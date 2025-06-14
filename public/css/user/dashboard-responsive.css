@@ -1,0 +1,286 @@
+
+@media (max-width: 550px){
+    header .home img{
+        width: 12%;
+    }
+    header .home a{
+        font-size: 17px;
+    }
+    .side-header{
+        display: flex;
+        width: 100%;
+        justify-content: space-between;
+    }
+    .nav, .login{
+        display: none;
+    }
+    .menu-icon{
+        display: block;
+    }
+    main{
+        z-index: 1;
+    }
+    main .big-hero{
+        font-size: 1.8rem;
+    }
+    main .small-hero{
+        width: 60%;
+        font-size: .8rem;
+    }
+    main{
+        height: 20vh;
+    }
+    .menu-icon {
+        display: block;
+    }
+
+    .login{
+        display: none;
+    }
+    .nav{
+        border-radius: 10px;
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        top: 60px;
+        right: 10px;
+        background-color: rgb(0, 0, 0);
+        border: 1px solid black;
+        box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+        z-index: 90;
+        opacity: 50px;
+    }
+
+    /* Show menu when checkbox is checked */
+    #menu-toggle:checked ~ .nav {
+        display: flex;
+    }
+
+    .nav a {
+        opacity: 50px;
+        color: white;
+        border-radius: 10px;
+        padding: 12px;
+        text-align: center;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .nav a:hover, .login a:hover {
+        background-color: rgb(143, 143, 143);
+        color: white;
+    }
+
+    /*Images container*/
+    .container{
+        display: flex;
+        justify-content: center;
+        flex-direction: row-reverse;
+    }
+    .item-1, .item-5, .item-1 img, .item-5 img {
+        height: 12rem;
+        width: 13rem;
+        display: none;
+    }
+    
+    .item-2, .item-4, .item-2 img, .item-4 img {
+        margin-top: 3.3%;
+        height: 15rem;
+        width: 8rem;
+    }
+    
+    .item-3 {
+
+        margin-top: 2.7%;
+        height: 18rem;
+        width: 10rem;
+    }
+    .item-3 img {
+        height: 8rem;
+        width: 100%;
+    }
+
+    .item-3 > .hero-btn {
+        height: 50%;
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        align-items: center;
+    }
+    .hero-btn a{
+        width: 50%;
+        font-size: 10px;
+    }
+    .hero-btn>.know {
+        margin-top: 3px;
+        background-color: rgb(238, 238, 238);
+        color: black;
+        transition: all 0.3s ease;
+    }
+}
+
+@media (max-width: 1200px){
+   
+    /*Images container*/
+    .container{
+        margin-top: 7%;
+        display: flex;
+        justify-content: center;
+        flex-direction: row-reverse;
+    }
+    .item-1, .item-5, .item-1 img, .item-5 img {
+        height: 17rem;
+        width: 10rem;
+    }
+    
+    .item-2, .item-4, .item-2 img, .item-4 img {
+        margin-top: 3.3%;
+        height: 15rem;
+        width: 8rem;
+    }
+    
+    .item-3 {
+
+        margin-top: 2.7%;
+        height: 18rem;
+        width: 10rem;
+    }
+    .item-3 img {
+        height: 8rem;
+        width: 100%;
+    }
+
+    .item-3 > .hero-btn {
+        height: 50%;
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        align-items: center;
+    }
+    .hero-btn a{
+        width: 50%;
+        font-size: 10px;
+    }
+    .hero-btn>.know {
+        margin-top: 3px;
+        background-color: rgb(238, 238, 238);
+        color: black;
+        transition: all 0.3s ease;
+    }
+}
+@media (max-width: 800px){
+
+    header .home img{
+        width: 12%;
+    }
+    header .home a{
+        font-size: 17px;
+    }
+    header{
+        display: flex;
+        justify-content: space-between;
+    }
+    header ul{
+        display: none;
+    }
+    .icon{
+        font-size: 30px;
+        display: block;
+    }
+   
+    .nav-links{
+        display: none;
+        flex-direction: column;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        background-color: aliceblue;
+        position: absolute;
+        top: 55px;
+        right: 0;
+        margin-right: 2%;
+        z-index: 2;
+        padding: 20px;
+        height: 10rem;
+        gap: 10%;
+        border-radius: 10px;
+    }
+    .nav-links.active{
+        display: flex;
+    }
+    .nav-links a{
+        padding: 0.5rem 1rem;
+    }
+    main .big-hero{
+        font-size: 1.8rem;
+    }
+    main .small-hero{
+        width: 60%;
+        font-size: .8rem;
+    }
+    main{
+        height: 20vh;
+    }
+    
+
+    /* Show menu when checkbox is checked */
+    #menu-toggle:checked ~ .nav {
+        display: flex;
+    }
+
+    .nav a {
+        opacity: 50px;
+        color: white;
+        border-radius: 10px;
+        padding: 12px;
+        text-align: center;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .nav a:hover, .login a:hover {
+        background-color: rgb(143, 143, 143);
+        color: white;
+    }
+
+    /*Images container*/
+    .container{
+        display: flex;
+        justify-content: center;
+    }
+    .item-1, .item-5, .item-1 img, .item-5 img {
+        height: 18rem;
+        width: 8rem;
+    }
+    
+    .item-2, .item-4, .item-2 img, .item-4 img {
+        margin-top: 3.3%;
+        height: 15rem;
+        width: 8rem;
+    }
+    
+    .item-3 {
+
+        margin-top: 2.7%;
+        height: 18rem;
+        width: 10rem;
+    }
+    .item-3 img {
+        height: 8rem;
+        width: 100%;
+    }
+
+    .item-3 > .hero-btn {
+        height: 50%;
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        align-items: center;
+    }
+    .hero-btn a{
+        width: 50%;
+        font-size: 10px;
+    }
+    .hero-btn>.know {
+        margin-top: 3px;
+        background-color: rgb(238, 238, 238);
+        color: black;
+        transition: all 0.3s ease;
+    }
+}

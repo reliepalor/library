@@ -1,0 +1,189 @@
+        /* Main Hero Section */
+main {
+    margin-top: -10;
+
+    text-align: center;
+    opacity: 0;
+    animation: slideIn 1s ease-out forwards 0.5s;
+}
+
+main .big-hero {
+    color: rgb(53, 53, 53);
+    font-size: 6vw;
+    margin-bottom: 1%;
+}
+
+main .small-hero {
+    text-align: center;
+    width: 21rem;
+    margin: auto;
+    line-height: 25px;
+    padding: 5px;
+}
+
+/* Container for Images */
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1%;
+    margin-bottom: 5%;
+}
+
+   
+   
+/* Image Items */
+.item {
+    width: 10%;
+    opacity: 0;
+    animation: fadeInUp 1s ease-out forwards 1s;
+}
+
+/* Image Styling */
+.item img {
+    border-radius: 30px;
+    width: 100%;
+    aspect-ratio: 2/3;
+    object-fit: cover;
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+/* Image Hover Effect */
+.item img:hover {
+    transform: scale(1.05);
+    box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Button Animations */
+.hero-btn a {
+    text-align: center;
+    width: 40%;
+    background-color: black;
+    color: white;
+    border-radius: 20px;
+    padding: 10px;
+    text-decoration: none;
+    display: inline-block;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+/* Button Hover Effect */
+.hero-btn a:hover {
+    background-color: rgb(53, 53, 53);
+    transform: translateY(-3px);
+}
+
+
+/* Image Positions */
+.item-1, .item-5, .item-1 img, .item-5 img {
+    height: 22rem;
+    width:18rem;
+}
+
+.item-2, .item-4, .item-2 img, .item-4 img {
+    margin-top: 3.3%;
+    height: 18rem;
+    width: 12rem;
+}
+
+.item-3 {
+    margin-top: 2.7%;
+    height: 18rem;
+    width: 13rem;
+}
+.item-3 img {
+    height: 10rem;
+    width: 100%;
+}
+/* Centering Hero Buttons */
+.item-3 > .hero-btn {
+    height: 50%;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+}
+.hero-btn>.know {
+    margin-top: 3px;
+    background-color: rgb(238, 238, 238);
+    color: black;
+    transition: all 0.3s ease;
+}
+
+.hero-btn>.know:hover {
+    color: black;
+    background-color: #ddd; /* Lighter background on hover */
+    transform: translateY(-3px); /* Lift effect on hover */
+}
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+        /* Fade-in animation for page load */
+        .animate-on-load {
+            animation: fadeIn 1s ease-out;
+        }
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        /* Scroll animations */
+        .animate-on-scroll {
+            opacity: 0;
+            transition: all 0.8s ease-out;
+        }
+        .animate-on-scroll.slideInLeft {
+            transform: translateX(-50px);
+        }
+        .animate-on-scroll.slideInRight {
+            transform: translateX(50px);
+        }
+        .animate-on-scroll.fadeInUp {
+            transform: translateY(50px);
+        }
+        .animate-on-scroll.visible {
+            opacity: 1;
+            transform: translateX(0) translateY(0);
+        }
+
+        /* Styles for mobile menu icon toggle */
+        #menu-toggle.is-open .hamburger-icon {
+            display: none;
+        }
+        #menu-toggle.is-open .x-icon {
+            display: block;
+        }
+        /* Smooth rotation for chevron icon */
+        .chevron-icon {
+            transition: transform 0.3s ease;
+        }
