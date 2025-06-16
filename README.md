@@ -1,6 +1,18 @@
 # 📚 Smart LIB — Digital Library Management & Space Optimization
 
+<p align="center">
+  <img src="screenshot/banner.png" alt="Smart LIB Banner" width="100%">
+</p>
+
 Smart LIB is a Laravel-based web application that allows students to register, log attendance, and borrow/return books using QR codes. It provides a real-time view of available books and study space in the library, making the entire library experience smarter and more efficient.
+
+---
+
+## 🎥 Live Demo
+
+<p align="center">
+  <img src="screenshot/demo.gif" alt="Smart LIB Demo" width="700">
+</p>
 
 ---
 
@@ -9,22 +21,22 @@ Smart LIB is a Laravel-based web application that allows students to register, l
 - ✅ **Student Registration & Login**
 - ✅ **QR Code Generation & Scanning**
 - ✅ **Admin Panel** for managing:
-  - Attendance data
-  - Book inventory and status
+  - Attendance data  
+  - Book inventory and status  
   - Library space availability
 - ✅ **Book Management (CRUD + Archive)**
 - ✅ **Borrow/Return System via QR Code**
 - ✅ **Search & Filter Books**
 - ✅ **Email Notifications**:
-  - QR code delivery via email
-  - Activity logs (login/logout)
+  - QR code delivery via email  
+  - Activity logs (login/logout)  
   - Overdue book reminders
 - ✅ **Role-based Access**:
-  - Student (User)
+  - Student (User)  
   - Librarian (Admin)
 - ✅ **Dashboard with Statistics**:
-  - Attendance tracking
-  - Book circulation
+  - Attendance tracking  
+  - Book circulation  
   - Available space metrics
 
 ---
@@ -42,11 +54,6 @@ Smart LIB is a Laravel-based web application that allows students to register, l
 ## ⚙️ Installation
 
 Follow these steps to set up Smart LIB on your local machine:
-![library_img](https://github.com/user-attachments/assets/3145d7e0-f3fb-4b33-a7e6-0dd720d860bf)
-
-
-https://github.com/user-attachments/assets/f861ab95-7bc1-4a2b-b87f-27c64f039eab
-
 
 ```bash
 # 1. Clone the repo
