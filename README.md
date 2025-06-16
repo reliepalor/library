@@ -11,7 +11,7 @@ Smart LIB is a Laravel-based web application that allows students to register, l
 ## 🎥 Live Demo
 
 <p align="center">
-  <img src="screenshot/demo.mp4" alt="Smart LIB Demo" width="700">
+  <img src="screenshot/demo.gif" alt="Smart LIB Demo" width="700">
 </p>
 
 ---
