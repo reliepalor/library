@@ -96,8 +96,8 @@
                 <!-- Remember Me + Forgot -->
                 <div class="flex items-center justify-between text-sm text-gray-400">
                     <label class="flex items-center">
-                        <input type="checkbox" name="remember" class="mr-2 rounded border-gray-600 text-indigo-500 FOCUS:ring-indigo-500 bg-gray-800">
-                        Remember me
+                        <input type="checkbox" name="remember" id="togglePassword" class="mr-2 rounded border-gray-600 text-indigo-500 FOCUS:ring-indigo-500 bg-gray-800">
+                        Show Password
                     </label>
                     @if (Route::has('password.request'))
                         <a href="{{ route('password.request') }}" class="text-indigo-400 hover:text-indigo-300">
@@ -121,4 +121,17 @@
         </div>
     </div>
 </body>
+
+<script>
+    const togglePassword = document.getElementById("togglePassword");
+    const password = document.getElementById("password");
+
+    togglePassword.addEventListener("change", () => {
+        if(togglePassword.checked){
+            password.type = "text";
+        }else{
+            password.type = "password";
+        }
+    })
+</script>
 </html>
