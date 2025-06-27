@@ -284,14 +284,45 @@
                                 <div class="flex flex-col md:flex-row justify-between items-center p-6 bg-gray-100 border-b border-gray-200">
                                     <h2 class="text-xl font-semibold text-gray-800">Student List</h2>
                                     <div class="flex flex-wrap items-center gap-2 mb-4">
-                                        <button class="college-filter px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition" data-college="All">All</button>
-                                        <button class="college-filter px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition" data-college="CICS">CICS</button>
-                                        <button class="college-filter px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition" data-college="CTED">CTED</button>
-                                        <button class="college-filter px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition" data-college="CCJE">CCJE</button>
-                                        <button class="college-filter px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition" data-college="CHM">CHM</button>
-                                        <button class="college-filter px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition" data-college="CBEA">CBEA</button>
-                                        <button class="college-filter px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition" data-college="CA">CA</button>
-                                        <button id="print-selected-btn" class="ml-4 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition">Print Selected (max 6)</button>
+                                        <div class="flex items-center space-x-2">
+                                            <div class="relative inline-block text-left">
+                                                <button id="collegeFilterButton" class="college-filter glass-button px-4 py-2 text-gray-500 text-sm font-medium rounded-2xl flex items-center justify-between w-32 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white/10 backdrop-blur-md border border-gray-400 shadow-md" data-college="All" aria-expanded="false" aria-controls="collegeFilterMenu">
+                                                    <span id="selectedCollege">All</span>
+                                                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </button>
+                                                <ul id="collegeFilterMenu" class="absolute z-20 mt-2 w-32 bg-white/10 backdrop-blur-md border border-gray-400 rounded-2xl shadow-2xl hidden transform origin-top transition-all duration-300 ease-out opacity-0 scale-y-95">
+                                                    <li>
+                                                        <button class="college-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-college="All">All</button>
+                                                    </li>
+                                                    <li>
+                                                        <button class="college-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-college="CICS">CICS</button>
+                                                    </li>
+                                                    <li>
+                                                        <button class="college-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-college="CTED">CTED</button>
+                                                    </li>
+                                                    <li>
+                                                        <button class="college-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-college="CCJE">CCJE</button>
+                                                    </li>
+                                                    <li>
+                                                        <button class="college-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-college="CHM">CHM</button>
+                                                    </li>
+                                                    <li>
+                                                        <button class="college-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-college="CBEA">CBEA</button>
+                                                    </li>
+                                                    <li>
+                                                        <button class="college-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-college="CA">CA</button>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <button id="applyFiltersButton" class="glass-button px-3 py-1.5 text-gray-500 text-sm font-medium rounded-2xl transition-all duration-300 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white/10 backdrop-blur-md border border-gray-400 shadow-md hidden">
+                                                Apply
+                                            </button>
+                                        
+                                        </div>
+
+                                        <button id="print-selected-btn" class="lass-button px-4 py-2 text-gray-500 text-sm font-medium rounded-2xl flex items-center justify-between w-32 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white/10 backdrop-blur-md border border-gray-400 shadow-md">Print QR Code</button>
                                     </div>
                                     <div class="flex items-center gap-4">
                                         <a href="{{ route('admin.students.archived') }}" title="Archived Students"

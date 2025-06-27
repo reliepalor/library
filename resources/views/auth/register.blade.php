@@ -110,6 +110,7 @@
                     @error('password')
                         <p class="text-sm text-red-400 mt-1">{{ $message }}</p>
                     @enderror
+                    
                 </div>
 
                 <!-- Confirm Password -->
@@ -120,6 +121,10 @@
                     @error('password_confirmation')
                         <p class="text-sm text-red-400 mt-1">{{ $message }}</p>
                     @enderror
+                    <label class="flex items-center mt-2">
+                        <input type="checkbox" name="remember" id="togglePassword" class="mr-2 rounded border-gray-600 text-indigo-500 FOCUS:ring-indigo-500 bg-gray-800">
+                        Show Password
+                    </label>
                 </div>
 
                 <!-- Actions -->
@@ -136,4 +141,21 @@
         </div>
     </div>
 </body>
+
+<script>
+    const togglePassword = document.getElementById("togglePassword");
+    const password = document.getElementById("password");
+    const password_confirmation = document.getElementById("password_confirmation");
+
+
+    togglePassword.addEventListener("change", () => {
+        if(togglePassword.checked){
+            password.type = "text";
+            password_confirmation.type = "text";
+        }else{
+            password.type = "password";
+            password_confirmation.type = "password"
+        }
+    })
+</script>
 </html>
