@@ -84,10 +84,13 @@
                 </div>
 
                 <!-- Password -->
-                <div>
+                <div class="relative">
                     <label for="password" class="block text-sm font-medium text-gray-300">Password</label>
                     <input id="password" name="password" type="password" required autocomplete="current-password"
-                        class="mt-1 w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-sm text-gray-200 input-focus" />
+                        class="mt-1 w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 pr-12 text-sm text-gray-200 input-focus" />
+                    <button type="button" id="togglePassword" tabindex="-1" class="absolute right-3 top-9 text-gray-400 hover:text-gray-200 focus:outline-none" style="background: none; border: none; padding: 0;">
+                        <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm6 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </button>
                     @error('password')
                         <p class="text-sm text-red-400 mt-1">{{ $message }}</p>
                     @enderror
@@ -95,10 +98,7 @@
 
                 <!-- Remember Me + Forgot -->
                 <div class="flex items-center justify-between text-sm text-gray-400">
-                    <label class="flex items-center">
-                        <input type="checkbox" name="remember" id="togglePassword" class="mr-2 rounded border-gray-600 text-indigo-500 FOCUS:ring-indigo-500 bg-gray-800">
-                        Show Password
-                    </label>
+                    <span></span>
                     @if (Route::has('password.request'))
                         <a href="{{ route('password.request') }}" class="text-indigo-400 hover:text-indigo-300">
                             Forgot password?
@@ -125,13 +125,15 @@
 <script>
     const togglePassword = document.getElementById("togglePassword");
     const password = document.getElementById("password");
-
-    togglePassword.addEventListener("change", () => {
-        if(togglePassword.checked){
-            password.type = "text";
-        }else{
-            password.type = "password";
-        }
-    })
+    const eyeIcon = document.getElementById("eyeIcon");
+    let show = false;
+    togglePassword.addEventListener("click", (e) => {
+        e.preventDefault();
+        show = !show;
+        password.type = show ? "text" : "password";
+        eyeIcon.innerHTML = show
+            ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-5 0-9-4-9-7s4-7 9-7 9 4 9 7c0 1.306-.835 2.417-2.125 3.825M15 12a3 3 0 11-6 0 3 3 0 016 0z" />'
+            : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm6 0a9 9 0 11-18 0 9 9 0 0118 0z" />';
+    });
 </script>
 </html>

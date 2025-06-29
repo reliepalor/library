@@ -502,4 +502,127 @@ class AttendanceController extends Controller
             'activity_trends' => $activityTrends
         ]);
     }
+
+    /**
+     * Log attendance action (handles both login and logout) for admin.
+     */
+    public function log(Request $request)
+    {
+        try {
+            $request->validate([
+                'student_id' => 'required|string|exists:students,student_id',
+                'activity' => 'required|string',
+            ]);
+
+            $studentId = $request->student_id;
+            $activity = $request->activity;
+            $today = Carbon::today()->toDateString();
+            $now = now();
+
+            $attendance = Attendance::where('student_id', $studentId)
+                ->whereDate('login', $today)
+                ->whereNull('logout')
+                ->first();
+
+            if ($attendance) {
+                $attendance->logout = $now;
+                $attendance->save();
+
+                if (str_contains($attendance->activity, 'Borrow')) {
+                    $parts = explode(':', $attendance->activity);
+                    if (count($parts) > 1) {
+                        $bookCode = trim($parts[1]);
+                        \App\Models\BorrowedBook::where('book_id', $bookCode)
+                            ->where('status', 'approved')
+                            ->update([
+                                'status' => 'returned',
+                                'returned_at' => now()
+                            ]);
+                    }
+                }
+
+                $duration = $attendance->login->diffForHumans($now, ['parts' => 2]);
+
+                $student = Student::where('student_id', $studentId)->first();
+                // Optionally send email here if needed for admin
+
+                return response()->json([
+                    'message' => 'Logout time recorded successfully.',
+                    'type' => 'logout',
+                    'student_id' => $studentId
+                ]);
+            } else {
+                $attendance = Attendance::create([
+                    'student_id' => $studentId,
+                    'activity' => $activity,
+                    'login' => $now,
+                ]);
+
+                $student = Student::where('student_id', $studentId)->first();
+                // Optionally send email here if needed for admin
+
+                return response()->json([
+                    'message' => 'Login time recorded successfully.',
+                    'type' => 'login',
+                    'student_id' => $studentId
+                ]);
+            }
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'error' => 'Validation error',
+                'message' => $e->getMessage(),
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Attendance logging error: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Server error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Check if student has an active attendance session today (admin).
+     */
+    public function check(Request $request)
+    {
+        $studentId = $request->query('student_id');
+
+        if (!$studentId) {
+            return response()->json(['error' => 'Student ID is required'], 400);
+        }
+
+        $today = Carbon::today()->toDateString();
+        $attendance = Attendance::where('student_id', $studentId)
+            ->whereDate('login', $today)
+            ->whereNull('logout')
+            ->first();
+
+        return response()->json([
+            'hasActiveSession' => (bool) $attendance,
+            'student_id' => $studentId,
+            'activity' => $attendance ? $attendance->activity : null
+        ]);
+    }
+
+    /**
+     * Show the attendance scan page (admin).
+     */
+    public function scan(Request $request)
+    {
+        $studentId = $request->query('student_id');
+
+        if (!$studentId) {
+            return response()->json(['error' => 'Student ID is required'], 400);
+        }
+
+        $student = Student::where('student_id', $studentId)->first();
+
+        if (!$student) {
+            return response()->json(['error' => 'Student not found'], 404);
+        }
+
+        return response()->json(['students' => $student]);
+    }
 } 
