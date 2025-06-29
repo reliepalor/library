@@ -72,6 +72,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::post('/', [AttendanceController::class, 'store'])->name('store');
         Route::post('/log', [AttendanceController::class, 'log'])->name('log');
         Route::get('/scan', [AttendanceController::class, 'scan'])->name('scan');
+        Route::get('/check', [AttendanceController::class, 'check'])->name('check');
         Route::get('/analytics', [AttendanceController::class, 'analytics'])->name('analytics');
         Route::get('/chart-data', [AttendanceController::class, 'getChartData'])->name('chart-data');
         Route::get('/history', [AttendanceController::class, 'history'])->name('history');
