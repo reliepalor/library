@@ -12,128 +12,138 @@
     <link rel="icon" type="image/x-icon" href="https://via.placeholder.com/32?text=CSU">
 </head>
 <body class="bg-gray-100 font-sans antialiased">
-
-        <!-- Header / Navigation -->
-    <header class="bg-white/10 backdrop-blur-md shadow-lg animate-on-load fixed top-0 left-0 w-full z-50">
-    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex justify-between items-center">
-        <div class="flex items-center space-x-3">
-            <!-- Placeholder Logo (replace with CSU logo) -->
-            <img src="https://via.placeholder.com/40?text=CSU" alt="CSU Library Logo" class="h-10 w-10">
-            <a href="{{route('user.dashboard')}}" class="text-xl font-bold text-gray-900">CSU Library</a>
-        </div>
-        <div class="hidden md:flex space-x-6">
-            <a href="#about" class="text-gray-900 hover:text-csu-light-blue transition hover:scale-105 transform duration-300">About</a>
-            <a href="#search" class="text-gray-900 hover:text-csu-light-blue transition hover:scale-105 transform duration-300">Search Catalog</a>
-            <a href="#services" class="text-gray-900 hover:text-csu-light-blue transition hover:scale-105 transform duration-300">Services</a>
-        </div>
-        <div class="relative" x-data="{ dropdownOpen: false }" @click.away="dropdownOpen = false">
-            <button @click="dropdownOpen = !dropdownOpen" class="flex items-center focus:outline-none">
-                @if(auth()->user()->profile_picture)
-                    <img src="{{ asset('storage/' . auth()->user()->profile_picture) }}" alt="Profile Picture" class="w-10 h-10 rounded-full object-cover" />
-                @else
-                    <svg class="w-10 h-10 rounded-full bg-gray-300 text-gray-600 p-2" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                    </svg>
-                @endif
-                <svg class="ml-2 w-4 h-4 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
-            </button>
-            <div x-show="dropdownOpen" x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20">
-                <a href="{{ route('user.profile.edit') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Profile</a>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">Logout</button>
-                </form>
-            </div>
-        </div>
-        <button class="md:hidden" id="menu-toggle" aria-label="Toggle menu">
-            <svg class="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-        </button>
-    </nav>
-    <!-- Mobile Menu (Hidden by Default) -->
-    <div id="mobile-menu" class="hidden md:hidden bg-white/10 backdrop-blur-md text-gray-900 px-4 py-4">
-        <a href="#about" class="block py-2 hover:text-csu-light-blue transition">About</a>
-        <a href="#search" class="block py-2 hover:text-csu-light-blue transition">Search Catalog</a>
-        <a href="#services" class="block py-2 hover:text-csu-light-blue transition">Services</a>
-    </div>
-</header>
-
-    <main class="max-w-3xl mx-auto p-6 bg-white mt-6 rounded shadow">
+    <x-header />
+<main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 bg-gradient-to-b from-white to-gray-100 min-h-screen">
+    <div class="bg-white rounded-2xl shadow-xl p-6 sm:p-10 space-y-10 transition duration-300 ease-in-out">
+        
         @if (session('status') === 'profile-updated')
-            <div class="mb-4 p-4 bg-green-100 text-green-700 rounded">
-                Profile updated successfully.
+            <div class="p-4 bg-blue-100 text-blue-800 rounded-lg flex items-center gap-2 animate-fade-in">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Profile updated successfully.</span>
             </div>
         @endif
 
-        <form method="POST" action="{{ route('user.profile.update') }}" enctype="multipart/form-data">
+        <!-- Profile Form -->
+        <form method="POST" action="{{ route('user.profile.update') }}" enctype="multipart/form-data" class="space-y-8">
             @csrf
             @method('PATCH')
 
-            <!-- Profile Picture -->
-            <div class="mb-4">
-                <label for="profile_picture" class="block text-gray-700 font-medium mb-2">Profile Picture</label>
-                <input id="profile_picture" name="profile_picture" type="file" class="border rounded w-full p-2" />
-                @error('profile_picture')
-                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                @enderror
-                @if(auth()->user()->profile_picture)
-                    <img src="{{ asset('storage/' . auth()->user()->profile_picture) }}" alt="Profile Picture" class="mt-2 w-24 h-24 rounded-full object-cover">
-                @endif
-            </div>
+            <!-- Header with Profile Picture and Name -->
+            <div class="flex flex-col sm:flex-row items-center gap-6 sm:items-start">
+                <div class="relative group">
+                    <img src="{{ $user->profile_picture ? asset('storage/' . $user->profile_picture) : asset('images/default-profile.png') }}"
+                         alt="Profile Picture"
+                         class="w-28 h-28 rounded-full object-cover ring-4 ring-blue-200 shadow-md transition duration-300">
 
-            <!-- Name -->
-            <div class="mb-4">
-                <label for="name" class="block text-gray-700 font-medium mb-2">Name</label>
-                <input id="name" name="name" type="text" value="{{ old('name', $user->name) }}" required class="border rounded w-full p-2" />
-                @error('name')
-                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                @enderror
+                    <label for="profile_picture"
+                           class="absolute bottom-0 right-0 p-2 bg-blue-600 text-white rounded-full cursor-pointer hover:bg-blue-700 shadow-lg transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M3 9a2 2 0 012-2h6m6 0H5a2 2 0 00-2 2v6a2 2 0 002 2h6m6 0h-6m6 0a2 2 0 002-2V9a2 2 0 00-2-2m-6 12V7" />
+                        </svg>
+                        <input id="profile_picture" name="profile_picture" type="file" class="hidden" />
+                    </label>
+                </div>
+                <div class="text-center sm:text-left space-y-1 w-full">
+                    <div class="mt-6 space-y-4">
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                            <input id="name" name="name" type="text" value="{{ old('name', $user->name) }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+                            @error('name') <p class="text-red-600 text-sm">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                            <input id="email" name="email" type="email" value="{{ old('email', $user->email) }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+                            @error('email') <p class="text-red-600 text-sm">{{ $message }}</p> @enderror
+                        </div>
+                        <!-- Add more fields for college, year, other_info if needed -->
+                    </div>
+                </div>
             </div>
+            @error('profile_picture')
+                <p class="text-red-600 text-sm">{{ $message }}</p>
+            @enderror
 
-            <!-- Email -->
-            <div class="mb-4">
-                <label for="email" class="block text-gray-700 font-medium mb-2">Email</label>
-                <input id="email" name="email" type="email" value="{{ old('email', $user->email) }}" required class="border rounded w-full p-2" />
-                @error('email')
-                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- College -->
-            <div class="mb-4">
-                <label for="college" class="block text-gray-700 font-medium mb-2">College</label>
-                <input id="college" name="college" type="text" value="{{ old('college', $user->college) }}" class="border rounded w-full p-2" />
-                @error('college')
-                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- Year -->
-            <div class="mb-4">
-                <label for="year" class="block text-gray-700 font-medium mb-2">Year</label>
-                <input id="year" name="year" type="text" value="{{ old('year', $user->year) }}" class="border rounded w-full p-2" />
-                @error('year')
-                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- Other Info -->
-            <div class="mb-4">
-                <label for="other_info" class="block text-gray-700 font-medium mb-2">Other Information</label>
-                <textarea id="other_info" name="other_info" rows="3" class="border rounded w-full p-2">{{ old('other_info', $user->other_info) }}</textarea>
-                @error('other_info')
-                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <div>
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Save</button>
+            <!-- Save Button -->
+            <div class="text-right">
+                <button type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl shadow-md transition duration-300">
+                    Save Changes
+                </button>
             </div>
         </form>
-    </main>
+
+        <!-- Student Info Section -->
+        @if ($user->student)
+            <div class="bg-gray-50 rounded-xl shadow-inner p-6 sm:p-8 space-y-6 transition duration-300">
+                <h3 class="text-xl font-semibold text-gray-800">Student Profile Information</h3>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
+                    <div>
+                        <label class="text-gray-600 font-medium">Student ID</label>
+                        <p class="text-gray-900 font-semibold">{{ $user->student->student_id }}</p>
+                    </div>
+                    <div>
+                        <label class="text-gray-600 font-medium">Full Name</label>
+                        <p class="text-gray-900 font-semibold">{{ $user->student->full_name }}</p>
+                    </div>
+                    <div>
+                        <label class="text-gray-600 font-medium">College</label>
+                        <p class="text-gray-900 font-semibold">{{ $user->student->college }}</p>
+                    </div>
+                    <div>
+                        <label class="text-gray-600 font-medium">Year Level</label>
+                        <p class="text-gray-900 font-semibold">{{ $user->student->year }}</p>
+                    </div>
+               
+                    <div class="sm:col-span-2">
+                        <label class="text-gray-600 font-medium mb-2 block">QR Code</label>
+                        @if ($user->student->qr_code_path)
+                            <img src="{{ asset('storage/' . $user->student->qr_code_path) }}"
+                                 alt="Student QR Code"
+                                 class="w-40 h-40 object-contain border border-gray-200 rounded-lg shadow-md hover:scale-105 transition duration-300" />
+                        @else
+                            <p class="text-gray-500">No QR code available.</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attendance History Section -->
+            <div class="mt-10 bg-white rounded-xl shadow-inner p-6 sm:p-8 space-y-6 transition duration-300">
+                <h3 class="text-xl font-semibold text-gray-800">Attendance History</h3>
+                @if ($user->student->attendanceHistories->isEmpty())
+                    <p class="text-gray-500">No attendance history available.</p>
+                @else
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="text-left py-2 px-4 border-b border-gray-300">Date</th>
+                                    <th class="text-left py-2 px-4 border-b border-gray-300">Time In - Time Out</th>
+                                    <th class="text-left py-2 px-4 border-b border-gray-300">Activity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($user->student->attendanceHistories as $history)
+                                    <tr class="hover:bg-gray-50 transition-colors duration-200">
+                                        <td class="py-2 px-4 border-b border-gray-300">{{ $history->date->format('Y-m-d') }}</td>
+                                        <td class="py-2 px-4 border-b border-gray-300">
+                                            {{ $history->time_in ? $history->time_in->format('h:i A') : '-' }} - {{ $history->time_out ? $history->time_out->format('h:i A') : '-' }}
+                                        </td>
+                                        <td class="py-2 px-4 border-b border-gray-300">{{ $history->activity }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </div>
+        @endif
+    </div>
+</main>
 
 </body>
 </html>

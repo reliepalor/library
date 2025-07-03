@@ -10,6 +10,9 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+
+use Illuminate\Support\Facades\Log as LogFacade;
+use Psr\Log\LoggerInterface;
 use Illuminate\Support\Collection;
 
 class AttendanceController extends Controller
@@ -20,7 +23,7 @@ class AttendanceController extends Controller
         
         // Get today's attendance with proper time tracking and student relationship
         $todayAttendance = Attendance::with(['student' => function($query) {
-                $query->select('student_id', 'lname', 'fname', 'college');
+                $query->select('student_id', 'lname', 'fname', 'college', 'email')->with('user');
             }])
             ->whereDate('login', $today)
             ->orderBy('login', 'desc')
@@ -54,6 +57,9 @@ class AttendanceController extends Controller
             return [
                 'student_id' => $attendance->student->student_id ?? 'N/A',
                 'student_name' => ($attendance->student->lname ?? 'N/A') . ', ' . ($attendance->student->fname ?? 'N/A'),
+                'profile_picture' => $attendance->student && $attendance->student->user && $attendance->student->user->profile_picture
+                    ? $attendance->student->user->profile_picture
+                    : null,
                 'college' => $attendance->student->college ?? 'N/A',
                 'activity' => $attendance->activity,
                 'time_in' => $attendance->login ? Carbon::parse($attendance->login)->setTimezone('Asia/Manila')->format('h:i A') : 'N/A',
@@ -95,7 +101,7 @@ class AttendanceController extends Controller
 
             return view('admin.attendance.history', compact('history', 'colleges', 'activities'));
         } catch (\Exception $e) {
-            Log::error('Error in attendance history: ' . $e->getMessage());
+                LogFacade::error('Error in attendance history: ' . $e->getMessage());
             return view('admin.attendance.history', [
                 'history' => collect(),
                 'colleges' => collect(),
@@ -210,7 +216,7 @@ class AttendanceController extends Controller
 
             return view('admin.attendance.analytics', compact('analytics'));
         } catch (\Exception $e) {
-            Log::error('Error in attendance analytics: ' . $e->getMessage());
+            LogFacade::error('Error in attendance analytics: ' . $e->getMessage());
             return view('admin.attendance.analytics', [
                 'analytics' => [
                     'dateFrom' => Carbon::now()->subDays(7)->format('Y-m-d'),

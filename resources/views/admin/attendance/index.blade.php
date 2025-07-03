@@ -6,6 +6,8 @@
     <title>Attendance Management - Library System</title>
     <link rel="icon" type="image/x-icon" href="/favicon/Library.png">
 
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -199,13 +201,16 @@
                 </div>
             </div>
             <!-- Logout Confirmation Modal -->
-            <div id="logout-modal" class="hidden fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50">
-                <div class="bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-xl shadow-lg p-6 w-96 text-center border border-white border-opacity-30">
-                    <h3 class="text-xl font-semibold mb-4 text-white drop-shadow-md">Logout Successful</h3>
-                    <p class="mb-4 text-white drop-shadow-sm">You have been logged out successfully.</p>
-                    <button id="logout-close" class="px-4 py-2 bg-blue-600 bg-opacity-80 hover:bg-opacity-100 text-white rounded-lg shadow-md transition duration-300">Close</button>
-                </div>
-            </div>
+            <!-- Removed logout confirmation modal as per user request -->
+ 
+             <!-- Logout Success Modal -->
+             <div id="logout-modal" class="hidden fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50">
+                 <div class="bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-xl shadow-lg p-6 w-96 text-center border border-white border-opacity-30">
+                     <h3 class="text-xl font-semibold mb-4 text-white drop-shadow-md">Logout Successful</h3>
+                     <p class="mb-4 text-white drop-shadow-sm">You have been logged out successfully.</p>
+                     <button id="logout-close" class="px-4 py-2 bg-blue-600 bg-opacity-80 hover:bg-opacity-100 text-white rounded-lg shadow-md transition duration-300">Close</button>
+                 </div>
+             </div>
 
             <!-- Today's Attendance Table -->
             <div class="shadcn-card overflow-hidden">
@@ -235,7 +240,12 @@
                             @forelse($todayAttendance as $attendance)
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $attendance['student_id'] }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $attendance['student_name'] }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex items-center space-x-3">
+                                        <img src="{{ $attendance['profile_picture'] ? asset('storage/' . $attendance['profile_picture']) : asset('images/default-profile.png') }}"
+                                             alt="Profile Picture"
+                                             class="w-10 h-10 rounded-full object-cover shadow-sm ring-1 ring-blue-100 transition-transform duration-300 hover:scale-105" />
+                                        <span class="font-medium">{{ $attendance['student_name'] }}</span>
+                                    </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full college-{{ $attendance['college'] }}">{{ $attendance['college'] }}</span>
                                     </td>
@@ -542,51 +552,51 @@
                 const data = await response.json();
                 if (data.error) throw new Error(data.error);
                 if (!data.students) throw new Error('Student not found in database');
-                // Check for active session
-                const checkResponse = await fetch(`/admin/attendance/check?student_id=${encodeURIComponent(studentId)}`, {
-                    method: 'GET',
+            // Check for active session
+            const checkResponse = await fetch(`/admin/attendance/check?student_id=${encodeURIComponent(studentId)}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            });
+            if (!checkResponse.ok) throw new Error(`Server error: ${checkResponse.status}`);
+            const checkData = await checkResponse.json();
+
+            if (checkData.hasActiveSession) {
+                // If student is logged in, automatically log them out without showing activity modal or confirmation
+                const logoutResponse = await fetch('/admin/attendance/log', {
+                    method: 'POST',
                     headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': csrfToken
-                    }
-                });
-                if (!checkResponse.ok) throw new Error(`Server error: ${checkResponse.status}`);
-                const checkData = await checkResponse.json();
-
-                if (checkData.hasActiveSession) {
-                    // If student is logged in, automatically log them out without showing activity modal
-                    const logoutResponse = await fetch('/admin/attendance/log', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': csrfToken,
-                            'Accept': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest',
-                        },
-                        body: JSON.stringify({
-                            student_id: studentId,
-                            activity: checkData.activity || 'Logout'
-                        }),
-                    });
-                    if (!logoutResponse.ok) throw new Error('Failed to log out student');
-                    const logoutData = await logoutResponse.json();
-                    showStatus(logoutData.message || 'Logout successful!', 'success');
-                    // Update attendance table dynamically
-                    addAttendanceRow({
+                    },
+                    body: JSON.stringify({
                         student_id: studentId,
-                        student_name: studentInfoDiv.querySelector('p.font-medium')?.textContent || '',
-                        college: studentInfoDiv.querySelector('p.text-sm.text-gray-600:nth-child(3)')?.textContent.replace('College: ', '') || '',
-                        activity: checkData.activity || 'Logout',
-                        time_in: '', // No change for login time
-                        time_out: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }),
-                        status: 'Logged Out'
-                    });
-                    // Show logout confirmation modal
-                    logoutModal.classList.remove('hidden');
-                    isProcessing = false;
-                    return;
-                }
+                        activity: checkData.activity || 'Logout'
+                    }),
+                });
+                if (!logoutResponse.ok) throw new Error('Failed to log out student');
+                const logoutData = await logoutResponse.json();
+                showStatus(logoutData.message || 'Logout successful!', 'success');
+                // Update attendance table dynamically
+                addAttendanceRow({
+                    student_id: studentId,
+                    student_name: studentInfoDiv.querySelector('p.font-medium')?.textContent || '',
+                    college: studentInfoDiv.querySelector('p.text-sm.text-gray-600:nth-child(3)')?.textContent.replace('College: ', '') || '',
+                    activity: checkData.activity || 'Logout',
+                    time_in: '', // No change for login time
+                    time_out: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }),
+                    status: 'Logged Out'
+                });
+                // Show logout success modal
+                logoutModal.classList.remove('hidden');
+                isProcessing = false;
+                return;
+            }
 
                 // If not logged in, show the activity modal for login
                 modalStudentId.value = studentId;
@@ -821,6 +831,9 @@
             logoutInProgress = false;
             location.reload();
         });
+
+        // Logout confirmation modal buttons
+        // Removed logout confirmation modal event listeners as per user request
     });
 
     // Add this helper function to append a row to the attendance table
@@ -830,7 +843,12 @@
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${row.student_id}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${row.student_name}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex items-center space-x-3">
+                <img src="${row.profile_picture ? asset('storage/' + row.profile_picture) : asset('images/default-profile.png')}"
+                     alt="Profile Picture"
+                     class="w-10 h-10 rounded-full object-cover shadow-sm ring-1 ring-blue-100 transition-transform duration-300 hover:scale-105" />
+                <span class="font-medium">${row.student_name}</span>
+            </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full college-${row.college}">${row.college}</span></td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${row.activity}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${row.time_in}</td>
