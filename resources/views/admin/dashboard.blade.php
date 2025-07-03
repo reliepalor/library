@@ -176,8 +176,16 @@
                                         @foreach($recentBorrows as $borrow)
                                         <tr>
                                             <td class="px-4 py-3">
-                                                <div class="text-sm font-medium text-gray-900 truncate">{{ $borrow->student->fname }} {{ $borrow->student->lname }}</div>
-                                                <div class="text-sm text-gray-500 truncate">{{ $borrow->student->student_id }}</div>
+                                                <div class="text-sm font-medium text-gray-900 truncate">
+                                                    @if($borrow->student)
+                                                        {{ $borrow->student->fname }} {{ $borrow->student->lname }}
+                                                    @else
+                                                        <span class="text-red-500">No student</span>
+                                                    @endif
+                                                </div>
+                                                <div class="text-sm text-gray-500 truncate">
+                                                    {{ $borrow->student->student_id ?? 'N/A' }}
+                                                </div>
                                             </td>
                                             <td class="px-4 py-3">
                                                 <div class="text-sm text-gray-900 truncate">{{ $borrow->book->name }}</div>

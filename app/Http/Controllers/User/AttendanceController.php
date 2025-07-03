@@ -19,7 +19,7 @@ class AttendanceController extends Controller
     public function index()
     {
         $today = Carbon::today()->toDateString();
-        $attendances = Attendance::with('student')
+        $attendances = Attendance::with('student.user')
             ->whereDate('login', $today)
             ->orderBy('login', 'desc')
             ->get();

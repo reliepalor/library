@@ -255,12 +255,12 @@
                                                     <div class="relative h-48 bg-gray-100">
                                                         <img src="{{ asset('storage/' . $book->image1) }}" alt="{{ $book->name }}" class="w-full h-full object-cover">
                                                         <span class="absolute top-2 right-2 text-xs font-semibold px-2 py-1 rounded-full
-                                                            @if($book->section === 'CICS') bg-orange-200 text-gray-800
-                                                            @elseif($book->section === 'CTED') bg-sky-200 text-gray-800
-                                                            @elseif($book->section === 'CCJE') bg-red-300 text-gray-800
-                                                            @elseif($book->section === 'CHM') bg-pink-300 text-gray-800
-                                                            @elseif($book->section === 'CBEA') bg-yellow-200 text-gray-800
-                                                            @elseif($book->section === 'CA') bg-green-300 text-gray-800
+                                                            @if($book->section === 'CICS') bg-violet-200 text-violet-800
+                                                            @elseif($book->section === 'CTED') bg-sky-200 text-sky-800
+                                                            @elseif($book->section === 'CCJE') bg-red-300 text-red-800
+                                                            @elseif($book->section === 'CHM') bg-pink-300 text-pink-800
+                                                            @elseif($book->section === 'CBEA') bg-yellow-200 text-yellow-800
+                                                            @elseif($book->section === 'CA') bg-green-300 text-green-800
                                                             @else bg-gray-100 text-gray-800 @endif">
                                                             {{ $book->section }}
                                                         </span>

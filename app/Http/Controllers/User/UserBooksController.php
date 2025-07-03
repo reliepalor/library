@@ -13,7 +13,7 @@ class UserBooksController extends Controller
      */
     public function index()
     {
-        $books = Books::all();
+        $books = Books::where('archived', false)->paginate(9);
         return view('user.books.index', compact('books'));
     }
 

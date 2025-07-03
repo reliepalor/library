@@ -62,4 +62,14 @@ class Student extends Model
     {
         return $query->where('archived', true);
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'email', 'email');
+    }
+
+    public function attendanceHistories()
+    {
+        return $this->hasMany(\App\Models\AttendanceHistory::class, 'student_id', 'student_id');
+    }
 }
