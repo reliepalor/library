@@ -112,8 +112,12 @@
                         class="w-full px-4 py-3 bg-white text-gray-900 rounded-lg font-medium hover:bg-gray-100 hover-scale focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         Sign in
                     </button>
+<a href="{{ route('auth.google.redirect') }}" class="w-full inline-flex justify-center items-center px-4 py-3 bg-white text-gray-900 rounded-lg font-medium hover:bg-gray-100 hover-scale mt-3 duration-100">
+  <img src="https://www.google.com/favicon.ico" alt="Google Icon" class="w-5 h-5 mr-2">
+  Continue with Google
+</a>
                     <a href="{{ route('register') }}"
-                        class="w-full inline-flex justify-center items-center px-4 py-3 border border-gray-600 text-gray-300 rounded-lg font-medium hover:bg-gray-700 hover-scale">
+                        class="w-full inline-flex justify-center items-center px-4 py-3 border border-gray-600 text-gray-300 rounded-lg font-medium hover:bg-gray-700 hover-scale mt-3">
                         Don't have an account? Sign up
                     </a>
                 </div>

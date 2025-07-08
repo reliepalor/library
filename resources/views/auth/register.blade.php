@@ -127,16 +127,23 @@
                         <p class="text-sm text-red-400 mt-1">{{ $message }}</p>
                     @enderror
                 </div>
-
-                <!-- Actions -->
-                <div class="flex items-center justify-between">
-                    <a href="{{ route('login') }}" class="text-sm text-indigo-400 hover:text-indigo-300">
+                <a href="{{ route('login') }}" class="text-sm text-indigo-400 hover:text-indigo-300 mb-5 ">
                         Already registered?
                     </a>
+
+                <!-- Actions -->
+                <div class="flex items-center justify-between flex-col">
+                    
                     <button type="submit"
-                        class="px-4 py-3 bg-white text-gray-900 rounded-lg font-medium hover:bg-gray-100 hover-scale focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        Sign up
+                        class="px-4 py-3 bg-white text-gray-900 rounded-lg font-medium hover:bg-gray-100 hover-scale focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full">
+                        Register
                     </button>
+                    <a href="{{ route('auth.google.redirect') }}"
+                        class="w-full inline-flex justify-center items-center px-4 py-3 bg-white text-gray-900 rounded-lg font-medium hover:bg-red-700 hover-scale mt-3">
+                          <img src="https://www.google.com/favicon.ico" alt="Google Icon" class="w-5 h-5 mr-2">
+
+                        Continue with Google
+                    </a>
                 </div>
             </form>
         </div>
