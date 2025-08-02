@@ -217,7 +217,7 @@
             {{ session('success') }}
         </div>
     @endif
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-6">
+    <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-6">
         @foreach($books as $book)
             <div class="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm overflow-hidden 
                         transform transition-all duration-300 hover:shadow-lg hover:-translate-y-1 

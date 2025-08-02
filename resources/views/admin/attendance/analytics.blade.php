@@ -9,6 +9,25 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fadeInUp { animation: fadeInUp 0.3s ease-out forwards; }
+    #dropdownMenu.show {
+        transform: scaleY(1);
+        opacity: 1;
+        display: block;
+    }
+    #dropdownButton[aria-expanded="true"] svg {
+        transform: rotate(180deg);
+    }
+    a:hover svg {
+        color: #3B82F6;
+    }
+    </style>
 </head>
 <body class="bg-gray-50" x-data="{ sidebarExpanded: true }">
     <div class="content-area flex-1" :class="{'ml-16': !sidebarExpanded, 'ml-64': sidebarExpanded}">
@@ -22,20 +41,7 @@
                 <div>
                     <h1 class="text-2xl font-semibold text-gray-900">Attendance Analytics</h1>
                 </div>
-                <div class="flex justify-center gap-3">
-                    <a href="{{ route('admin.attendance.index') }}" class="shadcn-button">
-                        Attendance
-                    </a>
-                    <a href="{{ route('admin.attendance.history') }}" class="shadcn-button">
-                        View History
-                    </a>
-                    <a href="{{ route('admin.attendance.analytics') }}" class="shadcn-button">
-                        Analytics
-                    </a>
-                    <a href="{{ route('admin.attendance.insights') }}" class="shadcn-button">
-                        Insights
-                    </a>
-                </div>
+                <x-attendance-menu />
             </div>
 
             <!-- Date Range Filter -->

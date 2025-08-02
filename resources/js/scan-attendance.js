@@ -277,7 +277,20 @@
                 if (!logoutResponse.ok) throw new Error('Failed to log out student');
                 const logoutData = await logoutResponse.json();
                 showStatus(logoutData.message || 'Logout successful!', 'success');
-                // Update attendance table dynamically
+        // Update attendance table dynamically
+        // Find existing row for student and update it, or add new row if not found
+        const tableBody = document.querySelector('table tbody');
+        if (tableBody) {
+            const existingRow = tableBody.querySelector(`tr[data-student-id="${studentId}"]`);
+            if (existingRow) {
+                existingRow.querySelector('td:nth-child(4)').textContent = checkData.activity || 'Logout';
+                existingRow.querySelector('td:nth-child(6)').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+                const statusSpan = existingRow.querySelector('td:nth-child(7) span');
+                if (statusSpan) {
+                    statusSpan.textContent = 'Logged Out';
+                    statusSpan.className = 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800';
+                }
+            } else {
                 addAttendanceRow({
                     student_id: studentId,
                     student_name: studentInfoDiv.querySelector('p.font-medium')?.textContent || '',
@@ -287,10 +300,15 @@
                     time_out: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }),
                     status: 'Logged Out'
                 });
-                // Show logout success modal
-                logoutModal.classList.remove('hidden');
-                isProcessing = false;
-                return;
+            }
+        }
+        // Show logout success modal
+        logoutModal.classList.remove('hidden');
+        setTimeout(() => {
+            logoutModal.classList.add('hidden');
+        }, 1800);
+        isProcessing = false;
+        return;
             }
 
                 // If not logged in, show the activity modal for login
@@ -539,9 +557,9 @@
         tr.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${row.student_id}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex items-center space-x-3">
-                <img src="${row.profile_picture ? asset('storage/' + row.profile_picture) : asset('images/default-profile.png')}"
-                     alt="Profile Picture"
-                     class="w-10 h-10 rounded-full object-cover shadow-sm ring-1 ring-blue-100 transition-transform duration-300 hover:scale-105" />
+        <img src="${row.profile_picture ? window.assetBaseUrl + 'storage/' + row.profile_picture : window.assetBaseUrl + 'images/default-profile.png'}"
+             alt="Profile Picture"
+             class="w-10 h-10 rounded-full object-cover shadow-sm ring-1 ring-blue-100 transition-transform duration-300 hover:scale-105" />
                 <span class="font-medium">${row.student_name}</span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full college-${row.college}">${row.college}</span></td>

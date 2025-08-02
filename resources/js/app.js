@@ -10,3 +10,4 @@ import './college-filter.js';
 import './full-screen.js';
 import './scan-attendance.js';
 import './library-book.js'
+import './attendance-menu.js'

@@ -392,10 +392,10 @@
         </div>
 
         <!-- QR Code Modal -->
-        <div id="qr-code-modal" class="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-70 opacity-0 pointer-events-none transition-opacity duration-300">
-            <div class="relative bg-white rounded-lg p-4 max-w-md w-full shadow-lg transform scale-95 transition-transform duration-300">
-                <button id="close-qr-modal" class="absolute top-2 right-2 text-gray-600 hover:text-gray-900 text-2xl font-bold">&times;</button>
-                <img id="qr-code-modal-img" src="" alt="QR Code" class="max-w-full max-h-[80vh] object-contain" />
+        <div id="qr-code-modal" class="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-70 opacity-0 pointer-events-none transition-opacity duration-300 ease-in-out">
+            <div class="relative bg-white rounded-lg p-6 max-w-md w-full shadow-xl transform scale-95 transition-transform duration-300 ease-in-out">
+                <button id="close-qr-modal" class="absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-3xl font-bold transition-transform hover:scale-110">&times;</button>
+                <img id="qr-code-modal-img" src="" alt="QR Code" class="max-w-full max-h-[80vh] object-contain rounded-md" />
             </div>
         </div>
 
@@ -571,7 +571,7 @@
                 const qrCodeModalImg = document.getElementById('qr-code-modal-img');
                 const closeQrModalBtn = document.getElementById('close-qr-modal');
 
-                document.querySelectorAll('td.px-6.py-4 img').forEach(img => {
+                document.querySelectorAll('td.px-4.py-4 img').forEach(img => {
                     img.style.cursor = 'pointer';
                     img.addEventListener('click', function() {
                         qrCodeModalImg.src = this.src;

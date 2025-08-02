@@ -10,8 +10,8 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-
-use Illuminate\Support\Facades\Log as LogFacade;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\AttendanceNotification;
 use Psr\Log\LoggerInterface;
 use Illuminate\Support\Collection;
 
@@ -550,7 +550,13 @@ class AttendanceController extends Controller
                 $duration = $attendance->login->diffForHumans($now, ['parts' => 2]);
 
                 $student = Student::where('student_id', $studentId)->first();
-                // Optionally send email here if needed for admin
+
+                // Send attendance notification email for logout
+                try {
+                    Mail::to($student->email)->send(new AttendanceNotification($student, 'logout', $now, $attendance->activity, $duration));
+                } catch (\Exception $e) {
+                    Log::error('Failed to send logout email: ' . $e->getMessage());
+                }
 
                 return response()->json([
                     'message' => 'Logout time recorded successfully.',
@@ -565,7 +571,13 @@ class AttendanceController extends Controller
                 ]);
 
                 $student = Student::where('student_id', $studentId)->first();
-                // Optionally send email here if needed for admin
+
+                // Send attendance notification email for login
+                try {
+                    Mail::to($student->email)->send(new AttendanceNotification($student, 'login', $now, $activity));
+                } catch (\Exception $e) {
+                    Log::error('Failed to send login email: ' . $e->getMessage());
+                }
 
                 return response()->json([
                     'message' => 'Login time recorded successfully.',

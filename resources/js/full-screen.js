@@ -1,15 +1,15 @@
+let isAppFullScreen = false;
+
 function toggleFullScreen() {
     const notFullscreenEls = document.querySelectorAll('.not-fullscreen');
-    const fullscreenEl = document.querySelector('.fullscreen');
+    const fullscreenEl = document.getElementById('fullscreen-section');
     const button = document.getElementById('fullscreen-btn');
 
-    const isCurrentlyFullscreen = document.fullscreenElement !== null;
+    if (!isAppFullScreen) {
+        // Hide all non-fullscreen elements
+        notFullscreenEls.forEach(el => el.classList.add('hidden'));
 
-    if (!isCurrentlyFullscreen) {
-        // Hide all not-fullscreen elements
-        notFullscreenEls.forEach(el => el.style.display = 'none');
-
-        // Enter fullscreen mode on the fullscreen element
+        // Request real fullscreen mode
         if (fullscreenEl.requestFullscreen) {
             fullscreenEl.requestFullscreen();
         } else if (fullscreenEl.webkitRequestFullscreen) {
@@ -18,10 +18,11 @@ function toggleFullScreen() {
             fullscreenEl.msRequestFullscreen();
         }
 
-        // Change button text
+        // Update UI
         button.textContent = 'Exit Fullscreen';
+        isAppFullScreen = true;
     } else {
-        // Exit fullscreen mode
+        // Exit browser fullscreen mode
         if (document.exitFullscreen) {
             document.exitFullscreen();
         } else if (document.webkitExitFullscreen) {
@@ -30,20 +31,24 @@ function toggleFullScreen() {
             document.msExitFullscreen();
         }
 
-        // Show the hidden UI
-        notFullscreenEls.forEach(el => el.style.display = '');
-        button.textContent = 'Full Screen';
+        // Restore hidden elements AFTER fullscreen exits (handled below)
+        isAppFullScreen = false;
     }
 }
 
-// Optional: update button text on exiting fullscreen via ESC or other means
+// Listen for when fullscreen is exited manually (Esc or button)
 document.addEventListener('fullscreenchange', () => {
-    const button = document.getElementById('fullscreen-btn');
-    const notFullscreenEls = document.querySelectorAll('.not-fullscreen');
     if (!document.fullscreenElement) {
-        // Show normal elements again
-        notFullscreenEls.forEach(el => el.style.display = '');
+        const notFullscreenEls = document.querySelectorAll('.not-fullscreen');
+        const button = document.getElementById('fullscreen-btn');
+
+        // Show all elements back
+        notFullscreenEls.forEach(el => el.classList.remove('hidden'));
+
+        // Reset button label
         button.textContent = 'Full Screen';
+
+        isAppFullScreen = false;
     }
 });
 
