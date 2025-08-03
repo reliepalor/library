@@ -16,37 +16,86 @@
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('profile-form');
             const fileInput = document.getElementById('profile_picture');
+            const previewImage = document.getElementById('profile-preview');
+            const saveButton = document.getElementById('save-profile-btn');
+            const confirmButton = document.getElementById('confirm-upload-btn');
+            const cancelButton = document.getElementById('cancel-upload-btn');
+            const confirmSection = document.getElementById('confirm-section');
             
-            if (fileInput) {
+            // Store the original image source
+            let originalImageSrc = previewImage.src;
+            
+            if (fileInput && previewImage) {
                 fileInput.addEventListener('change', function(e) {
-                    const fileName = e.target.files[0] ? e.target.files[0].name : 'No file selected';
-                    console.log('File selected:', fileName);
-                    
-                    // Update the file name display
-                    const fileNameDisplay = document.getElementById('file-name-display');
-                    if (fileNameDisplay) {
-                        fileNameDisplay.textContent = 'Selected file: ' + fileName;
-                    }
-                    
-                    // Submit the form automatically when a file is selected
-                    if (e.target.files.length > 0 && form) {
-                        console.log('Submitting form automatically');
-                        form.submit();
+                    if (e.target.files && e.target.files[0]) {
+                        const reader = new FileReader();
+                        
+                        reader.onload = function(event) {
+                            previewImage.src = event.target.result;
+                        }
+                        
+                        reader.readAsDataURL(e.target.files[0]);
+                        
+                        // Show confirmation section
+                        confirmSection.classList.remove('hidden');
                     }
                 });
             }
             
+            if (confirmButton) {
+                confirmButton.addEventListener('click', function() {
+                    // Submit the form when user confirms
+                    if (form) {
+                        // Instead of calling form.submit(), click the save button
+                        // This ensures proper form validation and submission
+                        saveButton.click();
+                    }
+                });
+            }
+            
+            if (cancelButton) {
+                cancelButton.addEventListener('click', function() {
+                    // Reset file input
+                    if (fileInput) {
+                        fileInput.value = '';
+                    }
+                    
+                    // Restore original image
+                    previewImage.src = originalImageSrc;
+                    
+                    // Hide confirm section
+                    confirmSection.classList.add('hidden');
+                });
+            }
+            
+            if (saveButton) {
+                saveButton.addEventListener('click', function() {
+                    // Always submit the form when the save button is clicked
+                    // This ensures proper form validation and submission
+                    if (form) {
+                        // Check if there's a file selected
+                        if (fileInput && fileInput.files && fileInput.files.length > 0) {
+                            // If a file is selected, submit the form normally
+                            // This will trigger the PATCH request with the file data
+                            form.submit();
+                        } else {
+                            // If no file is selected, we can still submit the form
+                            // to update other profile information
+                            form.submit();
+                        }
+                    }
+                });
+            }
+            
+            // Also handle form submission via Enter key
             if (form) {
                 form.addEventListener('submit', function(e) {
-                    console.log('Form is being submitted');
-                    console.log('Form data:', new FormData(form));
+                    // Allow default submission to handle it properly
+                    // This ensures that file data is included in the request
+                    // e.preventDefault(); // Removed to allow proper form submission
                     
-                    // Check if a file is selected
-                    if (fileInput && fileInput.files.length > 0) {
-                        console.log('File selected:', fileInput.files[0].name);
-                    } else {
-                        console.log('No file selected');
-                    }
+                    // Submit the form
+                    // form.submit(); // Removed to allow default submission
                 });
             }
         });
@@ -110,29 +159,42 @@
         <!-- Profile Header -->
         <div class="flex flex-col items-center mb-8">
             <div class="relative group">
-                <img src="{{ $user->profile_picture ? asset('storage/' . $user->profile_picture) . '?v=' . time() : asset('images/default-profile.png') }}"
+                <!-- Current profile picture -->
+                <img id="profile-preview" src="{{ $user->profile_picture ? asset('storage/' . $user->profile_picture) . '?v=' . time() : asset('images/default-profile.png') }}"
                      alt="Profile Picture"
                      class="w-32 h-32 rounded-full object-cover ring-4 ring-blue-500 shadow-lg transition duration-300">
-
-                <label for="profile_picture"
-                       class="absolute bottom-2 right-2 p-2 bg-blue-600 text-white rounded-full cursor-pointer hover:bg-blue-700 shadow-lg transition transform hover:scale-105">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M3 9a2 2 0 012-2h6m6 0H5a2 2 0 00-2 2v6a2 2 0 002 2h6m6 0h-6m6 0a2 2 0 002-2V9a2 2 0 00-2-2m-6 12V7" />
-                    </svg>
-                    <input id="profile_picture" name="profile_picture" type="file" class="hidden" accept="image/*" 
-                           onchange="this.form.submit()" />
-                </label>
+                
+                 <!-- Upload section - always visible for editing -->
+                 <div id="upload-section">
+                     <label for="profile_picture"
+                            class="absolute bottom-2 right-2 p-2 bg-blue-600 text-white rounded-full cursor-pointer hover:bg-blue-700 shadow-lg transition transform hover:scale-105">
+                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                   d="M3 9a2 2 0 012-2h6m6 0H5a2 2 0 00-2 2v6a2 2 0 002 2h6m6 0h-6m6 0a2 2 0 002-2V9a2 2 0 00-2-2m-6 12V7" />
+                         </svg>
+                         <input id="profile_picture" name="profile_picture" type="file" class="hidden" accept="image/*" />
+                     </label>
+                 </div>
+                
+                <!-- Confirmation section -->
+                <div id="confirm-section" class="absolute bottom-2 right-2 flex gap-1 hidden">
+                    <button type="button" id="confirm-upload-btn"
+                            class="p-2 bg-green-600 text-white rounded-full cursor-pointer hover:bg-green-700 shadow-lg transition transform hover:scale-105">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </button>
+                    <button type="button" id="cancel-upload-btn"
+                            class="p-2 bg-red-600 text-white rounded-full cursor-pointer hover:bg-red-700 shadow-lg transition transform hover:scale-105">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
                 
                 <!-- Debug: Show selected file name -->
                 @if (config('app.debug'))
                     <div class="text-xs text-gray-500 mt-2 text-center" id="file-name-display"></div>
-                    <script>
-                        document.getElementById('profile_picture').addEventListener('change', function(e) {
-                            const fileName = e.target.files[0] ? e.target.files[0].name : 'No file selected';
-                            document.getElementById('file-name-display').textContent = 'Selected file: ' + fileName;
-                        });
-                    </script>
                 @endif
             </div>
             
@@ -140,13 +202,6 @@
                 <h2 class="text-2xl font-bold text-gray-900">{{ $user->name }}</h2>
                 <p class="text-gray-600">{{ $user->email }}</p>
                 
-                <!-- Debug: Show current profile picture path -->
-                @if (config('app.debug'))
-                    <div class="text-xs text-gray-500 mt-2">
-                        <p>Profile picture path: {{ $user->profile_picture ?? 'None' }}</p>
-                        <p>Full image URL: {{ $user->profile_picture ? asset('storage/' . $user->profile_picture) : asset('images/default-profile.png') }}</p>
-                    </div>
-                @endif
             </div>
         </div>
 
@@ -162,33 +217,14 @@
             <input type="hidden" name="name" value="{{ $user->name }}">
             <input type="hidden" name="email" value="{{ $user->email }}">
             
-            <!-- Debug: Show form submission status -->
-            @if (config('app.debug'))
-                <div class="text-xs text-gray-500 mt-2">
-                    <p>Form method: PATCH</p>
-                    <p>Form action: {{ route('user.profile.update') }}</p>
-                    <p>CSRF token: {{ csrf_token() }}</p>
-                    <p>Current profile picture path: {{ $user->profile_picture ?? 'None' }}</p>
-                </div>
-            @endif
-
             @error('profile_picture')
                 <p class="text-red-500 text-sm text-center">{{ $message }}</p>
             @enderror
 
-            <!-- Debug information -->
-            @if (config('app.debug'))
-                <div class="text-xs text-gray-500 mt-2">
-                    <p>Form method: PATCH</p>
-                    <p>Form action: {{ route('user.profile.update') }}</p>
-                    <p>CSRF token: {{ csrf_token() }}</p>
-                    <p>Current profile picture path: {{ $user->profile_picture ?? 'None' }}</p>
-                </div>
-            @endif
-
             <!-- Save Button -->
             <div class="flex justify-center pt-4">
                 <button type="submit"
+                        id="save-profile-btn"
                         x-show="!saved"
                         :disabled="isSubmitting"
                         class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg shadow-md transition duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"

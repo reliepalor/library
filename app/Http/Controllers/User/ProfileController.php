@@ -35,72 +35,94 @@ class ProfileController extends Controller
         $user = $request->user();
         
         // Log the request data for debugging
-        \Log::info('Profile update request data', [
-            'all_fields' => $request->all(),
-            'has_file' => $request->hasFile('profile_picture'),
-            'name' => $request->input('name'),
-            'email' => $request->input('email'),
-        ]);
+        if (config('app.debug')) {
+            Log::info('Profile update request data', [
+                'all_fields' => $request->all(),
+                'has_file' => $request->hasFile('profile_picture'),
+                'name' => $request->input('name'),
+                'email' => $request->input('email'),
+            ]);
+        }
 
-        $user->fill($request->except('profile_picture'));
-
+        // Handle profile picture upload
         if ($request->hasFile('profile_picture')) {
             try {
                 // Store the old profile picture path for deletion later
                 $oldProfilePicture = $user->profile_picture;
                 
                 // Log the file upload for debugging
-                \Log::info('Profile picture uploaded', [
-                    'file_name' => $request->file('profile_picture')->getClientOriginalName(),
-                    'file_size' => $request->file('profile_picture')->getSize(),
-                    'file_type' => $request->file('profile_picture')->getMimeType(),
-                ]);
+                if (config('app.debug')) {
+                    Log::info('Profile picture uploaded', [
+                        'file_name' => $request->file('profile_picture')->getClientOriginalName(),
+                        'file_size' => $request->file('profile_picture')->getSize(),
+                        'file_type' => $request->file('profile_picture')->getMimeType(),
+                    ]);
+                }
                 
-                // Process and optimize the image
-                $image = $request->file('profile_picture');
-                $imageName = time() . '_' . $user->id . '.' . $image->getClientOriginalExtension();
+                // Store the file in the public disk
+                $imagePath = $request->file('profile_picture')->store('profile_pictures', 'public');
                 
-                // Create image manager with GD driver
-                $manager = new ImageManager(new Driver());
+                // Log the stored path
+                if (config('app.debug')) {
+                    Log::info('Profile picture stored at: ' . $imagePath);
+                }
                 
-                // Read image from file
-                $imageResource = $manager->read($image);
-                
-                // Resize and optimize the image
-                $imageResource->scaleDown(300, 300);
-                
-                // Save the optimized image
-                $imagePath = 'profile_pictures/' . $imageName;
-                $imageResource->toJpeg(80)->save(storage_path('app/public/' . $imagePath));
-                
+                // Update the user's profile picture
                 $user->profile_picture = $imagePath;
+                
+                // Log the profile picture value
+                if (config('app.debug')) {
+                    Log::info('Profile picture value set to: ' . $user->profile_picture);
+                }
                 
                 // Delete the old profile picture if it exists and is different from the new one
                 if ($oldProfilePicture && $oldProfilePicture !== $imagePath) {
                     Storage::disk('public')->delete($oldProfilePicture);
                 }
                 
-                // Log the stored path
-                \Log::info('Profile picture stored at: ' . $imagePath);
+                // Save the user immediately after updating the profile picture
+                $saved = $user->save();
+                
+                // Log successful save
+                if (config('app.debug')) {
+                    Log::info('User profile updated with new picture', [
+                        'user_id' => $user->id, 
+                        'profile_picture' => $user->profile_picture,
+                        'all_attributes' => $user->getAttributes(),
+                        'save_result' => $saved
+                    ]);
+                }
+                
+                return Redirect::route('user.profile.edit')->with('status', 'profile-updated');
             } catch (\Exception $e) {
-                \Log::error('Profile picture upload failed: ' . $e->getMessage());
+                if (config('app.debug')) {
+                    Log::error('Profile picture upload failed: ' . $e->getMessage());
+                }
                 return Redirect::route('user.profile.edit')->withErrors(['profile_picture' => 'Failed to upload profile picture. Please try again.']);
             }
         }
+
+        // Update other user fields if no file is uploaded
+        $user->fill($request->except('profile_picture'));
 
         if ($user->isDirty('email')) {
             $user->email_verified_at = null;
         }
 
-        $user->save();
+        // Save the user
+        $saved = $user->save();
         
         // Log successful save
-        \Log::info('User profile updated', [
-            'user_id' => $user->id, 
-            'profile_picture' => $user->profile_picture,
-            'all_attributes' => $user->getAttributes()
-        ]);
+        if (config('app.debug')) {
+            Log::info('User profile updated', [
+                'user_id' => $user->id, 
+                'profile_picture' => $user->profile_picture,
+                'all_attributes' => $user->getAttributes(),
+                'save_result' => $saved
+            ]);
+        }
 
         return Redirect::route('user.profile.edit')->with('status', 'profile-updated');
     }
 }
+
