@@ -7,20 +7,30 @@
 
         <title>Admin | Students</title>
         <link rel="icon" type="image/x-icon" href="/favicon/Library.png">
-
-        <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-
-        <!-- Chart.js -->
+        <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-        <!-- Vite Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         <style>
             /* Smooth transitions for the sidebar */
             [x-cloak] { display: none !important; }
+            
+        .main-content {
+            transition: margin-left 0.5s ease-in-out;
+        }
+        .sidebar-collapsed {
+            margin-left: 4rem;
+        }
+        .sidebar-expanded {
+            margin-left: 15rem;
+        }
+        @media (max-width: 768px) {
+            .sidebar-collapsed, .sidebar-expanded {
+                margin-left: 0;
+            }
+        }
             
             /* Custom nav link styling for the sidebar */
             .nav-link {

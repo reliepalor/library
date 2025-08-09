@@ -1,4 +1,50 @@
-<x-app-layout>
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
+
+        <title>Admin | Books</title>
+        <link rel="icon" type="image/x-icon" href="/favicon/Library.png">
+
+        <link rel="preconnect" href="https://fonts.bunny.net">
+        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+        <style>
+            /* Smooth transitions for the sidebar */
+            [x-cloak] { display: none !important; }
+            
+            /* Custom nav link styling for the sidebar */
+            .nav-link {
+                display: flex;
+                align-items: center;
+                padding: 0.75rem 1rem;
+                color: #4b5563;
+                transition: all 0.3s ease;
+            }
+            
+            .nav-link:hover {
+                background-color: #f3f4f6;
+            }
+            
+            .nav-link.active {
+                background-color: #e5e7eb;
+                color: #111827;
+                border-left: 3px solid #3b82f6;
+            }
+            
+            /* Ensure smooth transition for content area */
+            .content-area {
+                transition: margin-left 0.3s ease;
+            }
+        </style>
+    </head>
+    <body class="font-sans antialiased" x-data="{ sidebarExpanded: window.innerWidth > 768 }" @resize.window="sidebarExpanded = window.innerWidth > 768">
+          <x-admin-nav-bar/>
     <div class="flex justify-center min-h-screen bg-gray-50">
         <form action="{{ route('admin.books.store') }}" method="POST" enctype="multipart/form-data" class="w-full max-w-3xl p-6 sm:p-8 my-12 bg-white rounded-2xl shadow-sm">
             @csrf
@@ -93,4 +139,7 @@
             this.textContent = optionalAuthors.classList.contains('hidden') ? 'Add More Authors' : 'Hide Additional Authors';
         });
     </script>
-</x-app-layout>
+    </body>
+   
+</html>
+

@@ -66,11 +66,17 @@
             font-weight: 600;
             display: inline-block;
         }
+
     </style>
 </head>
 <body>
     <x-header />
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16 bg-gradient-to-b from-gray-50 to-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16 bg-gradient-to-b from-gray-50 to-blue-50">
+        <div>
+            <x-attendance-hero-section/>
+        </div>
+        <section class="relative bg-gradient-to-br from-sky-50 via-white to-blue-50 py-12 sm:py-16 px-4 sm:px-6 lg:px-8 overflow-hidden mt-4 mb-5 rounded-xl shadow-md">
+        
         <div class="bg-white rounded-2xl shadow-lg p-6 sm:p-8 space-y-8 transition-all duration-300 hover:shadow-xl">
             <!-- Header -->
             <div class="flex justify-between items-center">
@@ -78,8 +84,8 @@
             </div>
 
             <!-- Attendance Logs -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300">
-                <div class="flex flex-col sm:flex-row justify-between items-center p-6 bg-gradient-to-r from-blue-50 to-white border-b border-gray-200">
+            <div id="#get-started" class="bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300">
+                <div class="flex flex-col sm:flex-row justify-between items-center p-6 border-b border-gray-200">
                     <h3 class="text-xl font-semibold text-gray-900">Attendance Records</h3>
                 </div>
                 <div class="overflow-x-auto">
@@ -136,10 +142,11 @@
         </div>
     </div>
     <div class="mb-20"></div>
-        <x-footer />
+    <x-footer />
 
 
 
 
 </body>
+
 </html>

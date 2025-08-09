@@ -3,6 +3,7 @@
     text-align: center;
     opacity: 0;
     animation: slideIn 1s ease-out forwards 0.5s;
+    align-items: center;
 }
 
 .main .big-hero {
@@ -188,3 +189,9 @@
             .scroll-reveal {
         transition: opacity 0.7s ease-out, transform 0.7s ease-out;
     }
+
+@media(max-width:600px) and (min-width:530px){
+    .main{
+        background-color: aqua;
+    }
+}

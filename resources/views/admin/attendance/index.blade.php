@@ -22,6 +22,21 @@
             box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
         }
 
+        .main-content {
+            transition: margin-left 0.5s ease-in-out;
+        }
+        .sidebar-collapsed {
+            margin-left: 4rem;
+        }
+        .sidebar-expanded {
+            margin-left: 15rem;
+        }
+        @media (max-width: 768px) {
+            .sidebar-collapsed, .sidebar-expanded {
+                margin-left: 0;
+            }
+        }
+
         .college-CICS { background-color: #c77dff; }
         .college-CTED { background-color: #90e0ef;  }
         .college-CCJE { background-color: #ff4d6d; }
@@ -53,17 +68,15 @@
         window.assetBaseUrl = "{{ asset('') }}";
     </script>
 </head>
-<body class="bg-gray-50" x-data="{ sidebarExpanded: true }">
-    <div class="content-area flex-1" :class="{'ml-16': !sidebarExpanded, 'ml-64': sidebarExpanded}">
-        <div class="not-fullscreen">
-            <x-admin-nav-bar />
-        </div>
+<body class="bg-gray-50">
+    <div class="flex h-screen" x-data="{ sidebarExpanded: window.innerWidth > 768 }" @resize.window="sidebarExpanded = window.innerWidth > 768">
+        <x-admin-nav-bar />
         
         <!-- Main Content -->
-        <div class="container mx-auto px-4 py-8" id="page-container" >
-
-           <div id="fullscreen-section" class="fullscreen transition-all duration-500 ease-in-out bg-white overflow-auto relative px-5 py-2 rounded-lg"
-    id="fullscreen-section">
+        <div class="main-content flex-1 overflow-auto" :class="sidebarExpanded ? 'sidebar-expanded' : 'sidebar-collapsed'">
+            <div class="container mx-auto px-4 py-8">
+                <div id="fullscreen-section" class="fullscreen transition-all duration-500 ease-in-out bg-white overflow-auto relative px-5 py-2 rounded-lg"
+        id="fullscreen-section">
                 <!-- QR Attendance Logging (moved from user) -->
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-semibold text-gray-800">QR Attendance Logging</h2>
@@ -243,13 +256,10 @@
                             </table>
                         </div>
                     </div>
-           </div>
+                </div>
+            </div>
         </div>
     </div>
-    
-
-
-
 </body>
 
 </html>

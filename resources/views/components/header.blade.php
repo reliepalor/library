@@ -1,4 +1,14 @@
-<header x-data="{ open: false }" class="bg-white/10 backdrop-blur-xl fixed top-0 left-0 w-full z-50 transition-all duration-300">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+</head>
+<body>
+    <header x-data="{ open: false }" class="bg-white/10 backdrop-blur-xl fixed top-0 left-0 w-full z-50 transition-all duration-300">
     <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
         <!-- Left: Logo and Brand -->
         <div class="flex items-center space-x-3">
@@ -46,7 +56,7 @@
                         x-transition:leave="transition ease-in duration-200 transform"
                         x-transition:leave-start="opacity-100 scale-y-100 translate-y-0"
                         x-transition:leave-end="opacity-0 scale-y-95 translate-y-1"
-                        class="absolute right-0 mt-2 w-48 bg-white/10 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 rounded-xl shadow-lg py-1 z-50 overflow-hidden"
+                        class="absolute right-0 mt-2 w-48 bg-white backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 rounded-xl shadow-lg py-1 z-50 overflow-hidden"
                     >
                         <a href="{{ route('user.profile.edit') }}" class="block px-4 py-2 text-sm text-gray-900 hover:bg-white/30 dark:hover:bg-gray-700/30 transition-colors duration-200">Profile</a>
                         <form method="POST" action="{{ route('logout') }}">
@@ -108,4 +118,6 @@
     </nav>
 
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-</header>
+    </header>   
+</body>
+</html>

@@ -48,7 +48,6 @@
             <div class="item item-3">
                 <div class="hero-btn">
                     <a href="" class="explore">Exploree</a>
-                    <a href="" class="know">View pages</a>
                 </div>
                 <div>
                     <img src="images/library-images/books4.jpg" alt="">
@@ -61,63 +60,65 @@
 
     </div>
     
-    <section class="relative bg-gradient-to-br from-indigo-900  to-gray-900 py-12 sm:py-16 px-4 sm:px-6 lg:px-8 overflow-hidden mt-12">   
-        <div class="absolute inset-0 bg-[url('/images/book-pattern.png')] opacity-10 bg-repeat"></div>
-        <div class="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-gray-900 to-transparent"></div>
-        <div class="relative max-w-7xl mx-auto text-center">
-            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6 animate-on-scroll" 
+        <div class="flex justify-center mb-5">
+        <section class="relative bg-gradient-to-br from-indigo-900  to-gray-900 py-12 sm:py-16 px-4 sm:px-6 lg:px-8 overflow-hidden mt-12 rounded-[100px] w-[90%]">   
+            <div class="absolute inset-0 bg-[url('/images/book-pattern.png')] opacity-10 bg-repeat"></div>
+            <div class="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-gray-900 to-transparent"></div>
+            <div class="relative max-w-7xl mx-auto text-center">
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6 animate-on-scroll" 
+                    x-data="{ visible: false, initialized: false }" 
+                    x-init="setTimeout(() => initialized = true, 100)" 
+                    x-intersect="visible = true" 
+                    :class="{ 'opacity-0 translate-y-10': !visible && initialized, 'opacity-100 translate-y-0': visible || !initialized }" 
+                    x-transition:enter="transition duration-700 ease-out" 
+                    x-transition:enter-start="opacity-0 translate-y-10" 
+                    x-transition:enter-end="opacity-100 translate-y-0">
+                    Ready to Explore the World of Books?
+                </h1>
+                <p class="text-base sm:text-lg lg:text-xl text-gray-300 max-w-3xl mx-auto mb-6 sm:mb-8 animate-on-scroll" 
                 x-data="{ visible: false, initialized: false }" 
-                x-init="setTimeout(() => initialized = true, 100)" 
+                x-init="setTimeout(() => initialized = true, 200)" 
                 x-intersect="visible = true" 
                 :class="{ 'opacity-0 translate-y-10': !visible && initialized, 'opacity-100 translate-y-0': visible || !initialized }" 
-                x-transition:enter="transition duration-700 ease-out" 
+                x-transition:enter="transition duration-700 ease-out delay-200" 
                 x-transition:enter-start="opacity-0 translate-y-10" 
                 x-transition:enter-end="opacity-100 translate-y-0">
-                Ready to Explore the World of Books?
-            </h1>
-            <p class="text-base sm:text-lg lg:text-xl text-gray-300 max-w-3xl mx-auto mb-6 sm:mb-8 animate-on-scroll" 
-            x-data="{ visible: false, initialized: false }" 
-            x-init="setTimeout(() => initialized = true, 200)" 
-            x-intersect="visible = true" 
-            :class="{ 'opacity-0 translate-y-10': !visible && initialized, 'opacity-100 translate-y-0': visible || !initialized }" 
-            x-transition:enter="transition duration-700 ease-out delay-200" 
-            x-transition:enter-start="opacity-0 translate-y-10" 
-            x-transition:enter-end="opacity-100 translate-y-0">
-                Take the first step today. Find your ideal book, build knowledge, and join thousands of avid readers.
-            </p>
-            <div class="flex flex-col sm:flex-row justify-center gap-4 animate-on-scroll" 
-                x-data="{ visible: false, initialized: false }" 
-                x-init="setTimeout(() => initialized = true, 300)" 
-                x-intersect="visible = true" 
-                :class="{ 'opacity-0 translate-y-10': !visible && initialized, 'opacity-100 translate-y-0': visible || !initialized }" 
-                x-transition:enter="transition duration-700 ease-out delay-400" 
-                x-transition:enter-start="opacity-0 translate-y-10" 
-                x-transition:enter-end="opacity-100 translate-y-0">
-                <a href="{{ route('user.books.index') }}" 
-                class="inline-flex items-center px-6 py-3 bg-white text-indigo-900 text-sm sm:text-base font-medium rounded-lg shadow-md hover:bg-gray-100 hover:shadow-lg transition-all duration-300">
-                    <i class="fas fa-book mr-2"></i>
-                    Find Your Book
-                </a>
-                <a href="{{ route('user.dashboard') }}" 
-                class="inline-flex items-center px-6 py-3 bg-indigo-700 text-white text-sm sm:text-base font-medium rounded-lg shadow-md hover:bg-indigo-800 hover:shadow-lg transition-all duration-300">
-                    <i class="fas fa-tachometer-alt mr-2"></i>
-                    Go to Dashboard
-                </a>
+                    Take the first step today. Find your ideal book, build knowledge, and join thousands of avid readers.
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4 animate-on-scroll" 
+                    x-data="{ visible: false, initialized: false }" 
+                    x-init="setTimeout(() => initialized = true, 300)" 
+                    x-intersect="visible = true" 
+                    :class="{ 'opacity-0 translate-y-10': !visible && initialized, 'opacity-100 translate-y-0': visible || !initialized }" 
+                    x-transition:enter="transition duration-700 ease-out delay-400" 
+                    x-transition:enter-start="opacity-0 translate-y-10" 
+                    x-transition:enter-end="opacity-100 translate-y-0">
+                    <a href="{{ route('user.books.index') }}" 
+                    class="inline-flex items-center px-6 py-3 bg-white text-indigo-900 text-sm sm:text-base font-medium rounded-lg shadow-md hover:bg-gray-100 hover:shadow-lg transition-all duration-300">
+                        <i class="fas fa-book mr-2"></i>
+                        Find Your Book
+                    </a>
+                    <a href="{{ route('user.dashboard') }}" 
+                    class="inline-flex items-center px-6 py-3 bg-indigo-700 text-white text-sm sm:text-base font-medium rounded-lg shadow-md hover:bg-indigo-800 hover:shadow-lg transition-all duration-300">
+                        <i class="fas fa-tachometer-alt mr-2"></i>
+                        Go to Dashboard
+                    </a>
+                </div>
+                <div class="mt-6 text-sm text-gray-400 flex justify-center gap-8 animate-on-scroll" 
+                    x-data="{ visible: false, initialized: false }" 
+                    x-init="setTimeout(() => initialized = true, 400)" 
+                    x-intersect="visible = true" 
+                    :class="{ 'opacity-0 translate-y-10': !visible && initialized, 'opacity-100 translate-y-0': visible || !initialized }" 
+                    x-transition:enter="transition duration-700 ease-out delay-600" 
+                    x-transition:enter-start="opacity-0 translate-y-10" 
+                    x-transition:enter-end="opacity-100 translate-y-0">
+                    <span><i class="fas fa-users mr-1"></i> 5,000+ Community Members</span>
+                    <span><i class="fas fa-book-open mr-1"></i> 50+ Book Categories</span>
+                    <span><i class="fas fa-check-circle mr-1"></i> 98% Satisfaction</span>
+                </div>
             </div>
-            <div class="mt-6 text-sm text-gray-400 flex justify-center gap-8 animate-on-scroll" 
-                x-data="{ visible: false, initialized: false }" 
-                x-init="setTimeout(() => initialized = true, 400)" 
-                x-intersect="visible = true" 
-                :class="{ 'opacity-0 translate-y-10': !visible && initialized, 'opacity-100 translate-y-0': visible || !initialized }" 
-                x-transition:enter="transition duration-700 ease-out delay-600" 
-                x-transition:enter-start="opacity-0 translate-y-10" 
-                x-transition:enter-end="opacity-100 translate-y-0">
-                <span><i class="fas fa-users mr-1"></i> 5,000+ Community Members</span>
-                <span><i class="fas fa-book-open mr-1"></i> 50+ Book Categories</span>
-                <span><i class="fas fa-check-circle mr-1"></i> 98% Satisfaction</span>
-            </div>
-        </div>
-    </section>
+        </section>
+    </div>
 
 <x-footer />
 

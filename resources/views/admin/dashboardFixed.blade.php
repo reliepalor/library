@@ -10,35 +10,14 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-            <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         <style>
             [x-cloak] { display: none !important; }
 
-            /* Ensure proper spacing for fixed sidebar */
-            .main-content {
-                transition: margin-left 0.5s ease-in-out;
-            }
             
-            .sidebar-collapsed {
-                margin-left: 4rem;
-            }
-            
-            .sidebar-expanded {
-                margin-left: 15rem;
-            }
-
-            /* Responsive adjustments */
-            @media (max-width: 768px) {
-                .sidebar-collapsed {
-                    margin-left: 0;
-                }
-                
-                .sidebar-expanded {
-                    margin-left: 0;
-                }
+            .content-area {
+                transition: margin-left 0.3s ease;
             }
 
             .fade-in { animation: fadeIn 0.5s ease-in; }
@@ -62,39 +41,18 @@
         </style>
         
     </head>
-    <body class="font-sans antialiased bg-gray-100 dark:bg-gray-100">
-        <div x-data="{ sidebarExpanded: window.innerWidth > 768 }" @resize.window="sidebarExpanded = window.innerWidth > 768">
-            <!-- Navigation Sidebar -->
-            <x-admin-nav-bar/>
-            <!-- Main Content Area -->
-            <div class="main-content min-h-screen"
-                 :class="sidebarExpanded ? 'sidebar-expanded' : 'sidebar-collapsed'">
-                <!-- Top Navigation Bar -->
-                <nav class="bg-white shadow-sm border-b border-gray-200">
-                    <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-                        <div class="flex justify-between items-center h-16">
-                            <div class="flex items-center">
-                                <button @click="sidebarExpanded = !sidebarExpanded" 
-                                        class="md:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
-                                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                                    </svg>
-                                </button>
-                                <h1 class="ml-4 text-xl font-semibold text-gray-800">Admin Dashboard</h1>
-                            </div>
-                            
-                            <div class="flex items-center space-x-4">
-                                <span class="text-sm text-gray-600">Welcome, {{ Auth::user()->name }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </nav>
+    <body class="font-sans antialiased" x-data="{ sidebarExpanded: window.innerWidth > 768 }" @resize.window="sidebarExpanded = window.innerWidth > 768">
+        <div class="min-h-screen bg-gray-100 dark:bg-gray-100 flex">
+            
+            <!-- Content Area -->
+            <div class="content-area flex-1" :class="{'ml-16': !sidebarExpanded, 'ml-64': sidebarExpanded}">
+               <x-admin-nav-bar />
 
                 <!-- Page Content -->
                 <main class="max-w-full mx-auto py-6 px-4 sm:px-6 lg:px-8">
                     <!-- Welcome Section -->
                     <div class="mb-8">
-                        <h1 class="text-2xl font-bold text-gray-800">Welcome back, Librarian!</h1>
+                        <h1 class="text-2xl font-bold text-gray-800">Welcome back, {{ Auth::user()->name }}!</h1>
                         <p class="text-gray-600">Here's what's happening in your library today.</p>
                     </div>
 
@@ -163,7 +121,7 @@
                                 </div>
                                 <div class="p-3 bg-purple-50 rounded-full">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2M9 5a2 2 0 011-2h2a2 2 0 012 2" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                     </svg>
                                 </div>
                             </div>
