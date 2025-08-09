@@ -4,107 +4,118 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Services\AvatarService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\View\View;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display the user's profile form.
-     */
-    public function edit(Request $request): View
+    public function edit(Request $request)
     {
         $user = $request->user()->load('student.attendanceHistories');
-        return view('user.profile.edit', [
-            'user' => $user,
-        ]);
+        return view('user.profile.edit', compact('user'));
     }
 
-    /**
-     * Update the user's profile information.
-     */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
         $user = $request->user();
-        
-        // Log the request data for debugging
-        Log::info('Profile update request initiated', [
+
+        Log::info('Profile update attempt', [
             'user_id' => $user->id,
             'has_file' => $request->hasFile('profile_picture'),
-            'file_details' => $request->hasFile('profile_picture') ? [
-                'file_name' => $request->file('profile_picture')->getClientOriginalName(),
-                'file_size' => $request->file('profile_picture')->getSize(),
-                'file_type' => $request->file('profile_picture')->getMimeType(),
-                'file_extension' => $request->file('profile_picture')->getClientOriginalExtension(),
-            ] : null,
+            'all_data' => $request->all()
         ]);
 
         try {
-            // Use database transaction to ensure atomicity
             return DB::transaction(function () use ($request, $user) {
-                // Handle profile picture upload
+                $changesMade = false;
+
+                // Handle profile picture - always treat as change when file is uploaded
                 if ($request->hasFile('profile_picture')) {
                     $file = $request->file('profile_picture');
                     
-                    // Validate file size and type
-                    if ($file->getSize() > 2048 * 1024) { // 2MB
-                        throw new \Exception('Profile picture must be less than 2MB.');
+                    // Validate file
+                    if (!$file->isValid()) {
+                        throw new \Exception('Invalid file upload');
                     }
                     
-                    $allowedExtensions = ['jpg', 'jpeg', 'png'];
                     $extension = strtolower($file->getClientOriginalExtension());
-                    if (!in_array($extension, $allowedExtensions)) {
-                        throw new \Exception('Only JPG, JPEG, and PNG files are allowed.');
-                    }
-                    
-                    // Create image manager and optimize image
-                    $manager = new ImageManager(new Driver());
-                    $image = $manager->read($file->getRealPath());
-                    $image->scale(300, 300); // Resize to manageable dimensions
                     $imageName = 'profile_' . $user->id . '_' . time() . '.' . $extension;
                     $imagePath = 'profile_pictures/' . $imageName;
-                    
-                    // Store the optimized image
-                    Storage::disk('public')->put($imagePath, (string) $image->encode());
-                    
-                    // Store the old profile picture path
-                    $oldProfilePicture = $user->profile_picture;
-                    
-                    // Update the user's profile picture path
-                    $user->profile_picture = $imagePath;
-                    
-                    // Delete the old profile picture if it exists
-                    if ($oldProfilePicture && $oldProfilePicture !== $imagePath && Storage::disk('public')->exists($oldProfilePicture)) {
-                        Storage::disk('public')->delete($oldProfilePicture);
+
+                    // Ensure directory exists
+                    if (!Storage::disk('public')->exists('profile_pictures')) {
+                        Storage::disk('public')->makeDirectory('profile_pictures');
                     }
+
+                    $manager = new ImageManager(new Driver());
+                    $image = $manager->read($file->getRealPath());
+                    $image->scale(300, 300);
+
+                    // Save new image
+                    $saved = Storage::disk('public')->put($imagePath, (string) $image->encode());
+                    
+                    if (!$saved) {
+                        throw new \Exception('Failed to save image');
+                    }
+
+                    // Delete old image if exists
+                    if ($user->profile_picture && Storage::disk('public')->exists($user->profile_picture)) {
+                        Storage::disk('public')->delete($user->profile_picture);
+                    }
+
+                    $user->profile_picture = $imagePath;
+                    $changesMade = true;
+                    
+                    Log::info('Profile picture uploaded', [
+                        'user_id' => $user->id,
+                        'image_path' => $imagePath,
+                        'file_size' => $file->getSize()
+                    ]);
                 }
 
-                // Update other user fields if provided
-                $user->fill($request->except('profile_picture'));
+                // Handle name change (only if provided)
+                if ($request->has('name') && $user->name !== $request->name) {
+                    $user->name = $request->name;
+                    $changesMade = true;
+                }
 
-                if ($user->isDirty('email')) {
+                // Handle email change (only if provided)
+                if ($request->has('email') && $user->email !== $request->email) {
+                    $user->email = $request->email;
                     $user->email_verified_at = null;
+                    $changesMade = true;
                 }
 
-                // Save the user
-                if (!$user->save()) {
-                    throw new \Exception('Failed to save profile changes to database.');
+                // Always save if profile picture was uploaded
+                if ($request->hasFile('profile_picture')) {
+                    $changesMade = true;
                 }
 
-                Log::info('Profile update successful', [
-                    'user_id' => $user->id,
-                    'profile_picture' => $user->profile_picture ?? 'No new picture uploaded',
-                ]);
+                if ($changesMade) {
+                    $saved = $user->save();
+                    
+                    if (!$saved) {
+                        throw new \Exception('Failed to save user data');
+                    }
+                    
+                    Log::info('Profile updated successfully', [
+                        'user_id' => $user->id,
+                        'profile_picture' => $user->profile_picture
+                    ]);
+                    
+                    return Redirect::route('user.profile.edit')->with('status', 'profile-updated');
+                }
 
-                return Redirect::route('user.profile.edit')->with('status', 'profile-updated');
+                // Only show "no changes" if truly no changes
+                return Redirect::route('user.profile.edit')
+                    ->with('info', 'No changes were made.');
             });
         } catch (\Exception $e) {
             Log::error('Profile update failed', [
@@ -113,7 +124,9 @@ class ProfileController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             
-            return Redirect::route('user.profile.edit')->withErrors(['profile_picture' => 'Failed to update profile: ' . $e->getMessage()]);
+            return Redirect::route('user.profile.edit')
+                ->withInput()
+                ->withErrors(['profile_picture' => 'Failed to update profile: ' . $e->getMessage()]);
         }
     }
 }
