@@ -112,7 +112,7 @@
                                         <span class="font-medium">{{ $attendance->student->lname ?? '' }}, {{ $attendance->student->fname ?? '' }}</span>
                                     </td>
                                     <td class="px-4 sm:px-6 py-4">
-                                        <span class="college-{{ $attendance->student->college ?? '' }} bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-medium">{{ $attendance->student->college ?? '' }}</span>
+                                        <span class="college-{{ $attendance->student->college ?? '' }}">{{ $attendance->student->college ?? '' }}</span>
                                     </td>
                                     <td class="px-4 sm:px-6 py-4">{{ $attendance->student->year ?? '' }}</td>
                                     <td class="px-4 sm:px-6 py-4">

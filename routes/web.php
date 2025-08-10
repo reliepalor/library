@@ -73,6 +73,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::post('/log', [AttendanceController::class, 'log'])->name('log');
         Route::get('/scan', [AttendanceController::class, 'scan'])->name('scan');
         Route::get('/check', [AttendanceController::class, 'check'])->name('check');
+        // Correctly scoped name becomes 'admin.attendance.analytics'
         Route::get('/analytics', [AttendanceController::class, 'analytics'])->name('analytics');
         Route::get('/chart-data', [AttendanceController::class, 'getChartData'])->name('chart-data');
         Route::get('/history', [AttendanceController::class, 'history'])->name('history');
@@ -80,7 +81,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/history-data', [AttendanceController::class, 'getHistoryData'])->name('history-data');
         Route::get('/insights', [AttendanceController::class, 'insights'])->name('insights');
         Route::get('/insights-data', [AttendanceController::class, 'insightsData'])->name('insights-data');
-        Route::get('/chart-data', [AttendanceController::class, 'chartData'])->name('chart-data');
+        Route::get('/available-books', [AttendanceController::class, 'availableBooks'])->name('available-books');
     });
 
     /*---------------------------ROUTE FOR ADMIN ---BORROW REQUESTS------------------------------*/

@@ -14,18 +14,21 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\AttendanceNotification;
 use Psr\Log\LoggerInterface;
 use Illuminate\Support\Collection;
+use App\Models\Books;
 
 class AttendanceController extends Controller
 {
     public function index()
     {
-        $today = Carbon::today()->toDateString();
+        // Use range to enable index usage on datetime
+        $startOfDay = Carbon::today()->startOfDay();
+        $endOfDay = Carbon::today()->endOfDay();
         
         // Get today's attendance with proper time tracking and student relationship
         $todayAttendance = Attendance::with(['student' => function($query) {
                 $query->select('student_id', 'lname', 'fname', 'college', 'email')->with('user');
             }])
-            ->whereDate('login', $today)
+            ->whereBetween('login', [$startOfDay, $endOfDay])
             ->orderBy('login', 'desc')
             ->get();
 
@@ -203,28 +206,78 @@ class AttendanceController extends Controller
 
     public function analytics(Request $request)
     {
-        try {
-            $dateFrom = $request->date_from ? Carbon::parse($request->date_from) : Carbon::now()->subDays(7);
-            $dateTo = $request->date_to ? Carbon::parse($request->date_to) : Carbon::now();
+        // Dashboard analytics aggregated from attendance_histories
+        $days = (int) $request->query('days', 30);
+        $days = max(7, min(90, $days));
 
-            // Get analytics data
-            $analytics = [
-                'dateFrom' => $dateFrom->format('Y-m-d'),
-                'dateTo' => $dateTo->format('Y-m-d'),
-                'data' => $this->getChartData($request)->getData()
-            ];
+        $tz = 'Asia/Manila';
+        $today = now($tz)->toDateString();
 
-            return view('admin.attendance.analytics', compact('analytics'));
-        } catch (\Exception $e) {
-            LogFacade::error('Error in attendance analytics: ' . $e->getMessage());
-            return view('admin.attendance.analytics', [
-                'analytics' => [
-                    'dateFrom' => Carbon::now()->subDays(7)->format('Y-m-d'),
-                    'dateTo' => Carbon::now()->format('Y-m-d'),
-                    'data' => []
-                ]
-            ]);
+        // Totals
+        $totalVisits = DB::table('attendance_histories')->count();
+        $uniqueStudents = DB::table('attendance_histories')->distinct('student_id')->count('student_id');
+        $todayVisits = DB::table('attendance_histories')
+            ->whereDate('date', $today)
+            ->count();
+
+        // Average duration in minutes (only rows with time_out)
+        $avgDuration = DB::table('attendance_histories')
+            ->whereNotNull('time_out')
+            ->selectRaw('AVG(TIMESTAMPDIFF(MINUTE, time_in, time_out)) as avg_min')
+            ->value('avg_min');
+
+        // Activity breakdown
+        $activities = DB::table('attendance_histories')
+            ->select('activity', DB::raw('COUNT(*) as cnt'))
+            ->groupBy('activity')
+            ->orderByDesc('cnt')
+            ->limit(10)
+            ->get();
+
+        // Most active colleges (use stored college column)
+        $colleges = DB::table('attendance_histories')
+            ->select(DB::raw('COALESCE(college, "Unknown") as college'), DB::raw('COUNT(*) as cnt'))
+            ->groupBy('college')
+            ->orderByDesc('cnt')
+            ->get();
+
+        // Daily trend for last N days using the `date` column
+        $startDate = now($tz)->subDays($days - 1)->toDateString();
+        $endDate = now($tz)->toDateString();
+        $trend = DB::table('attendance_histories')
+            ->selectRaw('DATE(`date`) as d, COUNT(*) as cnt')
+            ->whereBetween('date', [$startDate, $endDate])
+            ->groupBy('d')
+            ->orderBy('d')
+            ->get();
+
+        // Normalize trend to include missing dates
+        $series = [];
+        for ($i = 0; $i < $days; $i++) {
+            $d = now($tz)->subDays($days - 1 - $i)->toDateString();
+            $series[$d] = 0;
         }
+        foreach ($trend as $row) {
+            $d = (string) $row->d;
+            if (isset($series[$d])) $series[$d] = (int) $row->cnt;
+        }
+
+        $stats = [
+            'totals' => [
+                'visits' => (int) $totalVisits,
+                'unique_students' => (int) $uniqueStudents,
+                'today' => (int) $todayVisits,
+                'avg_duration_min' => $avgDuration ? round($avgDuration, 1) : 0,
+            ],
+            'activities' => $activities,
+            'colleges' => $colleges,
+            'trend' => [
+                'labels' => array_keys($series),
+                'data' => array_values($series),
+            ],
+        ];
+
+        return view('admin.attendance.analytics', compact('stats'));
     }
 
     public function getChartData(Request $request)
@@ -522,30 +575,35 @@ class AttendanceController extends Controller
 
             $studentId = $request->student_id;
             $activity = $request->activity;
-            $today = Carbon::today()->toDateString();
+            // Use range to enable index usage
+            $startOfDay = Carbon::today()->startOfDay();
+            $endOfDay = Carbon::today()->endOfDay();
             $now = now();
 
             $attendance = Attendance::where('student_id', $studentId)
-                ->whereDate('login', $today)
+                ->whereBetween('login', [$startOfDay, $endOfDay])
                 ->whereNull('logout')
                 ->first();
 
             if ($attendance) {
-                $attendance->logout = $now;
-                $attendance->save();
+                // Ensure atomicity for logout and any related updates
+                DB::transaction(function () use ($attendance, $now) {
+                    $attendance->logout = $now;
+                    $attendance->save();
 
-                if (str_contains($attendance->activity, 'Borrow')) {
-                    $parts = explode(':', $attendance->activity);
-                    if (count($parts) > 1) {
-                        $bookCode = trim($parts[1]);
-                        \App\Models\BorrowedBook::where('book_id', $bookCode)
-                            ->where('status', 'approved')
-                            ->update([
-                                'status' => 'returned',
-                                'returned_at' => now()
-                            ]);
+                    if (str_contains($attendance->activity, 'Borrow')) {
+                        $parts = explode(':', $attendance->activity);
+                        if (count($parts) > 1) {
+                            $bookCode = trim($parts[1]);
+                            \App\Models\BorrowedBook::where('book_id', $bookCode)
+                                ->where('status', 'approved')
+                                ->update([
+                                    'status' => 'returned',
+                                    'returned_at' => now()
+                                ]);
+                        }
                     }
-                }
+                });
 
                 $duration = $attendance->login->diffForHumans($now, ['parts' => 2]);
 
@@ -553,7 +611,7 @@ class AttendanceController extends Controller
 
                 // Send attendance notification email for logout
                 try {
-                    Mail::to($student->email)->send(new AttendanceNotification($student, 'logout', $now, $attendance->activity, $duration));
+                    Mail::to($student->email)->queue(new AttendanceNotification($student, 'logout', $now, $attendance->activity, $duration));
                 } catch (\Exception $e) {
                     Log::error('Failed to send logout email: ' . $e->getMessage());
                 }
@@ -574,7 +632,7 @@ class AttendanceController extends Controller
 
                 // Send attendance notification email for login
                 try {
-                    Mail::to($student->email)->send(new AttendanceNotification($student, 'login', $now, $activity));
+                    Mail::to($student->email)->queue(new AttendanceNotification($student, 'login', $now, $activity));
                 } catch (\Exception $e) {
                     Log::error('Failed to send login email: ' . $e->getMessage());
                 }
@@ -611,9 +669,11 @@ class AttendanceController extends Controller
             return response()->json(['error' => 'Student ID is required'], 400);
         }
 
-        $today = Carbon::today()->toDateString();
+        // Use range to enable index usage
+        $startOfDay = Carbon::today()->startOfDay();
+        $endOfDay = Carbon::today()->endOfDay();
         $attendance = Attendance::where('student_id', $studentId)
-            ->whereDate('login', $today)
+            ->whereBetween('login', [$startOfDay, $endOfDay])
             ->whereNull('logout')
             ->first();
 
@@ -635,12 +695,65 @@ class AttendanceController extends Controller
             return response()->json(['error' => 'Student ID is required'], 400);
         }
 
-        $student = Student::where('student_id', $studentId)->first();
+        $student = Student::with('user')->where('student_id', $studentId)->first();
 
         if (!$student) {
             return response()->json(['error' => 'Student not found'], 404);
         }
 
-        return response()->json(['students' => $student]);
+        return response()->json([
+            'students' => $student,
+            'profile_picture' => $student->user && $student->user->profile_picture 
+                ? $student->user->profile_picture 
+                : null
+        ]);
     }
-} 
+
+    /**
+     * Return available books (active and not currently borrowed) for quick borrowing.
+     */
+    public function availableBooks(Request $request)
+    {
+        try {
+            $limit = (int) ($request->query('limit', 30));
+            $search = trim((string) $request->query('search', ''));
+            $college = trim((string) $request->query('college', ''));
+
+            $query = Books::active();
+
+            if ($search !== '') {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%$search%")
+                      ->orWhere('author', 'like', "%$search%")
+                      ->orWhere('book_code', 'like', "%$search%")
+                      ->orWhere('section', 'like', "%$search%");
+                });
+            }
+
+            if ($college !== '') {
+                // Map college filter to section for now
+                $query->where('section', 'like', "%$college%");
+            }
+
+            // Exclude currently borrowed (approved & not returned)
+            $query->whereNotIn('book_code', function ($sub) {
+                $sub->select('book_id')
+                    ->from('borrowed_books')
+                    ->whereNull('returned_at')
+                    ->where('status', 'approved');
+            });
+
+            $books = $query->orderBy('name')->limit($limit)->get(['book_code','name','author','section','image1']);
+
+            return response()->json([
+                'data' => $books,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching available books: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Server error',
+                'message' => 'Failed to fetch available books.'
+            ], 500);
+        }
+    }
+}

@@ -156,10 +156,9 @@
           
         </div>
     </div>
-    <div class="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent"></div>
-</section>
+    </section>
 
-    <div class="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8 fade-in">
+    <div class="max-w-7xl mx-auto py-1 px-4 sm:px-6 lg:px-8 fade-in ">
         <div class="flex justify-center mb-8">
             <div class="inline-flex rounded-full shadow bg-gray-100 p-1">
                 <button id="library-books-btn" class="px-6 py-2 rounded-full text-sm font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:bg-white text-gray-700 bg-white shadow active" style="box-shadow: 0 2px 8px rgba(99,102,241,0.08);">Library Book</button>
@@ -279,51 +278,8 @@
     </div>
 
     <div class="mt-8 flex justify-center">
-        {{ $books->links('pagination::tailwind') }}
+        {{ $books->links('vendor.pagination.modern-gray') }}
     </div>
-
-    <style>
-        /* Pagination link styles */
-        .pagination {
-            display: flex;
-            gap: 0.5rem;
-            list-style: none;
-            padding: 0;
-        }
-        .pagination li {
-            transition: transform 0.3s ease, background-color 0.3s ease;
-        }
-        .pagination li a {
-            display: inline-block;
-            padding: 0.5rem 0.75rem;
-            border-radius: 0.375rem;
-            border: 1px solid transparent;
-            color: #4f46e5; /* Indigo */
-            font-weight: 600;
-            text-decoration: none;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        .pagination li a:hover {
-            background-color: #c7d2fe; /* Light Indigo */
-            color: #3730a3; /* Darker Indigo */
-            transform: scale(1.1);
-        }
-        .pagination li.active span {
-            background-color: #4f46e5; /* Indigo */
-            color: white;
-            border-color: #4f46e5;
-            font-weight: 700;
-            transform: scale(1.1);
-        }
-        .pagination li.disabled span {
-            color: #9ca3af; /* Gray */
-            cursor: not-allowed;
-        }
-        /* Smooth fade transition for pagination */
-        .pagination li a, .pagination li span {
-            transition: opacity 0.4s ease, transform 0.4s ease;
-        }
-    </style>
 </div>
         <div id="ebook-container" style="display: none;">
             <div class="flex flex-wrap justify-center gap-2 mb-4">

@@ -37,9 +37,9 @@
                         :aria-expanded="dropdownOpen"
                         :aria-label="dropdownOpen ? 'Close profile menu' : 'Open profile menu'"
                     >
-@if(optional(auth()->user())->profile_picture)
-    <img src="{{ asset('storage/' . optional(auth()->user())->profile_picture) }}" alt="Profile Picture" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border border-gray-200/50 dark:border-gray-700/50" />
-@else
+                        @if(optional(auth()->user())->profile_picture)
+                            <img src="{{ asset('storage/' . optional(auth()->user())->profile_picture) }}" alt="Profile Picture" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border border-gray-200/50 dark:border-gray-700/50" />
+                        @else
                             <svg class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/20 dark:bg-gray-700/20 text-gray-600 dark:text-gray-400 p-1.5" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                             </svg>
@@ -77,9 +77,9 @@
                     :aria-expanded="mobileMenuOpen"
                     :aria-label="mobileMenuOpen ? 'Close menu' : 'Open menu'"
                 >
-@if(optional(auth()->user())->profile_picture)
-    <img src="{{ asset('storage/' . optional(auth()->user())->profile_picture) }}" alt="Profile Picture" class="w-8 h-8 rounded-full object-cover border border-gray-200/50 dark:border-gray-700/50" />
-@else
+                    @if(optional(auth()->user())->profile_picture)
+                        <img src="{{ asset('storage/' . optional(auth()->user())->profile_picture) }}" alt="Profile Picture" class="w-8 h-8 rounded-full object-cover border border-gray-200/50 dark:border-gray-700/50" />
+                    @else
                         <svg class="w-8 h-8 rounded-full bg-white/20 dark:bg-gray-700/20 text-gray-600 dark:text-gray-400 p-1.5" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                         </svg>

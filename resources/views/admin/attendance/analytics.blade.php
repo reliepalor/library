@@ -40,29 +40,71 @@
             <div class="flex justify-between items-center mb-8">
                 <div>
                     <h1 class="text-2xl font-semibold text-gray-900">Attendance Analytics</h1>
+                    <!-- Top Activity and College Lists -->
+                <div class="shadcn-card p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Highlights</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-medium text-gray-700 mb-2">Top Activities</h4>
+                            <ul class="space-y-2">
+                                @foreach(($stats['activities'] ?? []) as $row)
+                                    <li class="flex items-center justify-between">
+                                        <span class="truncate pr-3">{{ $row->activity }}</span>
+                                        <span class="text-sm px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">{{ $row->cnt }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-700 mb-2">Most Active Colleges</h4>
+                            <ul class="space-y-2">
+                                @foreach(($stats['colleges'] ?? []) as $row)
+                                    <li class="flex items-center justify-between">
+                                        <span class="truncate pr-3">{{ $row->college }}</span>
+                                        <span class="text-sm px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">{{ $row->cnt }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
                 </div>
+            </div>
                 <x-attendance-menu />
             </div>
 
-            <!-- Date Range Filter -->
+            <!-- Range Filter -->
             <div class="shadcn-card p-6 mb-8">
-                <form action="{{ route('admin.attendance.analytics') }}" method="GET" class="flex flex-wrap gap-4">
+                <form action="{{ route('admin.attendance.analytics') }}" method="GET" class="flex flex-wrap gap-4 items-end">
                     <div>
-                        <label for="date_from" class="block text-sm font-medium text-gray-700">Date From</label>
-                        <input type="date" name="date_from" id="date_from" value="{{ request('date_from', now()->subDays(7)->format('Y-m-d')) }}"
-                            class="shadcn-input">
+                        <label for="days" class="block text-sm font-medium text-gray-700">Range</label>
+                        <select id="days" name="days" class="shadcn-input">
+                            @foreach([7,14,30,60,90] as $d)
+                                <option value="{{ $d }}" {{ (int)request('days', 30) === $d ? 'selected' : '' }}>{{ $d }} days</option>
+                            @endforeach
+                        </select>
                     </div>
-                    <div>
-                        <label for="date_to" class="block text-sm font-medium text-gray-700">Date To</label>
-                        <input type="date" name="date_to" id="date_to" value="{{ request('date_to', now()->format('Y-m-d')) }}"
-                            class="shadcn-input">
-                    </div>
-                    <div class="flex items-end">
-                        <button type="submit" class="shadcn-button">
-                            Apply Filter
-                        </button>
-                    </div>
+                    <button type="submit" class="shadcn-button">Apply</button>
                 </form>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div class="shadcn-card p-5">
+                    <p class="text-sm text-gray-500">Total Visits</p>
+                    <p class="mt-1 text-2xl font-semibold text-gray-900">{{ number_format($stats['totals']['visits'] ?? 0) }}</p>
+                </div>
+                <div class="shadcn-card p-5">
+                    <p class="text-sm text-gray-500">Unique Students</p>
+                    <p class="mt-1 text-2xl font-semibold text-gray-900">{{ number_format($stats['totals']['unique_students'] ?? 0) }}</p>
+                </div>
+                <div class="shadcn-card p-5">
+                    <p class="text-sm text-gray-500">Today</p>
+                    <p class="mt-1 text-2xl font-semibold text-gray-900">{{ number_format($stats['totals']['today'] ?? 0) }}</p>
+                </div>
+                <div class="shadcn-card p-5">
+                    <p class="text-sm text-gray-500">Avg Duration</p>
+                    <p class="mt-1 text-2xl font-semibold text-gray-900">{{ ($stats['totals']['avg_duration_min'] ?? 0) }} mins</p>
+                </div>
             </div>
 
             <!-- Analytics Grid -->
@@ -138,145 +180,72 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Fetch chart data
-            fetch(`{{ route('admin.attendance.chart-data') }}?date_from=${document.getElementById('date_from').value}&date_to=${document.getElementById('date_to').value}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        console.error('Error fetching chart data:', data.message);
-                        return;
-                    }
+            const stats = @json($stats);
+            // Daily Attendance Trends Chart
+            new Chart(document.getElementById('attendanceTrendsChart'), {
+                type: 'line',
+                data: {
+                    labels: stats.trend?.labels || [],
+                    datasets: [{
+                        label: 'Attendance Count',
+                        data: stats.trend?.data || [],
+                        borderColor: '#3b82f6',
+                        tension: 0.2,
+                        fill: true,
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
 
-                    // Daily Attendance Trends Chart
-                    new Chart(document.getElementById('attendanceTrendsChart'), {
-                        type: 'line',
-                        data: {
-                            labels: data.dates,
-                            datasets: [{
-                                label: 'Attendance Count',
-                                data: data.attendance_counts,
-                                borderColor: '#3b82f6',
-                                tension: 0.1,
-                                fill: true,
-                                backgroundColor: 'rgba(59, 130, 246, 0.1)'
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    display: false
-                                }
-                            },
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    ticks: {
-                                        stepSize: 1
-                                    }
-                                }
-                            }
-                        }
-                    });
+            // College Distribution Chart
+            const collegeLabels = (stats.colleges || []).map(r => r.college);
+            const collegeCounts = (stats.colleges || []).map(r => r.cnt);
+            new Chart(document.getElementById('collegeDistributionChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: collegeLabels,
+                    datasets: [{
+                        data: collegeCounts,
+                        backgroundColor: ['#f3e8ff','#dbeafe','#fee2e2','#fce7f3','#fef9c3','#dcfce7','#e5e7eb'],
+                        borderColor: ['#6b21a8','#1e40af','#991b1b','#9d174d','#854d0e','#166534','#374151'],
+                        borderWidth: 2
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            });
 
-                    // College Distribution Chart
-                    new Chart(document.getElementById('collegeDistributionChart'), {
-                        type: 'doughnut',
-                        data: {
-                            labels: data.colleges,
-                            datasets: [{
-                                data: data.college_counts,
-                                backgroundColor: [
-                                    '#f3e8ff', // CICS
-                                    '#dbeafe', // CTED
-                                    '#fee2e2', // CCJE
-                                    '#fce7f3', // CHM
-                                    '#fef9c3', // CBEA
-                                    '#dcfce7'  // CA
-                                ],
-                                borderColor: [
-                                    '#6b21a8', // CICS
-                                    '#1e40af', // CTED
-                                    '#991b1b', // CCJE
-                                    '#9d174d', // CHM
-                                    '#854d0e', // CBEA
-                                    '#166534'  // CA
-                                ],
-                                borderWidth: 2
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    position: 'right'
-                                }
-                            }
-                        }
-                    });
+            // Activity Distribution Chart
+            const activityLabels = (stats.activities || []).map(r => r.activity);
+            const activityCounts = (stats.activities || []).map(r => r.cnt);
+            new Chart(document.getElementById('activityDistributionChart'), {
+                type: 'pie',
+                data: {
+                    labels: activityLabels,
+                    datasets: [{
+                        data: activityCounts,
+                        backgroundColor: ['#10b981','#ef4444','#8b5cf6','#f59e0b','#3b82f6','#22c55e','#eab308'],
+                        borderWidth: 2
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            });
 
-                    // Activity Distribution Chart
-                    new Chart(document.getElementById('activityDistributionChart'), {
-                        type: 'pie',
-                        data: {
-                            labels: data.activities,
-                            datasets: [{
-                                data: data.activity_counts,
-                                backgroundColor: [
-                                    '#10b981', // Present
-                                    '#ef4444', // Absent
-                                    '#8b5cf6'  // Borrowed
-                                ],
-                                borderWidth: 2
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    position: 'right'
-                                }
-                            }
-                        }
-                    });
-
-                    // Peak Hours Analysis Chart
-                    new Chart(document.getElementById('peakHoursChart'), {
-                        type: 'bar',
-                        data: {
-                            labels: data.hours,
-                            datasets: [{
-                                label: 'Attendance Count',
-                                data: data.hourly_counts,
-                                backgroundColor: '#8b5cf6',
-                                borderRadius: 4
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    display: false
-                                }
-                            },
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    ticks: {
-                                        stepSize: 1
-                                    }
-                                }
-                            }
-                        }
-                    });
-                })
-                .catch(error => {
-                    console.error('Error fetching chart data:', error);
-                });
+            // Peak Hours Analysis (derived from trend by hour if available later)
+            // Placeholder: we use the same trend to display distribution over labels
+            new Chart(document.getElementById('peakHoursChart'), {
+                type: 'bar',
+                data: {
+                    labels: stats.trend?.labels || [],
+                    datasets: [{ label: 'Daily Count', data: stats.trend?.data || [], backgroundColor: '#8b5cf6', borderRadius: 4 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+            });
         });
     </script>
 </body>

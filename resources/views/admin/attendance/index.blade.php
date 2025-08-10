@@ -123,6 +123,16 @@
                 <div id="status-display" class="mb-4 p-3 bg-gray-50 rounded-lg hidden">
                     <p id="status-text" class="text-sm text-gray-700"></p>
                 </div>
+                <!-- Loading Overlay -->
+                <div id="loading-overlay" class="hidden fixed inset-0 z-50 bg-white/70 backdrop-blur-sm flex items-center justify-center opacity-0 transition-opacity duration-200">
+                    <div class="flex flex-col items-center space-y-3">
+                        <svg class="w-12 h-12 text-blue-600 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                        </svg>
+                        <p id="loading-overlay-text" class="text-sm font-medium text-gray-700">Processing...</p>
+                    </div>
+                </div>
                 <!-- Activity Modal -->
                 <div id="activity-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
                     <div class="bg-white rounded-lg shadow-lg p-6 w-96">
@@ -139,8 +149,19 @@
                                     <option value="Other">Other Activities</option>
                                 </select>
                             </div>
-                            <div id="student-info" class="mb-4 p-3 bg-gray-50 rounded">
-                                <p class="text-sm font-medium text-gray-700">Loading student information...</p>
+                            <div id="student-info" class="mb-4 p-4 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-4">
+                                    <div class="flex-shrink-0">
+                                        <img id="student-profile-pic" src="{{ asset('images/default-profile.png') }}" alt="Student Profile"
+                                             onerror="this.onerror=null;this.src='{{ asset('images/default-profile.png') }}';"
+                                             class="w-16 h-16 rounded-full object-cover border-2 border-blue-200 shadow-sm">
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div id="student-details" class="space-y-1">
+                                            <p class="text-sm font-medium text-gray-700">Loading student information...</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div class="flex justify-end space-x-2">
                                 <button type="button" id="modal-cancel" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancel</button>
@@ -151,37 +172,81 @@
                 </div>
                 <!-- Borrow Books Modal -->
                 <div id="borrow-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div class="bg-white rounded-lg shadow-lg p-6 w-96">
-                        <h3 class="text-lg font-semibold mb-4">Borrow Books</h3>
-                        <form id="borrow-form">
-                            @csrf
-                            <input type="hidden" name="student_id" id="borrow-student-id" value="">
-                            <div class="mb-4">
-                                <label for="book_id" class="block mb-1 font-medium">Book ID</label>
-                                <input type="text" name="book_id" id="book_id" class="w-full border border-gray-300 rounded px-3 py-2" required>
+                    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 overflow-hidden">
+                        <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                            <h3 class="text-xl font-semibold text-gray-900">Borrow Books</h3>
+                            <button type="button" id="borrow-cancel" class="px-3 py-1.5 text-sm rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200">Close</button>
+                        </div>
+                        <div class="p-6">
+                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                <!-- Available books -->
+                                <div class="lg:col-span-2">
+                                    <div class="flex flex-col gap-3 mb-3">
+                                        <div class="flex items-center gap-3">
+                                            <div class="relative flex-1">
+                                                <input id="available-books-search" type="text" placeholder="Search by title, author, code, or section..." class="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/>
+                                                </svg>
+                                            </div>
+                                            <select id="available-books-college" class="border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                <option value="">All Colleges</option>
+                                            </select>
+                                            <button id="refresh-available-books" class="px-3 py-2 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100">Refresh</button>
+                                        </div>
+                                    </div>
+                                    <div id="available-books-container" class="border border-gray-200 rounded-xl max-h-[32rem] overflow-y-auto bg-white">
+                                        <div class="p-4 text-sm text-gray-500">Loading available books...</div>
+                                        <div id="available-books-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4"></div>
+                                    </div>
+                                </div>
+                                <!-- Manual entry -->
+                                <div class="lg:col-span-1">
+                                    <form id="borrow-form" class="bg-gray-50 rounded-xl p-4 h-full">
+                                        @csrf
+                                        <input type="hidden" name="student_id" id="borrow-student-id" value="">
+                                        <label for="book_id" class="block mb-2 font-medium text-gray-800">Enter Book Code</label>
+                                        <input type="text" name="book_id" id="book_id" class="w-full border border-gray-300 rounded-lg px-3 py-2 mb-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., BK-00123" required>
+                                        <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Request Borrow</button>
+                                        <p class="mt-3 text-xs text-gray-500">Tip: You can also click a book from the list to auto-fill the code.</p>
+                                    </form>
+                                </div>
                             </div>
-                            <div class="flex justify-end space-x-2">
-                                <button type="button" id="borrow-cancel" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancel</button>
-                                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Request Borrow</button>
-                            </div>
-                        </form>
+                        </div>
                     </div>
                 </div>
                 <!-- Other Activities Modal -->
                 <div id="other-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div class="bg-white rounded-lg shadow-lg p-6 w-96">
-                        <h3 class="text-lg font-semibold mb-4">Other Activities</h3>
-                        <form id="other-form">
+                    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl mx-4 overflow-hidden">
+                        <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                            <h3 class="text-xl font-semibold text-gray-900">Other Activities</h3>
+                            <button type="button" id="other-cancel" class="px-3 py-1.5 text-sm rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200">Close</button>
+                        </div>
+                        <form id="other-form" class="p-6 space-y-5">
                             @csrf
                             <input type="hidden" name="student_id" id="other-student-id" value="">
                             <input type="hidden" name="activity" value="Other">
-                            <div class="mb-4">
-                                <label for="custom_activity" class="block mb-1 font-medium">Activity Description</label>
-                                <input type="text" name="custom_activity" id="custom_activity" class="w-full border border-gray-300 rounded px-3 py-2" required>
+
+                            <div>
+                                <p class="text-sm font-medium text-gray-800 mb-2">Quick select</p>
+                                <div id="preset-activities" class="flex flex-wrap gap-2">
+                                    <button type="button" class="preset-chip inline-flex items-center px-3 py-1.5 rounded-full text-sm bg-gray-100 text-gray-800 hover:bg-gray-200">Signing of Clearance</button>
+                                    <button type="button" class="preset-chip inline-flex items-center px-3 py-1.5 rounded-full text-sm bg-gray-100 text-gray-800 hover:bg-gray-200">Use of Comfort Room</button>
+                                    <button type="button" class="preset-chip inline-flex items-center px-3 py-1.5 rounded-full text-sm bg-gray-100 text-gray-800 hover:bg-gray-200">Waiting for Friend</button>
+                                    <button type="button" class="preset-chip inline-flex items-center px-3 py-1.5 rounded-full text-sm bg-gray-100 text-gray-800 hover:bg-gray-200">Reading Newspapers</button>
+                                    <button type="button" class="preset-chip inline-flex items-center px-3 py-1.5 rounded-full text-sm bg-gray-100 text-gray-800 hover:bg-gray-200">Research</button>
+                                    <button type="button" class="preset-chip inline-flex items-center px-3 py-1.5 rounded-full text-sm bg-gray-100 text-gray-800 hover:bg-gray-200">Printing</button>
+                                </div>
                             </div>
-                            <div class="flex justify-end space-x-2">
-                                <button type="button" id="other-cancel" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancel</button>
-                                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Log Activity</button>
+
+                            <div>
+                                <label for="custom_activity" class="block mb-2 font-medium text-gray-800">Or type activity</label>
+                                <input type="text" name="custom_activity" id="custom_activity" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Describe the activity..." required>
+                                <p class="mt-2 text-xs text-gray-500">Tip: Click a quick select above to auto-fill and submit.</p>
+                            </div>
+
+                            <div class="flex justify-end">
+                                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Log Activity</button>
                             </div>
                         </form>
                     </div>
@@ -228,6 +293,7 @@
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex items-center space-x-3">
                                                 <img src="{{ $attendance['profile_picture'] ? asset('storage/' . $attendance['profile_picture']) : asset('images/default-profile.png') }}"
                                                     alt="Profile Picture"
+                                                    onerror="this.onerror=null;this.src='{{ asset('images/default-profile.png') }}';"
                                                     class="w-10 h-10 rounded-full object-cover shadow-sm ring-1 ring-blue-100 transition-transform duration-300 hover:scale-105" />
                                                 <span class="font-medium">{{ $attendance['student_name'] }}</span>
                                             </td>

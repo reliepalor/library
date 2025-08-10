@@ -4,6 +4,8 @@ namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -11,7 +13,7 @@ use App\Models\Student;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\View;
 
-class AttendanceNotification extends Mailable
+class AttendanceNotification extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 

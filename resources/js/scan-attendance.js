@@ -21,6 +21,11 @@
         const statusText = document.getElementById('status-text');
         const logoutModal = document.getElementById('logout-modal');
         const logoutClose = document.getElementById('logout-close');
+        // Borrow modal elements (new)
+        const availableBooksSearch = document.getElementById('available-books-search');
+        const availableBooksList = document.getElementById('available-books-list');
+        const refreshAvailableBooksBtn = document.getElementById('refresh-available-books');
+        const availableBooksCollege = document.getElementById('available-books-college');
 
         // Verify all required elements exist
         if (!qrInput || !qrReader || !webcamContainer || !physicalContainer || 
@@ -43,6 +48,97 @@
         webcamContainer.classList.add('transition-opacity', 'duration-500', 'ease-in-out');
         physicalContainer.classList.add('transition-opacity', 'duration-500', 'ease-in-out');
 
+        // --- Borrow modal helpers ---
+        let borrowUiInitialized = false;
+        let sectionsInitialized = false;
+
+        const debounce = (fn, delay = 300) => {
+            let t;
+            return (...args) => {
+                clearTimeout(t);
+                t = setTimeout(() => fn(...args), delay);
+            };
+        };
+
+        const renderAvailableBooks = (books = []) => {
+            if (!availableBooksList) return;
+            availableBooksList.innerHTML = '';
+            if (!books.length) {
+                availableBooksList.innerHTML = '<div class="p-6 text-gray-500 text-sm col-span-2">No available books found.</div>';
+                return;
+            }
+            // Do NOT rebuild dropdown on every render; it will hide other options when filtered.
+            const frag = document.createDocumentFragment();
+            books.forEach((b) => {
+                const li = document.createElement('div');
+                // Product-like card: breathable but compact
+                li.className = 'bg-white rounded-xl shadow-sm ring-1 ring-gray-100 hover:shadow-md transition p-4 flex flex-col gap-3';
+                const imgSrc = b.image1 ? (window.assetBaseUrl + 'storage/' + b.image1) : (window.assetBaseUrl + 'images/book-placeholder.png');
+                li.innerHTML = `
+                    <div class="w-full aspect-[5/3] bg-gray-50 rounded-lg overflow-hidden ring-1 ring-gray-200">
+                        <img src="${imgSrc}" alt="${b.name || 'Book'}" class="w-full h-full object-cover" onerror="this.src='${window.assetBaseUrl}images/book-placeholder.png'">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="min-w-0">
+                                <p class="font-semibold text-gray-900 truncate">${b.name || 'Untitled'}</p>
+                                <p class="text-sm text-gray-600 truncate">${b.author || 'Unknown author'}</p>
+                                ${b.section ? `<p class="text-xs text-gray-500 mt-0.5 truncate">Section: ${b.section}</p>` : ''}
+                            </div>
+                            <span class="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 ring-1 ring-blue-200">${b.book_code}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-end pt-1">
+                        <button class="borrow-book-btn px-3 py-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-700" data-code="${b.book_code}">Borrow</button>
+                    </div>
+                `;
+                frag.appendChild(li);
+            });
+            availableBooksList.appendChild(frag);
+        };
+
+        const loadAvailableBooks = async (search = '', college = '') => {
+            try {
+                // Show subtle inline loading state in the container
+                if (availableBooksList) {
+                    availableBooksList.innerHTML = '<div class="p-4 text-sm text-gray-500 col-span-2">Loading available books...</div>';
+                }
+                const url = new URL(window.location.origin + '/admin/attendance/available-books');
+                if (search) url.searchParams.set('search', search);
+                if (college) url.searchParams.set('college', college);
+                url.searchParams.set('limit', '100');
+                const res = await fetch(url.toString(), { headers: { 'Accept': 'application/json' } });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'Failed fetching available books');
+                // Initialize section/college dropdown only once using the first unfiltered payload
+                if (!sectionsInitialized && availableBooksCollege) {
+                    const isUnfiltered = !search && !college;
+                    if (isUnfiltered) {
+                        const unique = Array.from(new Set((data.data || []).map(b => b.section).filter(Boolean))).sort();
+                        // Build options once
+                        availableBooksCollege.innerHTML = '';
+                        const allOpt = document.createElement('option');
+                        allOpt.value = '';
+                        allOpt.textContent = 'All Colleges';
+                        availableBooksCollege.appendChild(allOpt);
+                        unique.forEach(sec => {
+                            const o = document.createElement('option');
+                            o.value = sec;
+                            o.textContent = sec;
+                            availableBooksCollege.appendChild(o);
+                        });
+                        sectionsInitialized = true;
+                    }
+                }
+                renderAvailableBooks(data.data || []);
+            } catch (e) {
+                console.error(e);
+                if (availableBooksList) {
+                    availableBooksList.innerHTML = '<div class="p-4 text-sm text-red-600 col-span-2">Failed to load available books.</div>';
+                }
+            }
+        };
+
         // Utility functions
         const showStatus = (message, type = 'info') => {
             statusText.textContent = message;
@@ -51,6 +147,52 @@
             setTimeout(() => {
                 statusDisplay.classList.add('hidden');
             }, 4000);
+        };
+
+        // Loading overlay helpers with smooth transitions and delayed show
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingOverlayText = document.getElementById('loading-overlay-text');
+        let loadingTimer = null;
+        let loadingShownAt = 0;
+        const MIN_VISIBLE_MS = 350; // avoid flicker
+        const SHOW_DELAY_MS = 300;   // only show if it takes a bit
+
+        const reallyShowOverlay = (message) => {
+            if (!loadingOverlay) return;
+            if (loadingOverlayText) loadingOverlayText.textContent = message || 'Processing...';
+            // Make visible then fade in
+            loadingOverlay.classList.remove('hidden');
+            // force next frame to apply transition
+            requestAnimationFrame(() => {
+                loadingOverlay.classList.remove('opacity-0');
+                loadingOverlay.classList.add('opacity-100');
+            });
+            loadingShownAt = Date.now();
+        };
+
+        const showLoading = (message = 'Processing...') => {
+            // reset any previous pending show
+            if (loadingTimer) clearTimeout(loadingTimer);
+            loadingTimer = setTimeout(() => reallyShowOverlay(message), SHOW_DELAY_MS);
+        };
+
+        const hideLoading = () => {
+            if (loadingTimer) {
+                clearTimeout(loadingTimer);
+                loadingTimer = null;
+            }
+            if (!loadingOverlay || loadingOverlay.classList.contains('hidden')) return;
+            const elapsed = Date.now() - loadingShownAt;
+            const wait = Math.max(0, MIN_VISIBLE_MS - elapsed);
+            setTimeout(() => {
+                loadingOverlay.classList.remove('opacity-100');
+                loadingOverlay.classList.add('opacity-0');
+                const onEnd = () => {
+                    loadingOverlay.classList.add('hidden');
+                    loadingOverlay.removeEventListener('transitionend', onEnd);
+                };
+                loadingOverlay.addEventListener('transitionend', onEnd);
+            }, wait);
         };
 
         const getCSRFToken = () => {
@@ -222,6 +364,7 @@
             if (isProcessing || logoutInProgress) return;
             isProcessing = true;
             showStatus('Processing QR code...');
+    showLoading('Checking attendance...');
             try {
                 // Fix: Only allow printable ASCII and pipe
                 const cleanData = qrData.replace(/[^-|]/g, '').trim();
@@ -307,6 +450,7 @@
         setTimeout(() => {
             logoutModal.classList.add('hidden');
         }, 1800);
+        hideLoading();
         isProcessing = false;
         return;
             }
@@ -316,12 +460,35 @@
                 const nameParts = name.split(' ');
                 const fname = nameParts[0] || '';
                 const lname = nameParts.slice(1).join(' ') || '';
-                studentInfoDiv.innerHTML = `
-                    <p class="font-medium text-gray-800">${lname}, ${fname}</p>
-                    <p class="text-sm text-gray-600">ID: ${studentId}</p>
-                    <p class="text-sm text-gray-600">College: ${college}</p>
-                    <p class="text-sm text-gray-600">Year: ${year}</p>
+                const profilePicUrl = data.profile_picture ? window.assetBaseUrl + 'storage/' + data.profile_picture : window.assetBaseUrl + 'images/default-profile.png';
+                const studentDetailsHtml = `
+                    <div class="flex flex-col">
+                        <p class="text-lg font-semibold text-gray-900">${lname}, ${fname}</p>
+                        <div class="mt-1 flex flex-wrap items-center gap-2">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 ring-1 ring-gray-200">ID: ${studentId}</span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-white college-${college}">${college}</span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 ring-1 ring-blue-200">Year: ${year}</span>
+                        </div>
+                    </div>
                 `;
+                const profilePicImg = document.getElementById('student-profile-pic');
+                if (profilePicImg) {
+                    profilePicImg.src = profilePicUrl;
+                    // Ensure stable layout and nice ring on success
+                    profilePicImg.classList.add('ring-2','ring-blue-200');
+                }
+                let studentDetailsDiv = document.getElementById('student-details');
+                if (!studentDetailsDiv) {
+                    studentDetailsDiv = document.createElement('div');
+                    studentDetailsDiv.id = 'student-details';
+                    studentDetailsDiv.className = 'space-y-1';
+                    // If there's a wrapper, append; otherwise append to studentInfoDiv safely
+                    studentInfoDiv.appendChild(studentDetailsDiv);
+                }
+                studentDetailsDiv.innerHTML = studentDetailsHtml;
+                // Elevate the card appearance on successful fetch
+                studentInfoDiv.classList.remove('bg-gray-50');
+                studentInfoDiv.classList.add('bg-white','shadow-sm','ring-1','ring-gray-100','animate-fadeInUp');
                 activitySelect.value = 'Study';
                 activityModal.classList.remove('hidden');
                 showStatus('Student found! Please select activity for login.', 'success');
@@ -332,6 +499,7 @@
                 otherModal.classList.add('hidden');
                 logoutModal.classList.add('hidden');
             } finally {
+                hideLoading();
                 isProcessing = false;
                 setTimeout(() => {
                     if (currentMode === 'physical') {
@@ -346,13 +514,56 @@
         physicalModeBtn.addEventListener('click', switchToPhysicalMode);
 
         // Activity selection handler
-        activitySelect.addEventListener('change', function() {
+        activitySelect.addEventListener('change', function () {
             const selectedActivity = this.value;
             if (selectedActivity === 'Borrow' || selectedActivity === 'Stay&Borrow') {
                 activityModal.classList.add('hidden');
                 borrowStudentId.value = modalStudentId.value;
                 borrowModal.classList.remove('hidden');
-                setTimeout(() => document.getElementById('book_id').focus(), 100);
+                // Initialize borrow UI once
+                if (!borrowUiInitialized) {
+                    borrowUiInitialized = true;
+                    if (availableBooksSearch) {
+                        const debouncedSearch = debounce(() => {
+                            loadAvailableBooks(availableBooksSearch.value.trim());
+                        }, 300);
+                        availableBooksSearch.addEventListener('input', debouncedSearch);
+                    }
+                    if (refreshAvailableBooksBtn) {
+                        refreshAvailableBooksBtn.addEventListener('click', () => {
+                            const s = availableBooksSearch?.value.trim() || '';
+                            const c = availableBooksCollege?.value || '';
+                            loadAvailableBooks(s, c);
+                        });
+                    }
+                    if (availableBooksCollege) {
+                        availableBooksCollege.addEventListener('change', () => {
+                            const s = availableBooksSearch?.value.trim() || '';
+                            const c = availableBooksCollege.value || '';
+                            loadAvailableBooks(s, c);
+                        });
+                    }
+                    // Delegate borrow button clicks
+                    if (availableBooksList) {
+                        availableBooksList.addEventListener('click', (e) => {
+                            const btn = e.target.closest('.borrow-book-btn');
+                            if (!btn) return;
+                            const code = btn.getAttribute('data-code');
+                            const input = document.getElementById('book_id');
+                            if (input) {
+                                input.value = code;
+                                input.focus();
+                                // Auto-submit for speed
+                                document.getElementById('borrow-form')?.dispatchEvent(new Event('submit', { cancelable: true }));
+                            }
+                        });
+                    }
+                }
+                // Load list fresh each time modal opens
+                if (availableBooksSearch) availableBooksSearch.value = '';
+                if (availableBooksCollege) availableBooksCollege.value = '';
+                loadAvailableBooks('', '');
+                setTimeout(() => document.getElementById('available-books-search')?.focus(), 80);
             } else if (selectedActivity === 'Other') {
                 activityModal.classList.add('hidden');
                 otherStudentId.value = modalStudentId.value;
@@ -368,6 +579,7 @@
             const activity = activitySelect.value;
             try {
                 showStatus('Logging attendance...');
+                showLoading('Logging attendance...');
                 const response = await fetch('/admin/attendance/log', {
                     method: 'POST',
                     headers: {
@@ -388,8 +600,8 @@
                 // Dynamically add the new attendance row to the table
                 addAttendanceRow({
                     student_id: studentId,
-                    student_name: studentInfoDiv.querySelector('p.font-medium')?.textContent || '',
-                    college: studentInfoDiv.querySelector('p.text-sm.text-gray-600:nth-child(3)')?.textContent.replace('College: ', '') || '',
+                    student_name: document.querySelector('#student-details p.text-lg')?.textContent || '',
+                    college: (document.querySelector('#student-details span[class*="college-"]')?.textContent) || '',
                     activity: activity,
                     time_in: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }),
                     time_out: 'N/A',
@@ -402,6 +614,8 @@
                 }
             } catch (error) {
                 showStatus(`Error: ${error.message}`, 'error');
+            } finally {
+                hideLoading();
             }
         });
 
@@ -412,7 +626,10 @@
             const bookId = document.getElementById('book_id').value;
             const activityType = activitySelect.value === 'Stay&Borrow' ? 'Stay&Borrow' : 'Borrow';
             try {
+                // Close the modal immediately; spinner shows only if slow due to delayed show
+                borrowModal.classList.add('hidden');
                 showStatus('Processing borrow request...');
+                showLoading('Requesting book...');
                 // First check if book can be borrowed (admin route)
                 const borrowResponse = await fetch('/admin/borrow/request', {
                     method: 'POST',
@@ -435,6 +652,7 @@
                     return;
                 }
                 // Only log attendance if book borrow request was successful
+                showLoading('Logging attendance...');
                 const attendanceResponse = await fetch('/admin/attendance/log', {
                     method: 'POST',
                     headers: {
@@ -456,11 +674,20 @@
                 showStatus(data.message || 'Book borrow request successful!', 'success');
                 borrowModal.classList.add('hidden');
                 document.getElementById('book_id').value = '';
-                setTimeout(() => {
-                    location.reload();
-                }, 1500);
+                // Add a row immediately without reload
+                addAttendanceRow({
+                    student_id: studentId,
+                    student_name: document.querySelector('#student-details p.text-lg')?.textContent || '',
+                    college: (document.querySelector('#student-details span[class*="college-"]')?.textContent) || '',
+                    activity: `${activityType}:${bookId}`,
+                    time_in: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }),
+                    time_out: 'N/A',
+                    status: 'Present'
+                });
             } catch (error) {
                 showStatus(`Error processing borrow request: ${error.message}`, 'error');
+            } finally {
+                hideLoading();
             }
         });
 
@@ -472,6 +699,7 @@
             const activity = `Other: ${customActivity}`;
             try {
                 showStatus('Logging custom activity...');
+                showLoading('Logging activity...');
                 const response = await fetch('/admin/attendance/log', {
                     method: 'POST',
                     headers: {
@@ -493,13 +721,37 @@
                 showStatus(data.message || 'Activity logged successfully!', 'success');
                 otherModal.classList.add('hidden');
                 document.getElementById('custom_activity').value = '';
-                setTimeout(() => {
-                    location.reload();
-                }, 1500);
+                // Add a row immediately without reload
+                addAttendanceRow({
+                    student_id: studentId,
+                    student_name: document.querySelector('#student-details p.text-lg')?.textContent || '',
+                    college: (document.querySelector('#student-details span[class*="college-"]')?.textContent) || '',
+                    activity: activity,
+                    time_in: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }),
+                    time_out: 'N/A',
+                    status: 'Present'
+                });
             } catch (error) {
                 showStatus(`Error logging custom activity: ${error.message}`, 'error');
+            } finally {
+                hideLoading();
             }
         });
+
+        // Preset activities quick select
+        const presetActivities = document.getElementById('preset-activities');
+        const otherForm = document.getElementById('other-form');
+        if (presetActivities && otherForm) {
+            presetActivities.addEventListener('click', (e) => {
+                const chip = e.target.closest('.preset-chip');
+                if (!chip) return;
+                const value = chip.textContent.trim();
+                const input = document.getElementById('custom_activity');
+                if (input) input.value = value;
+                // Auto-submit for a fast flow
+                otherForm.dispatchEvent(new Event('submit', { cancelable: true }));
+            });
+        }
 
         // Modal cancel buttons
         document.getElementById('modal-cancel').addEventListener('click', () => {
@@ -570,4 +822,3 @@
         `;
         tableBody.prepend(tr);
     }
-
