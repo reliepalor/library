@@ -92,6 +92,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/requests', [App\Http\Controllers\Admin\Auth\BorrowRequestController::class, 'index'])->name('requests');
         Route::post('/requests/{id}/approve', [App\Http\Controllers\Admin\Auth\BorrowRequestController::class, 'approve'])->name('requests.approve');
         Route::post('/requests/{id}/reject', [App\Http\Controllers\Admin\Auth\BorrowRequestController::class, 'reject'])->name('requests.reject');
+        Route::post('/requests/{id}/return', [App\Http\Controllers\Admin\Auth\BorrowRequestController::class, 'markAsReturned'])->name('requests.return');
         Route::post('/request', [App\Http\Controllers\Admin\Auth\BorrowRequestController::class, 'store'])->name('request');
     });
 

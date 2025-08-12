@@ -39,6 +39,16 @@
                                     Borrowed Books
                                 </button>
                             </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-4 right-4 z-[60] hidden">
+        <div id="toastInner" class="flex items-center gap-3 px-4 py-3 rounded shadow-lg bg-green-600 text-white min-w-[220px]">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span id="toastMessage">Success</span>
+        </div>
+    </div>
                         </div>
                     </div>
                 </div>
@@ -133,10 +143,26 @@
                                                 @endif
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {{ $book->book->name ?? 'Unknown Book' }} ({{ $book->book_id }})
+                                                <a href="#" onclick="showBookImage('{{ $book->book->image1 ?? '' }}', '{{ $book->book->name ?? 'Unknown Book' }}')" 
+                                                   class="text-blue-600 hover:underline">
+                                                    {{ $book->book->name ?? 'Unknown Book' }} ({{ $book->book_id }})
+                                                </a>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {{ ucfirst($book->status) }}
+                                                @if($book->status === 'approved')
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                        {{ ucfirst($book->status) }}
+                                                    </span>
+                                                    <button onclick="markAsReturned({{ $book->id }})" 
+                                                            class="ml-2 text-xs text-blue-600 hover:text-blue-800 underline">
+                                                        Mark as Returned
+                                                    </button>
+                                                @else
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                                        {{ $book->status === 'returned' ? 'bg-gray-100 text-gray-800' : 'bg-yellow-100 text-yellow-800' }}">
+                                                        {{ ucfirst($book->status) }}
+                                                    </span>
+                                                @endif
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {{ $book->created_at->format('M d, Y h:i A') }}
@@ -153,6 +179,47 @@
                     </div>
                 </div>
             </main>
+        </div>
+    </div>
+
+    <!-- Book Image Modal -->
+    <div id="bookImageModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-xl">
+                <div class="flex justify-between items-center px-6 py-4 border-b">
+                    <h3 id="bookImageTitle" class="text-lg font-medium text-gray-900"></h3>
+                    <button onclick="document.getElementById('bookImageModal').classList.add('hidden')" 
+                            class="text-gray-400 hover:text-gray-500">
+                        <span class="sr-only">Close</span>
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-6 flex justify-center">
+                    <img id="bookImage" src="" alt="Book Cover" class="max-h-[70vh] max-w-full object-contain">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Return Confirmation Modal -->
+    <div id="returnConfirmationModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-md w-full p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Confirm Return</h3>
+                <p class="text-gray-600 mb-6">Are you sure you want to mark this book as returned?</p>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="hideReturnConfirmation()" 
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                        Cancel
+                    </button>
+                    <button type="button" id="confirmReturnBtn" 
+                            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                        Mark as Returned
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -181,6 +248,123 @@
     </div>
 
     <script>
+        // Simple toast helper
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastInner = document.getElementById('toastInner');
+            const toastMessage = document.getElementById('toastMessage');
+
+            toastMessage.textContent = message || '';
+            // Set style by type
+            if (type === 'error') {
+                toastInner.classList.remove('bg-green-600');
+                toastInner.classList.add('bg-red-600');
+            } else {
+                toastInner.classList.remove('bg-red-600');
+                toastInner.classList.add('bg-green-600');
+            }
+
+            toast.classList.remove('hidden');
+            // Auto-hide
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 1500);
+        }
+        // Return confirmation modal functions
+        let currentBorrowId = null;
+
+        function showReturnConfirmation(borrowId) {
+            currentBorrowId = borrowId;
+            document.getElementById('returnConfirmationModal').classList.remove('hidden');
+        }
+
+        function hideReturnConfirmation() {
+            document.getElementById('returnConfirmationModal').classList.add('hidden');
+            currentBorrowId = null;
+        }
+
+        // Mark book as returned - shows confirmation modal
+        function markAsReturned(borrowId) {
+            showReturnConfirmation(borrowId);
+        }
+
+        // Handle confirm return button click
+        document.getElementById('confirmReturnBtn').addEventListener('click', function() {
+            if (!currentBorrowId) return;
+            
+            // Show loading state
+            const button = this;
+            const originalText = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processing...';
+            
+            // Use the correct route that matches your web.php
+            const returnUrl = `/admin/borrow/requests/${currentBorrowId}/return`;
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+            
+            fetch(returnUrl, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    hideReturnConfirmation();
+                    showToast('Book marked as returned', 'success');
+                    setTimeout(() => window.location.reload(), 900);
+                } else {
+                    alert('Failed to update status: ' + (data.message || 'Unknown error'));
+                    button.disabled = false;
+                    button.innerHTML = originalText;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating the status');
+                button.disabled = false;
+                button.innerHTML = originalText;
+            })
+            .finally(() => {
+                // no-op
+            });
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('returnConfirmationModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideReturnConfirmation();
+            }
+        });
+
+        // Show book image in modal
+        function showBookImage(imageUrl, bookTitle) {
+            if (!imageUrl) {
+                alert('No image available for this book');
+                return;
+            }
+            
+            const modal = document.getElementById('bookImageModal');
+            const img = document.getElementById('bookImage');
+            const title = document.getElementById('bookImageTitle');
+            
+            img.src = '/storage/' + imageUrl;
+            title.textContent = bookTitle || 'Book Cover';
+            modal.classList.remove('hidden');
+            
+            // Close modal when clicking outside the image
+            modal.onclick = function(e) {
+                if (e.target === modal) {
+                    modal.classList.add('hidden');
+                }
+            };
+        }
+        
+        /* Legacy confirm-based return function removed. Modal-based return flow is defined above. */
+        
         // Toggle between sections
         const requestsBtn = document.getElementById('requestsBtn');
         const borrowedBtn = document.getElementById('borrowedBtn');

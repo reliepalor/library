@@ -99,4 +99,32 @@ class BorrowRequestController extends Controller
             ], 500);
         }
     }
+    
+    /**
+     * Mark a borrowed book as returned
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function markAsReturned($id)
+    {
+        try {
+            $borrowRequest = BorrowedBook::findOrFail($id);
+            
+            $borrowRequest->update([
+                'status' => 'returned',
+                'returned_at' => now()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Book marked as returned successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to mark book as returned: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

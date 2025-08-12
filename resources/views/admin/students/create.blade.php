@@ -12,7 +12,60 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        :root{
+    /* tweak these to match the image */
+    --bg: #ffffff;           /* page background */
+    --grid-color: #e6e6e6;   /* faint grid line color */
+    --grid-size: 48px;       /* size of each square */
+    --line-thickness: 1px;   /* thickness of grid lines */
+    --header-blue: #2f82c9;  /* blue top line color */
+    --header-thin: #cfe3f6;  /* faint thin line under blue */
+    --header-height: 3px;    /* blue line height */
+  }
 
+  html,body {height:100%; margin:0;}
+  body {
+    background-color: var(--bg);
+    /* two gradients: vertical and horizontal lines */
+    background-image:
+      linear-gradient(to right, var(--grid-color) var(--line-thickness), transparent calc(var(--line-thickness))),
+      linear-gradient(to bottom, var(--grid-color) var(--line-thickness), transparent calc(var(--line-thickness)));
+    background-size: var(--grid-size) var(--grid-size);
+    /* make lines crisp on some zoom levels */
+    background-repeat: repeat;
+    position: relative;
+    font-family: sans-serif;
+  }
+
+  /* top header line like in your screenshot */
+  .top-rule {
+    position: fixed;             /* stays at top of viewport */
+    left: 0;
+    right: 0;
+    top: 0;
+    height: calc(var(--header-height) + 1px); /* blue + thin below */
+    pointer-events: none;
+    z-index: 9999;
+  }
+  .top-rule::before{
+    content: "";
+    display:block;
+    height: var(--header-height);
+    background: var(--header-blue);
+  }
+  .top-rule::after{
+    content: "";
+    display:block;
+    height: 1px;
+    background: var(--header-thin);
+  }
+
+  /* optional container to demonstrate content spacing */
+  .page {
+    padding: 28px;
+  }
+    </style>
    <script>
         window.assetBaseUrl = "{{ asset('') }}";
     </script>
@@ -20,8 +73,10 @@
 <body class="bg-gray-50" x-data="{ sidebarExpanded: true }">
                 <x-admin-nav-bar />
 
-    <div class="flex justify-center">
-            <div class="mt-10 w-full max-w-2xl p-8 bg-white border border-gray-200 rounded-xl shadow-lg transition-all duration-300">
+  <div class="page">
+  </div>
+  <div class="flex justify-center">
+        <div class="mt-10 w-full max-w-2xl p-8 bg-white border border-gray-200 rounded-xl shadow-lg transition-all duration-300">
             <h1 class="text-2xl font-semibold text-gray-900 mb-6 text-center relative">
                 Register Student
             </h1>
@@ -133,7 +188,7 @@
 
                 {{-- Submit --}}
                 <div class="md:col-span-2 flex justify-center mt-6">
-                    <button type="button" id="submitBtn"
+                    <button type="submit"
                         class="inline-flex items-center px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition">
                         Add Student
                     </button>
@@ -142,69 +197,29 @@
         </div>
     </div>
     
-    <!-- Loading Spinner Modal -->
-    <div id="loadingModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
-        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <!-- Background overlay -->
-            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-    
-            <!-- Spinner container -->
-            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div class="sm:flex sm:items-start">
-                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                            <div class="flex justify-center">
-                                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                            </div>
-                            <div class="mt-4 text-center">
-                                <p class="text-lg font-medium text-gray-900">Processing your request...</p>
-                                <p class="text-sm text-gray-500 mt-2">Please wait while we add the student</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <!-- Minimal full-screen loading spinner -->
+    <div id="pageSpinner" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/30"></div>
+        <div class="relative w-full h-full flex items-center justify-center">
+            <div class="flex flex-col items-center gap-3">
+                <div class="h-12 w-12 border-4 border-white/70 border-t-transparent rounded-full animate-spin"></div>
+                <p class="text-white text-sm">Processing, please wait...</p>
             </div>
         </div>
     </div>
-    
-    <!-- Success/Error Message Modal -->
-    <div id="messageModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
-        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <!-- Background overlay -->
-            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-    
-            <!-- Modal container -->
-            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div class="sm:flex sm:items-start">
-                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                            <div class="flex justify-center">
-                                <div id="messageIcon" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full">
-                                    <!-- Icon will be inserted by JavaScript -->
-                                </div>
-                            </div>
-                            <div class="mt-4 text-center">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="messageTitle"></h3>
-                                <div class="mt-2">
-                                    <p class="text-sm text-gray-500" id="messageContent"></p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button type="button" id="closeMessageModal" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
-                        OK
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
+
+    <script>
+        // Show spinner on native form submit without altering submit logic
+        (function(){
+            const form = document.querySelector('form[action="{{ route('admin.students.store') }}"]');
+            const spinner = document.getElementById('pageSpinner');
+            if (form && spinner) {
+                form.addEventListener('submit', function(){
+                    spinner.classList.remove('hidden');
+                });
+            }
+        })();
+    </script>
     <script>
         // Handle form submission with AJAX
         document.getElementById('submitBtn').addEventListener('click', function(e) {
@@ -213,6 +228,9 @@
             // Show loading spinner
             const loadingModal = document.getElementById('loadingModal');
             loadingModal.classList.remove('hidden');
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-70','cursor-not-allowed');
             
             // Get form data
             const form = document.querySelector('form');
@@ -224,29 +242,68 @@
                 body: formData,
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                credentials: 'same-origin'
             })
-            .then(response => response.json())
-            .then(data => {
+            .then(async response => {
+                // Attempt to parse JSON only if the response is JSON
+                const contentType = response.headers.get('content-type') || '';
+                let data = null;
+                if (contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    // Non-JSON likely means a redirect (login) or an error page
+                    const text = await response.text();
+                    if (response.status === 419) {
+                        throw new Error('Your session has expired (419). Please refresh the page and try again.');
+                    }
+                    if (response.status === 401) {
+                        throw new Error('You are not authorized (401). Please log in again.');
+                    }
+                    // Provide a shortened message, log full HTML to console for debugging
+                    console.error('Non-JSON response:', { status: response.status, text });
+                    throw new Error('Unexpected server response. Please try again.');
+                }
+
+                // If HTTP not ok but server returned JSON, surface message
+                if (!response.ok) {
+                    const msg = (data && (data.message || data.error)) || 'Request failed.';
+                    throw new Error(msg);
+                }
+
                 // Hide loading spinner
                 loadingModal.classList.add('hidden');
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-70','cursor-not-allowed');
                 
-                if (data.success) {
+                if (data && data.success) {
                     // Show success message in modal
                     showMessageModal('Success', data.message || 'Student added successfully!', true);
                     form.reset();
+                    
+                    // Clear any previous error messages
+                    clearErrorMessages();
                 } else {
-                    // Show error message in modal
-                    showMessageModal('Error', data.message || 'An error occurred while adding the student.', false);
+                    // Handle validation errors
+                    if (data && data.errors) {
+                        // Display validation errors in the form
+                        displayValidationErrors(data);
+                    } else {
+                        // Show error message in modal
+                        showMessageModal('Error', data.message || 'An error occurred while adding the student.', false);
+                    }
                 }
             })
             .catch(error => {
                 // Hide loading spinner
                 loadingModal.classList.add('hidden');
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-70','cursor-not-allowed');
                 
                 console.error('Error:', error);
-                showMessageModal('Error', 'An error occurred while adding the student. Please try again.', false);
+                showMessageModal('Error', error?.message || 'An error occurred while adding the student. Please try again.', false);
             });
         });
         

@@ -40,53 +40,119 @@ class StudentController extends \App\Http\Controllers\Controller
      */
     public function store(Request $request)
     {
-        $validate = $request->validate([
-            "student_id" => "required|string|min:7|max:9|unique:students,student_id",
-            "lname"      => "required|string|max:155",
-            "fname"      => "required|string|max:155",
-            "MI"         => "required|string|max:155",
-            "college"    => "required|string|max:155",
-            "year"       => "required|integer|min:1|max:5",
-            "email"      => "required|string|email|max:155",
-        ]);
-
-        // Create the student record
-        $student = Student::create($validate);
-
-        // Generate QR code data
-        $data = "{$student->student_id} | {$student->lname} {$student->fname} | {$student->college} | Year: {$student->year}";
-
-        // Path to public storage where the QR code will be saved
-        $fileName = "qrcodes/student_{$student->student_id}.png";
-
-        // Generate and save the QR code with a white background and black foreground
-        Storage::disk('public')->put($fileName, QrCode::format('png')
-            ->size(300)  // Set size of the QR code
-            ->backgroundColor(255, 255, 255)  // Set background color to white (RGB: 255, 255, 255)
-            ->color(0, 0, 0)  // Set the color of the QR code itself to black (RGB: 0, 0, 0)
-            ->generate($data));
-
-        // Save QR code path to student record
-        $student->qr_code_path = $fileName;
-        $student->save();
-
-        // Get the file path and base64 encode it for email
-        $qrCodeBase64 = base64_encode(Storage::disk('public')->get($fileName));
-
-        // Send an email with the QR code as an inline image or attachment
-        Mail::to($student->email)->send(new StudentQrMail($student, $qrCodeBase64));
-
-        // Check if the request is an AJAX request
-        if ($request->expectsJson() || $request->ajax()) {
-            // Return success response for AJAX requests
-            return response()->json([
-                'success' => true,
-                'message' => 'Student Added and QR Code Sent!'
+        try {
+            // Normalize/trim inputs before validation
+            $request->merge([
+                'student_id' => trim((string) $request->input('student_id')),
+                'lname'      => trim((string) $request->input('lname')),
+                'fname'      => trim((string) $request->input('fname')),
+                'MI'         => trim((string) $request->input('MI')),
+                'college'    => trim((string) $request->input('college')),
+                'year'       => (int) $request->input('year'),
+                'email'      => strtolower(trim((string) $request->input('email'))),
             ]);
+            $validate = $request->validate([
+                "student_id" => "required|string|min:5|max:20",
+                "lname"      => "required|string|max:155",
+                "fname"      => "required|string|max:155",
+                "MI"         => "nullable|string|max:155",
+                "college"    => "required|string|max:155",
+                // Limit year level to 1-4 as requested
+                "year"       => "required|integer|min:1|max:4",
+                "email"      => "required|string|email|max:155",
+            ]);
+
+            // Create or update the student record by student_id (idempotent)
+            $student = Student::updateOrCreate(
+                ['student_id' => $validate['student_id']],
+                $validate
+            );
+
+            // Generate QR code data
+            $data = "{$student->student_id} | {$student->lname} {$student->fname} | {$student->college} | Year: {$student->year}";
+
+            // Ensure directory exists before saving QR
+            $directory = 'qrcodes';
+            if (!Storage::disk('public')->exists($directory)) {
+                Storage::disk('public')->makeDirectory($directory);
+            }
+
+            // Path to public storage where the QR code will be saved
+            $fileName = "qrcodes/student_{$student->student_id}.png";
+
+            // Generate and save the QR code with a white background and black foreground
+            Storage::disk('public')->put($fileName, QrCode::format('png')
+                ->size(300)  // Set size of the QR code
+                ->backgroundColor(255, 255, 255)  // Set background color to white (RGB: 255, 255, 255)
+                ->color(0, 0, 0)  // Set the color of the QR code itself to black (RGB: 0, 0, 0)
+                ->generate($data));
+
+            // Save QR code path to student record
+            if ($student->qr_code_path !== $fileName) {
+                $student->qr_code_path = $fileName;
+                $student->save();
+            }
+
+            // Attempt to send email with QR code; do not fail the whole flow if mail fails
+            try {
+                $qrCodeBase64 = base64_encode(Storage::disk('public')->get($fileName));
+                Mail::to($student->email)->send(new StudentQrMail($student, $qrCodeBase64));
+                $successMessage = 'Student saved and QR Code sent!';
+            } catch (\Throwable $mailException) {
+                // Log the mail error for debugging
+                \Log::error('Failed to send student QR email', [
+                    'student_id' => $student->student_id,
+                    'email' => $student->email,
+                    'error' => $mailException->getMessage(),
+                ]);
+                $successMessage = 'Student saved, but sending the QR code email failed.';
+            }
+
+            // Check if the request is an AJAX request
+            if ($request->expectsJson() || $request->ajax()) {
+                // Return success response for AJAX requests
+                return response()->json([
+                    'success' => true,
+                    'message' => $successMessage,
+                ]);
+            }
+
+            // Redirect to the index with a success message for non-AJAX requests
+            return redirect()->route("admin.students.index")->with("success", $successMessage);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation errors for AJAX requests
+            if ($request->expectsJson() || $request->ajax()) {
+                $errors = $e->errors();
+                $firstError = null;
+                foreach ($errors as $field => $messages) {
+                    if (!empty($messages)) { $firstError = $messages[0]; break; }
+                }
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed.',
+                    'first_error' => $firstError,
+                    'errors' => $errors,
+                ], 422);
+            }
+
+            // Re-throw the exception for non-AJAX requests
+            throw $e;
+        } catch (\Throwable $e) {
+            \Log::error('Student store failed', [
+                'request' => $request->all(),
+                'error' => $e->getMessage(),
+            ]);
+            // Catch-all for other errors to avoid generic HTML 500 in AJAX
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An unexpected error occurred while adding the student.',
+                    'error' => config('app.debug') ? $e->getMessage() : null,
+                ], 500);
+            }
+
+            throw $e;
         }
-        
-        // Redirect to the index with a success message for non-AJAX requests
-        return redirect()->route("admin.students.index")->with("success", "Student Added and QR Code Sent!");
     }
 
     /**
@@ -133,12 +199,12 @@ class StudentController extends \App\Http\Controllers\Controller
     {
         $student = Student::findOrFail($id);
         $validate = $request->validate([
-            "student_id" => "required|string|min:7|max:9|unique:students,student_id," . $id,
+            "student_id" => "required|string|min:5|max:20|unique:students,student_id," . $id,
             "lname"      => "required|string|max:155",
             "fname"      => "required|string|max:155",
-            "MI"         => "required|string|max:155",
+            "MI"         => "nullable|string|max:155",
             "college"    => "required|string|max:155",
-            "year"       => "required|integer|min:1|max:5",
+            "year"       => "required|integer|min:1|max:4",
             "email"      => "required|string|email|max:155",
         ]);
         $student->update($validate);
