@@ -21,6 +21,9 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/services', [App\Http\Controllers\ServicesController::class, 'index'])->name('services.index');
+Route::post('/services/register-qr', [App\Http\Controllers\ServicesController::class, 'registerQr'])->name('services.register-qr');
+
 Route::get('/dashboard', function () {
     return view('user.dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');

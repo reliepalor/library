@@ -76,7 +76,16 @@ class StudentController extends \App\Http\Controllers\Controller
         // Send an email with the QR code as an inline image or attachment
         Mail::to($student->email)->send(new StudentQrMail($student, $qrCodeBase64));
 
-        // Redirect to the index with a success message
+        // Check if the request is an AJAX request
+        if ($request->expectsJson() || $request->ajax()) {
+            // Return success response for AJAX requests
+            return response()->json([
+                'success' => true,
+                'message' => 'Student Added and QR Code Sent!'
+            ]);
+        }
+        
+        // Redirect to the index with a success message for non-AJAX requests
         return redirect()->route("admin.students.index")->with("success", "Student Added and QR Code Sent!");
     }
 

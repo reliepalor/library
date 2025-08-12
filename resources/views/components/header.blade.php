@@ -20,7 +20,7 @@
         <div class="hidden md:flex flex-1 justify-center items-center space-x-2 lg:space-x-3">
             <a href="{{ route('user.attendance.index') }}" class="px-3 py-2 text-sm lg:text-base text-gray-900 hover:bg-white/30  rounded-lg transition-colors duration-200 hover:text-blue-700 ">Attendance</a>
             <a href="{{ route('user.books.index') }}" class="px-3 py-2 text-sm lg:text-base text-gray-900 hover:bg-white/30  rounded-lg transition-colors duration-200 hover:text-blue-700 ">Books</a>
-            <a href="#services" class="px-3 py-2 text-sm lg:text-base text-gray-900 hover:bg-white/30  rounded-lg transition-colors duration-200 hover:text-blue-700 ">Services</a>
+            <a href="{{ route('services.index') }}" class="px-3 py-2 text-sm lg:text-base text-gray-900 hover:bg-white/30  rounded-lg transition-colors duration-200 hover:text-blue-700 ">Services</a>
         </div>
 
         <!-- Right: Profile Dropdown and Auth Links (Desktop) -->
@@ -100,7 +100,7 @@
                 >
                     <a href="{{ route('user.attendance.index') }}" class="block px-4 py-3 text-sm text-gray-900 hover:bg-white/30 dark:hover:bg-gray-700/30 transition-colors duration-200">Attendance</a>
                     <a href="{{ route('user.books.index') }}" class="block px-4 py-3 text-sm text-gray-900 hover:bg-white/30 dark:hover:bg-gray-700/30 transition-colors duration-200">Books</a>
-                    <a href="#services" class="block px-4 py-3 text-sm text-gray-900 hover:bg-white/30 dark:hover:bg-gray-700/30 transition-colors duration-200">Services</a>
+                    <a href="{{ route('services.index') }}" class="block px-4 py-3 text-sm text-gray-900 hover:bg-white/30 dark:hover:bg-gray-700/30 transition-colors duration-200">Services</a>
                     @guest
                         <a href="{{ route('login') }}" class="block px-4 py-3 text-sm text-gray-900 hover:bg-white/30 dark:hover:bg-gray-700/30 transition-colors duration-200">Login</a>
                         <a href="{{ route('register') }}" class="block px-4 py-3 text-sm text-gray-900 hover:bg-white/30 dark:hover:bg-gray-700/30 transition-colors duration-200">Register</a>

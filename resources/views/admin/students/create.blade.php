@@ -133,7 +133,7 @@
 
                 {{-- Submit --}}
                 <div class="md:col-span-2 flex justify-center mt-6">
-                    <button type="submit"
+                    <button type="button" id="submitBtn"
                         class="inline-flex items-center px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition">
                         Add Student
                     </button>
@@ -141,8 +141,158 @@
             </form>
         </div>
     </div>
+    
+    <!-- Loading Spinner Modal -->
+    <div id="loadingModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Background overlay -->
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+    
+            <!-- Spinner container -->
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                            <div class="flex justify-center">
+                                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                            </div>
+                            <div class="mt-4 text-center">
+                                <p class="text-lg font-medium text-gray-900">Processing your request...</p>
+                                <p class="text-sm text-gray-500 mt-2">Please wait while we add the student</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Success/Error Message Modal -->
+    <div id="messageModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Background overlay -->
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+    
+            <!-- Modal container -->
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                            <div class="flex justify-center">
+                                <div id="messageIcon" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full">
+                                    <!-- Icon will be inserted by JavaScript -->
+                                </div>
+                            </div>
+                            <div class="mt-4 text-center">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="messageTitle"></h3>
+                                <div class="mt-2">
+                                    <p class="text-sm text-gray-500" id="messageContent"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" id="closeMessageModal" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Handle form submission with AJAX
+        document.getElementById('submitBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Show loading spinner
+            const loadingModal = document.getElementById('loadingModal');
+            loadingModal.classList.remove('hidden');
+            
+            // Get form data
+            const form = document.querySelector('form');
+            const formData = new FormData(form);
+            
+            // Submit via AJAX
+            fetch('{{ route("admin.students.store") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading spinner
+                loadingModal.classList.add('hidden');
+                
+                if (data.success) {
+                    // Show success message in modal
+                    showMessageModal('Success', data.message || 'Student added successfully!', true);
+                    form.reset();
+                } else {
+                    // Show error message in modal
+                    showMessageModal('Error', data.message || 'An error occurred while adding the student.', false);
+                }
+            })
+            .catch(error => {
+                // Hide loading spinner
+                loadingModal.classList.add('hidden');
+                
+                console.error('Error:', error);
+                showMessageModal('Error', 'An error occurred while adding the student. Please try again.', false);
+            });
+        });
+        
+        // Show message modal
+        function showMessageModal(title, message, isSuccess) {
+            const messageModal = document.getElementById('messageModal');
+            const messageTitle = document.getElementById('messageTitle');
+            const messageContent = document.getElementById('messageContent');
+            const messageIcon = document.getElementById('messageIcon');
+            const closeMessageModal = document.getElementById('closeMessageModal');
+            
+            messageTitle.textContent = title;
+            messageContent.textContent = message;
+            
+            // Set icon based on success or error
+            if (isSuccess) {
+                messageIcon.innerHTML = `
+                    <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                `;
+                messageIcon.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100";
+            } else {
+                messageIcon.innerHTML = `
+                    <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                `;
+                messageIcon.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100";
+            }
+            
+            messageModal.classList.remove('hidden');
+            
+            // Close modal when close button is clicked
+            closeMessageModal.addEventListener('click', function() {
+                messageModal.classList.add('hidden');
+            });
+            
+            // Close modal when clicking outside
+            messageModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.add('hidden');
+                }
+            });
+        }
+    </script>
 </body>
 
 </html>
-
-
