@@ -70,7 +70,7 @@
     <body class="font-sans antialiased" x-data="{ sidebarExpanded: window.innerWidth > 768 }" @resize.window="sidebarExpanded = window.innerWidth > 768">
         <div class="min-h-screen bg-gray-100 dark:bg-gray-100 flex">
             <x-admin-nav-bar />
-
+            
             <!-- Content Area -->
             <div class="content-area flex-1" :class="{'ml-16': !sidebarExpanded, 'ml-64': sidebarExpanded}">
                 <main class="max-w-full mx-auto py-6 px-4 sm:px-6 lg:px-8">
