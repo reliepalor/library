@@ -701,11 +701,15 @@ class AttendanceController extends Controller
             return response()->json(['error' => 'Student not found'], 404);
         }
 
+        // Get student's full name
+        $studentName = $student->fname . ' ' . $student->lname;
+        
         return response()->json([
             'students' => $student,
-            'profile_picture' => $student->user && $student->user->profile_picture 
-                ? $student->user->profile_picture 
-                : null
+            'profile_picture' => $student->user && $student->user->profile_picture
+                ? $student->user->profile_picture
+                : null,
+            'student_name' => $studentName
         ]);
     }
 

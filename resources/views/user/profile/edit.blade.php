@@ -53,7 +53,7 @@
 
     <div class="flex flex-col items-center justify-center min-h-screen py-12 px-4">
         <div class="flex justify-center gap-10 mt-10">
-        <div class="bg-blue-200 rounded-2xl shadow-xl p-8 w-[100vw] max-w-md" x-data="{ showQrModal: false }">
+        <div class="bg-blue-50 rounded-2xl shadow-sm p-8 w-[100vw] max-w-md" x-data="{ showQrModal: false }">
 
             @if (session('status') === 'profile-updated')
                 <div class="mb-6 p-4 bg-green-50 text-green-700 rounded-lg border border-green-200 transition-opacity duration-500" 

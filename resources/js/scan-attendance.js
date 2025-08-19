@@ -1,5 +1,29 @@
  // Main JavaScript for admin scan/webcam attendance
     // (Copied and adapted from user attendance, all AJAX endpoints use /admin/attendance/...)
+    
+    // Helper function to generate avatar URL similar to PHP AvatarService
+    function generateAvatarUrl(name, size = 100) {
+        // Generate initials from name
+        const initials = name ? name.split(' ').map(part => part.charAt(0).toUpperCase()).join('').substring(0, 2) : 'U';
+        
+        // Generate consistent color from string (simplified version)
+        const colors = [
+            '1abc9c', '2ecc71', '3498db', '9b59b6', 'e74c3c',
+            'f39c12', '34495e', '16a085', '27ae60', '2980b9',
+            '8e44ad', 'c0392b', 'd35400', '7f8c8d', '95a5a6'
+        ];
+        
+        // Simple hash function to get consistent color
+        let hash = 0;
+        for (let i = 0; i < name.length; i++) {
+            hash = name.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const background = colors[Math.abs(hash) % colors.length];
+        
+        // Return UI Avatars URL
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=${background}&color=fff&size=${size}&rounded=true&bold=true`;
+    }
+    
     document.addEventListener('DOMContentLoaded', () => {
         // DOM Elements
         const qrInput = document.getElementById('qr-input');
@@ -460,7 +484,10 @@
                 const nameParts = name.split(' ');
                 const fname = nameParts[0] || '';
                 const lname = nameParts.slice(1).join(' ') || '';
-                const profilePicUrl = data.profile_picture ? window.assetBaseUrl + 'storage/' + data.profile_picture : window.assetBaseUrl + 'images/default-profile.png';
+                const studentName = data.student_name || `${fname} ${lname}`;
+                const profilePicUrl = data.profile_picture
+                    ? window.assetBaseUrl + 'storage/' + data.profile_picture
+                    : generateAvatarUrl(studentName, 100);
                 const studentDetailsHtml = `
                     <div class="flex flex-col">
                         <p class="text-lg font-semibold text-gray-900">${lname}, ${fname}</p>
@@ -476,6 +503,11 @@
                     profilePicImg.src = profilePicUrl;
                     // Ensure stable layout and nice ring on success
                     profilePicImg.classList.add('ring-2','ring-blue-200');
+                    // Add onerror handler to fallback to avatar if image fails to load
+                    profilePicImg.onerror = function() {
+                        this.onerror = null;
+                        this.src = generateAvatarUrl(studentName, 100);
+                    };
                 }
                 let studentDetailsDiv = document.getElementById('student-details');
                 if (!studentDetailsDiv) {

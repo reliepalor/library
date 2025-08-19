@@ -152,8 +152,8 @@
                             <div id="student-info" class="mb-4 p-4 bg-gray-50 rounded-lg">
                                 <div class="flex items-center space-x-4">
                                     <div class="flex-shrink-0">
-                                        <img id="student-profile-pic" src="{{ asset('images/default-profile.png') }}" alt="Student Profile"
-                                             onerror="this.onerror=null;this.src='{{ asset('images/default-profile.png') }}';"
+                                        <img id="student-profile-pic" src="{{ \App\Services\AvatarService::getPlaceholderAvatar('Student', 100) }}" alt="Student Profile"
+                                             onerror="this.onerror=null;this.src='{{ \App\Services\AvatarService::getPlaceholderAvatar('Student', 100) }}';"
                                              class="w-16 h-16 rounded-full object-cover border-2 border-blue-200 shadow-sm">
                                     </div>
                                     <div class="flex-1 min-w-0">
@@ -291,9 +291,9 @@
                                         <tr data-student-id="{{ $attendance['student_id'] }}">
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $attendance['student_id'] }}</td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex items-center space-x-3">
-                                                <img src="{{ $attendance['profile_picture'] ? asset('storage/' . $attendance['profile_picture']) : asset('images/default-profile.png') }}"
+                                                <img src="{{ $attendance['profile_picture'] ? asset('storage/' . $attendance['profile_picture']) : \App\Services\AvatarService::getPlaceholderAvatar($attendance['student_name'], 100) }}"
                                                     alt="Profile Picture"
-                                                    onerror="this.onerror=null;this.src='{{ asset('images/default-profile.png') }}';"
+                                                    onerror="this.onerror=null;this.src='{{ \App\Services\AvatarService::getPlaceholderAvatar($attendance['student_name'], 100) }}';"
                                                     class="w-10 h-10 rounded-full object-cover shadow-sm ring-1 ring-blue-100 transition-transform duration-300 hover:scale-105" />
                                                 <span class="font-medium">{{ $attendance['student_name'] }}</span>
                                             </td>
