@@ -8,15 +8,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('borrowed_books', function (Blueprint $table) {
-            $table->string('rejection_reason')->nullable()->after('status');
-        });
+      //  Schema::table('borrowed_books', function (Blueprint $table) {
+        //    $table->string('rejection_reason')->nullable()->after('status');
+      //  });
     }
 
     public function down(): void
     {
-        Schema::table('borrowed_books', function (Blueprint $table) {
-            $table->dropColumn('rejection_reason');
-        });
+    //    Schema::table('borrowed_books', function (Blueprint $table) {
+       //     $table->dropColumn('rejection_reason');
+      //  });
     }
 }; 

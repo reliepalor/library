@@ -11,9 +11,9 @@ return new class extends Migration
         // Add helpful indexes to speed up frequent queries
         Schema::table('attendances', function (Blueprint $table) {
             // Composite index for common lookups today by student and login range
-            $table->index(['student_id', 'login'], 'attendances_student_login_index');
+            $table->index(['student_id', 'login'], 'attendances_student_login_index_v2');
             // For quick filtering by null/non-null logout
-            $table->index('logout', 'attendances_logout_index');
+            // $table->index('logout', 'attendances_logout_index'); // Already exists from table creation
         });
 
         // If your table is named differently, adjust accordingly
@@ -27,8 +27,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('attendances', function (Blueprint $table) {
-            $table->dropIndex('attendances_student_login_index');
-            $table->dropIndex('attendances_logout_index');
+            $table->dropIndex('attendances_student_login_index_v2');
+            // $table->dropIndex('attendances_logout_index'); // Already exists from table creation
         });
 
         if (Schema::hasTable('borrowed_books')) {

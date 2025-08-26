@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('borrowed_books', function (Blueprint $table) {
-            $table->timestamp('returned_at')->nullable()->after('status');
+            // The returned_at column already exists in the base table, so we don't need to add it again
+            // If we need to modify it, we can do so here
         });
     }
 

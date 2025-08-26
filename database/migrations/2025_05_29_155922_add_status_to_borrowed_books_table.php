@@ -11,13 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('cats', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('breed');
-            $table->integer('age');
-            $table->foreignId('dojocat_id')->constrained('dojo_cats')->onDelete('cascade');
-            $table->timestamps();
+        Schema::table('borrowed_books', function (Blueprint $table) {
+            $table->string('status')->default('borrowed')->after('book_id');
         });
     }
 
@@ -26,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('cats');
+        Schema::table('borrowed_books', function (Blueprint $table) {
+            $table->dropColumn('status');
+        });
     }
 };

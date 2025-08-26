@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('borrowed_books', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('attendance_id')->constrained('attendance')->onDelete('cascade');
+            $table->foreignId('attendance_id')->constrained('attendances')->onDelete('cascade');
             $table->string('book_id'); // references books.book_id (like CICS01)
             $table->timestamp('borrowed_at')->default(now());
             $table->timestamp('returned_at')->nullable();

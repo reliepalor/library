@@ -26,7 +26,7 @@
                   x-transition:enter="transition-all duration-300 delay-100"
                   x-transition:enter-start="opacity-0 transform translate-x-4"
                   x-transition:enter-end="opacity-100 transform translate-x-0"
-                  class="ml-3 text-gray-800 font-bold text-lg tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  class="ml-3 text-gray-800 font-bold text-lg tracking-tight">
                 Library
             </span>
         </a>

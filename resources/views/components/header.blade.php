@@ -13,7 +13,7 @@
         <!-- Left: Logo and Brand -->
         <div class="flex items-center space-x-3">
             <img src="/images/library.png" alt="CSU Library Logo" class="h-8 w-8 sm:h-10 sm:w-10 transition-transform duration-300 hover:scale-105">
-            <a href="/" class="text-lg sm:text-xl font-semibold text-gray-800 tracking-tight">CSU Library</a>
+            <a href="/" class="text-lg sm:text-xl font-semibold text-gray-800 tracking-tight">Smart Lib</a>
         </div>
 
         <!-- Center: Navigation Links (Desktop) -->

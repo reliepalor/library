@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('borrowed_books', function (Blueprint $table) {
+        Schema::create('borrow_requests', function (Blueprint $table) {
             $table->id();
             $table->string('student_id');
             $table->string('book_id');

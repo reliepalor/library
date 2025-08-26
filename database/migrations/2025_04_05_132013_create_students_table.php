@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('students', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->string(column: 'student_id');
+            $table->string(column: 'student_id')->unique();
             $table->string(column: 'lname');
             $table->string(column: 'fname');
             $table->string(column: 'MI');
@@ -22,7 +22,8 @@ return new class extends Migration
             $table->string(column: 'year');
             $table->string(column: 'email');
             $table->string('qr_code_path')->nullable();
-
+            
+            $table->index('student_id');
         });
     }
 

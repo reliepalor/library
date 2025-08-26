@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('students', function (Blueprint $table) {
-            $table->boolean('archived')->default(false);
-            $table->timestamp('archived_at')->nullable();
-        });
+       Schema::table('students', function (Blueprint $table) {
+           $table->boolean('archived')->default(false);
+           $table->timestamp('archived_at')->nullable();
+       });
     }
 
     /**
@@ -22,8 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('students', function (Blueprint $table) {
-            $table->dropColumn(['archived', 'archived_at']);
-        });
+       Schema::table('students', function (Blueprint $table) {
+           $table->dropColumn(['archived', 'archived_at']);
+       });
     }
 }; 

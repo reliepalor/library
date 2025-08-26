@@ -8,11 +8,11 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::rename('attendance', 'attendances');
+       // Schema::rename('attendance', 'attendances');
     }
 
     public function down()
     {
-        Schema::rename('attendances', 'attendance');
+        //Schema::rename('attendances', 'attendance');
     }
 }; 
