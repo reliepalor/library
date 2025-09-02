@@ -11,3 +11,4 @@ import './full-screen.js';
 import './scan-attendance.js';
 import './library-book.js'
 import './attendance-menu.js'
+import './user/welcome-mobile-toggle.js';

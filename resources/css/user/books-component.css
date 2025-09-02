@@ -1,0 +1,99 @@
+@layer components {
+    /* Modern Minimalist Animations */
+    .fade-in-up {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .fade-in-up.animate {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* Staggered animation delays */
+    .fade-in-up:nth-child(1) { transition-delay: 0.1s; }
+    .fade-in-up:nth-child(2) { transition-delay: 0.3s; }
+    .fade-in-up:nth-child(3) { transition-delay: 0.5s; }
+    .fade-in-up:nth-child(4) { transition-delay: 0.7s; }
+
+    /* Subtle background pattern */
+    .pattern-overlay {
+        background-image: 
+            radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.02) 2px, transparent 2px),
+            radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.02) 2px, transparent 2px);
+        background-size: 60px 60px;
+        background-position: 0 0, 30px 30px;
+    }
+
+    /* Modern button hover effects */
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-primary::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transition: left 0.6s;
+    }
+
+    .btn-primary:hover::before {
+        left: 100%;
+    }
+
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Stats counter animation */
+    .stat-number {
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* Subtle glow effect */
+    .glow-subtle {
+        box-shadow: 0 0 40px rgba(102, 126, 234, 0.1);
+    }
+
+    /* Modern gradient background */
+    .modern-gradient {
+        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 25%, #1e293b 75%, #0f172a 100%);
+    }
+
+    /* Intersection Observer Animation Trigger */
+    .animate-on-scroll {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .animate-on-scroll.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* Responsive text sizing */
+    .heading-responsive {
+        font-size: clamp(1.875rem, 4vw, 3rem);
+        line-height: 1.2;
+    }
+
+    .text-responsive {
+        font-size: clamp(1rem, 2.5vw, 1.25rem);
+        line-height: 1.6;
+    }
+}
