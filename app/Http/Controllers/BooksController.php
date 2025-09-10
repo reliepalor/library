@@ -47,8 +47,8 @@ class BooksController extends Controller
             if ($request->hasFile("image$i")) {
                 $image = $request->file("image$i");
                 $imageName = time() . "_$i." . $image->getClientOriginalExtension();
-                $image->move(public_path('images/books'), $imageName);
-                $data["image$i"] = $imageName;
+                $path = $image->storeAs('books', $imageName, 'public');
+                $data["image$i"] = $path;
             }
         }
 
@@ -89,14 +89,14 @@ class BooksController extends Controller
         for ($i = 1; $i <= 5; $i++) {
             if ($request->hasFile("image$i")) {
                 // Delete old image if exists
-                if ($book->{"image$i"} && file_exists(public_path('images/books/' . $book->{"image$i"}))) {
-                    unlink(public_path('images/books/' . $book->{"image$i"}));
+                if ($book->{"image$i"}) {
+                    Storage::disk('public')->delete($book->{"image$i"});
                 }
 
                 $image = $request->file("image$i");
                 $imageName = time() . "_$i." . $image->getClientOriginalExtension();
-                $image->move(public_path('images/books'), $imageName);
-                $data["image$i"] = $imageName;
+                $path = $image->storeAs('books', $imageName, 'public');
+                $data["image$i"] = $path;
             }
         }
 
@@ -136,8 +136,8 @@ class BooksController extends Controller
 
         // Delete associated images
         for ($i = 1; $i <= 5; $i++) {
-            if ($book->{"image$i"} && file_exists(public_path('images/books/' . $book->{"image$i"}))) {
-                unlink(public_path('images/books/' . $book->{"image$i"}));
+            if ($book->{"image$i"}) {
+                Storage::disk('public')->delete($book->{"image$i"});
             }
         }
 

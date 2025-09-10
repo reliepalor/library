@@ -17,6 +17,12 @@
         .nav-link:hover { background-color: #f3f4f6; }
         .nav-link.active { background-color: #e5e7eb; color: #111827; border-left: 3px solid #3b82f6; }
         .content-area { transition: margin-left 0.3s ease; }
+
+        /* Toast progress bar animation */
+        #toastProgressBar {
+            transition: width 3s linear;
+            transform-origin: left;
+        }
     </style>
 </head>
 <body class="font-sans antialiased" x-data="{ sidebarExpanded: window.innerWidth > 768 }" @resize.window="sidebarExpanded = window.innerWidth > 768">
@@ -42,11 +48,20 @@
 
     <!-- Toast Notification -->
     <div id="toast" class="fixed top-4 right-4 z-[60] hidden">
-        <div id="toastInner" class="flex items-center gap-3 px-4 py-3 rounded shadow-lg bg-green-600 text-white min-w-[220px]">
-            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div id="toastInner" class="flex items-center gap-3 px-4 py-3 rounded shadow-lg bg-green-600 text-white min-w-[250px] relative overflow-hidden">
+            <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
-            <span id="toastMessage">Success</span>
+            <span id="toastMessage" class="flex-1">Success</span>
+            <button onclick="hideToast()" class="ml-2 text-white hover:text-gray-200 flex-shrink-0">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <!-- Progress Bar -->
+            <div id="toastProgress" class="absolute bottom-0 left-0 h-1 bg-white bg-opacity-30 w-full">
+                <div id="toastProgressBar" class="h-full bg-white w-full"></div>
+            </div>
         </div>
     </div>
                         </div>
@@ -94,7 +109,7 @@
                                                 <div class="text-sm text-gray-500">{{ $request->book->book_code }}</div>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {{ $request->created_at->format('M d, Y h:i A') }}
+                                                {{ $request->created_at->setTimezone('Asia/Manila')->format('M d, Y h:i A') }}
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                 <div class="flex space-x-3">
@@ -165,7 +180,7 @@
                                                 @endif
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {{ $book->created_at->format('M d, Y h:i A') }}
+                                                {{ $book->created_at->setTimezone('Asia/Manila')->format('M d, Y h:i A') }}
                                             </td>
                                         </tr>
                                     @empty
@@ -238,7 +253,13 @@
                             </div>
                         </div>
                         <div class="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
-                            <button type="submit" class="inline-flex w-full justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:col-start-2 sm:text-sm">Reject</button>
+                            <button type="submit" id="rejectSubmitBtn" class="inline-flex w-full justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:col-start-2 sm:text-sm">
+                                <span id="rejectBtnText">Reject</span>
+                                <svg id="rejectSpinner" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </button>
                             <button type="button" onclick="hideRejectModal()" class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:col-start-1 sm:mt-0 sm:text-sm">Cancel</button>
                         </div>
                     </form>
@@ -248,13 +269,22 @@
     </div>
 
     <script>
-        // Simple toast helper
+        // Enhanced toast helper with progress bar
+        let toastTimeout;
+        let progressInterval;
+
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             const toastInner = document.getElementById('toastInner');
             const toastMessage = document.getElementById('toastMessage');
+            const progressBar = document.getElementById('toastProgressBar');
+
+            // Clear any existing timeouts/intervals
+            if (toastTimeout) clearTimeout(toastTimeout);
+            if (progressInterval) clearInterval(progressInterval);
 
             toastMessage.textContent = message || '';
+
             // Set style by type
             if (type === 'error') {
                 toastInner.classList.remove('bg-green-600');
@@ -265,10 +295,36 @@
             }
 
             toast.classList.remove('hidden');
-            // Auto-hide
+
+            // Start progress bar animation
+            progressBar.style.width = '100%';
+            progressBar.style.transition = 'width 0s linear';
+
+            // Delay before starting progress bar shrink
             setTimeout(() => {
-                toast.classList.add('hidden');
-            }, 1500);
+                progressBar.style.width = '0%';
+                progressBar.style.transition = 'width 3s linear';
+            }, 100);
+
+            // Auto-hide after 3.2 seconds
+            toastTimeout = setTimeout(() => {
+                hideToast();
+            }, 3200);
+        }
+
+        function hideToast() {
+            const toast = document.getElementById('toast');
+            const progressBar = document.getElementById('toastProgressBar');
+
+            // Clear timeouts/intervals
+            if (toastTimeout) clearTimeout(toastTimeout);
+            if (progressInterval) clearInterval(progressInterval);
+
+            // Reset progress bar
+            progressBar.style.width = '0%';
+            progressBar.style.transition = 'none';
+
+            toast.classList.add('hidden');
         }
         // Return confirmation modal functions
         let currentBorrowId = null;
@@ -315,9 +371,9 @@
                 if (data.success) {
                     hideReturnConfirmation();
                     showToast('Book marked as returned', 'success');
-                    setTimeout(() => window.location.reload(), 900);
+                    setTimeout(() => window.location.reload(), 3200); // Wait a bit longer than toast duration
                 } else {
-                    alert('Failed to update status: ' + (data.message || 'Unknown error'));
+                    showToast('Failed to update status: ' + (data.message || 'Unknown error'), 'error');
                     button.disabled = false;
                     button.innerHTML = originalText;
                 }
@@ -401,6 +457,94 @@
             const modal = document.getElementById('rejectModal');
             modal.classList.add('hidden');
         }
+
+        // Handle approve button clicks with real-time updates
+        document.addEventListener('submit', function(e) {
+            if (e.target.matches('form[action*="approve"]')) {
+                e.preventDefault();
+                const form = e.target;
+                const originalText = form.querySelector('button').innerHTML;
+
+                // Show loading state
+                form.querySelector('button').innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Approving...';
+                form.querySelector('button').disabled = true;
+
+                const formData = new FormData(form);
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    showToast('Borrow request approved and attendance updated!', 'success');
+                    // Refresh the page to show updated data
+                    setTimeout(() => window.location.reload(), 1500);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('An error occurred while approving the request', 'error');
+                    // Reset button state
+                    form.querySelector('button').innerHTML = originalText;
+                    form.querySelector('button').disabled = false;
+                });
+            }
+        });
+
+        // Handle reject form submission
+        document.getElementById('rejectForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const form = this;
+            const submitBtn = document.getElementById('rejectSubmitBtn');
+            const btnText = document.getElementById('rejectBtnText');
+            const spinner = document.getElementById('rejectSpinner');
+            const originalText = btnText.textContent;
+
+            // Show spinner and disable button
+            btnText.textContent = 'Sending...';
+            spinner.classList.remove('hidden');
+            submitBtn.disabled = true;
+
+            const formData = new FormData(form);
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    hideRejectModal();
+                    showToast('Borrow request rejected and attendance updated!', 'success');
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    showToast('Failed to reject request: ' + (data.message || 'Unknown error'), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An error occurred while rejecting the request', 'error');
+            })
+            .finally(() => {
+                // Reset button state
+                btnText.textContent = originalText;
+                spinner.classList.add('hidden');
+                submitBtn.disabled = false;
+            });
+        });
     </script>
 </body>
 </html> 

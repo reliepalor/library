@@ -288,7 +288,7 @@
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200" id="attendance-table-body">
                                     @forelse($todayAttendance as $attendance)
-                                        <tr data-student-id="{{ $attendance['student_id'] }}">
+                                        <tr data-attendance-id="{{ $attendance['id'] }}">
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $attendance['student_id'] }}</td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex items-center space-x-3">
                                                 <img src="{{ $attendance['profile_picture'] ? asset('storage/' . $attendance['profile_picture']) : \App\Services\AvatarService::getPlaceholderAvatar($attendance['student_name'], 100) }}"
@@ -300,7 +300,17 @@
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full college-{{ $attendance['college'] }}">{{ $attendance['college'] }}</span>
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $attendance['activity'] }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                @if(str_contains(strtolower($attendance['activity']), 'wait for approval'))
+                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">{{ $attendance['activity'] }}</span>
+                                                @elseif(str_contains(strtolower($attendance['activity']), 'borrow:'))
+                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">{{ $attendance['activity'] }}</span>
+                                                @elseif(str_contains(strtolower($attendance['activity']), 'borrow book rejected'))
+                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">{{ $attendance['activity'] }}</span>
+                                                @else
+                                                    {{ $attendance['activity'] }}
+                                                @endif
+                                            </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $attendance['time_in'] }}</td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $attendance['time_out'] }}</td>
                                             <td class="px-6 py-4 whitespace-nowrap">

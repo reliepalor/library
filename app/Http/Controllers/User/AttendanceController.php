@@ -21,10 +21,57 @@ class AttendanceController extends Controller
         $today = Carbon::today()->toDateString();
         $attendances = Attendance::with('student.user')
             ->whereDate('login', $today)
+            ->orderBy('created_at', 'desc')
             ->orderBy('login', 'desc')
             ->get();
 
         return view('user.attendance.index', compact('attendances'));
+    }
+
+    /**
+     * Provide today's attendance in a lightweight JSON for realtime polling on the user page.
+     */
+    public function realtime(Request $request)
+    {
+        try {
+            $today = Carbon::today();
+            $attendances = Attendance::with(['student.user'])
+                ->whereBetween('login', [$today->copy()->startOfDay(), $today->copy()->endOfDay()])
+                ->orderByDesc('created_at')
+                ->orderByDesc('login')
+                ->get();
+
+            $list = $attendances->map(function ($a) {
+                $studentName = trim(($a->student->lname ?? '') . ', ' . ($a->student->fname ?? ''));
+                $profile = optional(optional($a->student)->user)->profile_picture;
+                return [
+                    'id' => $a->id,
+                    'student_id' => $a->student_id,
+                    'student_name' => $studentName,
+                    'college' => $a->student->college ?? '',
+                    'year' => $a->student->year ?? '',
+                    'activity' => $a->activity ?? '',
+                    'time_in' => optional($a->login)->setTimezone('Asia/Manila')->format('h:i A'),
+                    'time_out' => $a->logout ? optional($a->logout)->setTimezone('Asia/Manila')->format('h:i A') : '-',
+                    'profile_picture' => $profile,
+                    'has_logout' => !is_null($a->logout),
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'todayAttendance' => $list,
+                    'last_updated' => now()->toISOString(),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            Log::error('User realtime attendance error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to fetch attendance data',
+            ], 500);
+        }
     }
 
     /**
@@ -59,14 +106,29 @@ class AttendanceController extends Controller
 
             $studentId = $request->student_id;
             $activity = $request->activity;
-            $today = Carbon::today()->toDateString();
-            $now = now();
+            $now = now()->setTimezone('Asia/Manila');
+            $today = $now->toDateString();
 
-            // Check if there is an attendance record for this student today with login but no logout
+            // Check if there's a rejected borrow request for this student today
+            $hasRejectedRequest = \App\Models\BorrowedBook::where('student_id', $studentId)
+                ->whereDate('created_at', $today)
+                ->where('status', 'rejected')
+                ->exists();
+
+            // If there's a rejected request, we still follow normal attendance logic
+            // The attendance record will show "Borrow book rejected" in the activity column
+            // but the student can still log in/out normally for other activities
+
+            // Check for the most recent attendance record for this student today
             $attendance = Attendance::where('student_id', $studentId)
                 ->whereDate('login', $today)
-                ->whereNull('logout')
+                ->orderBy('login', 'desc')
                 ->first();
+
+            // If the most recent record is already logged out, treat it as if there's no active session
+            if ($attendance && !is_null($attendance->logout)) {
+                $attendance = null;
+            }
 
             if ($attendance) {
                 // If found, set logout time
@@ -83,7 +145,7 @@ class AttendanceController extends Controller
                             ->where('status', 'approved')
                             ->update([
                                 'status' => 'returned',
-                                'returned_at' => now()
+                                'returned_at' => $now
                             ]);
                     }
                 }
@@ -91,22 +153,26 @@ class AttendanceController extends Controller
                 // Calculate duration
                 $duration = $attendance->login->diffForHumans($now, ['parts' => 2]);
 
-                // Send logout notification email
-                $student = Student::where('student_id', $studentId)->first();
-                if ($student && $student->email) {
-                    try {
-                        Log::info("Attempting to send logout email to student {$student->email}");
-                        Mail::to($student->email)->send(new AttendanceNotification(
-                            $student,
-                            'logout',
-                            $now,
-                            $attendance->activity,
-                            $duration
-                        ));
-                        Log::info("Logout email sent to student {$student->email}");
-                    } catch (\Exception $e) {
-                        Log::error("Failed to send logout email to student {$student->email}: " . $e->getMessage());
+                // Only send logout notification if this wasn't a system logout
+                if (!$attendance->system_logout) {
+                    $student = Student::where('student_id', $studentId)->first();
+                    if ($student && $student->email) {
+                        try {
+                            Log::info("Attempting to send logout email to student {$student->email}");
+                            Mail::to($student->email)->send(new AttendanceNotification(
+                                $student,
+                                'logout',
+                                $now,
+                                $attendance->activity,
+                                $duration
+                            ));
+                            Log::info("Logout email sent to student {$student->email}");
+                        } catch (\Exception $e) {
+                            Log::error("Failed to send logout email to student {$student->email}: " . $e->getMessage());
+                        }
                     }
+                } else {
+                    Log::info("Skipping logout email for system-logged-out session for student {$studentId}");
                 }
 
                 return response()->json([
@@ -115,6 +181,37 @@ class AttendanceController extends Controller
                     'student_id' => $studentId
                 ]);
             } else {
+                // Check if there are any pending or approved borrow requests for this student today
+                $hasActiveBorrowRequest = \App\Models\BorrowedBook::where('student_id', $studentId)
+                    ->whereDate('created_at', $today)
+                    ->whereIn('status', ['pending', 'approved'])
+                    ->exists();
+
+                // Only prevent borrowing if they have a pending request for the same book
+                if ($hasActiveBorrowRequest && str_contains($activity, 'Borrow')) {
+                    // Check if they're trying to borrow the same book again
+                    $bookCode = null;
+                    if (preg_match('/Borrow:([A-Z0-9]+)/', $activity, $matches)) {
+                        $bookCode = $matches[1];
+                    }
+
+                    if ($bookCode) {
+                        $existingRequest = \App\Models\BorrowedBook::where('student_id', $studentId)
+                            ->where('book_id', $bookCode)
+                            ->whereDate('created_at', $today)
+                            ->whereIn('status', ['pending', 'approved'])
+                            ->exists();
+
+                        if ($existingRequest) {
+                            return response()->json([
+                                'message' => 'You already have a pending or approved request for this book. Please wait for it to be processed.',
+                                'type' => 'pending_request',
+                                'student_id' => $studentId
+                            ], 422);
+                        }
+                    }
+                }
+
                 // Create new attendance record with login time and the selected activity
                 $attendance = Attendance::create([
                     'student_id' => $studentId,
@@ -173,16 +270,19 @@ class AttendanceController extends Controller
 
         $today = Carbon::today()->toDateString();
         
-        // Check if there is an attendance record for this student today with login but no logout
+        // Get the most recent attendance record for this student today
         $attendance = Attendance::where('student_id', $studentId)
             ->whereDate('login', $today)
-            ->whereNull('logout')
+            ->orderBy('login', 'desc')
             ->first();
 
+        // If the most recent record is already logged out, treat it as inactive
+        $hasActiveSession = $attendance && is_null($attendance->logout);
+
         return response()->json([
-            'hasActiveSession' => (bool) $attendance,
+            'hasActiveSession' => $hasActiveSession,
             'student_id' => $studentId,
-            'activity' => $attendance ? $attendance->activity : null
+            'activity' => $hasActiveSession ? $attendance->activity : null
         ]);
     }
 

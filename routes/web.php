@@ -53,6 +53,8 @@ Route::middleware(['auth', UserMiddleware::class])->group(function () {
         Route::get('/', [UserAttendanceController::class, 'index'])->name('index');
         Route::post('/', [UserAttendanceController::class, 'store'])->name('store');
         Route::post('/log', [UserAttendanceController::class, 'log'])->name('log');
+        // Realtime data for user attendance page
+        Route::get('/realtime', [UserAttendanceController::class, 'realtime'])->name('realtime');
         Route::get('/scan', [UserAttendanceController::class, 'scan'])->name('scan');
         Route::get('/check', [UserAttendanceController::class, 'check'])->name('check');
     });
@@ -63,9 +65,13 @@ Route::middleware(['auth', UserMiddleware::class])->group(function () {
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('admin/dashboard', [DashboardController::class, 'index'])->name('admin.auth.dashboard');
 
+    // Real-time attendance data
+    Route::get('admin/attendance/realtime', [\App\Http\Controllers\Admin\AttendanceController::class, 'getRealtimeAttendance'])
+        ->name('admin.attendance.realtime');
+
     // Overdue Book Routes - Moved here and fixed paths
     Route::post('admin/overdue-books/send-reminders', [OverdueBookController::class, 'sendReminders'])
-        ->name('admin.overdue.books.send-reminders');
+        ->name('admin.overdue-books.send-reminders');
     Route::get('admin/overdue-books', [OverdueBookController::class, 'getOverdueBooks'])
         ->name('admin.overdue.books');
 

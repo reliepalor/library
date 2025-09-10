@@ -43,13 +43,12 @@ class Books extends Model
 
     public function borrowedBy()
     {
-        $borrow = \App\Models\BorrowedBook::where('book_id', $this->book_code)
-            ->where('status', 'approved')
+        return \App\Models\BorrowedBook::where('book_id', $this->book_code)
+            ->whereIn('status', ['pending', 'approved'])
             ->whereNull('returned_at')
             ->with('student')
             ->latest()
             ->first();
-        return $borrow ? $borrow->student : null;
     }
 
     public function archive()

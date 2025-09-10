@@ -20,32 +20,91 @@ class AttendanceController extends Controller
 {
     public function index()
     {
-        // Use range to enable index usage on datetime
         $startOfDay = Carbon::today()->startOfDay();
         $endOfDay = Carbon::today()->endOfDay();
-        
-        // Get today's attendance with proper time tracking and student relationship
-        $todayAttendance = Attendance::with(['student' => function($query) {
+
+        // Get today's attendance with optimized query
+        $todayAttendance = $this->getTodayAttendance($startOfDay, $endOfDay);
+
+        // Get borrow requests with optimized query
+        $borrowRequests = $this->getTodayBorrowRequests();
+
+        // Process attendance data with borrow request status
+        $processedData = $this->processAttendanceData($todayAttendance, $borrowRequests);
+
+        return view('admin.attendance.index', $processedData);
+    }
+
+    /**
+     * Get today's attendance records with optimized query
+     */
+    private function getTodayAttendance($startOfDay, $endOfDay)
+    {
+        return Attendance::with(['student' => function($query) {
                 $query->select('student_id', 'lname', 'fname', 'college', 'email')->with('user');
             }])
             ->whereBetween('login', [$startOfDay, $endOfDay])
+            ->orderBy('created_at', 'desc')
             ->orderBy('login', 'desc')
             ->get();
+    }
 
-        // Calculate accurate statistics
-        $stats = [
-            'total' => $todayAttendance->count(), // Total students who have logged in/out today
-            'present' => $todayAttendance->whereNull('logout')->count(), // Students currently in library
-            'absent' => $todayAttendance->whereNotNull('logout')->count(), // Students who have logged out
-            'borrowed' => $todayAttendance->where('activity', 'like', '%Borrow%')->count(), // Books borrowed today
+    /**
+     * Get today's borrow requests with optimized query
+     */
+    private function getTodayBorrowRequests()
+    {
+        return \App\Models\BorrowedBook::with('book:id,book_code,name')
+            ->whereDate('created_at', Carbon::today())
+            ->whereIn('status', ['pending', 'approved', 'rejected'])
+            ->get()
+            ->groupBy('student_id');
+    }
+
+    /**
+     * Process attendance data and calculate statistics
+     */
+    private function processAttendanceData($todayAttendance, $borrowRequests)
+    {
+        // Calculate statistics
+        $stats = $this->calculateAttendanceStats($todayAttendance);
+
+        // Get college-wise statistics
+        $collegeStats = $this->calculateCollegeStats($todayAttendance);
+
+        // Format attendance data for display
+        $formattedAttendance = $this->formatAttendanceData($todayAttendance, $borrowRequests);
+
+        return [
+            'todayAttendance' => $formattedAttendance,
+            'stats' => $stats,
+            'collegeStats' => $collegeStats
         ];
+    }
 
-        // Get accurate college-wise statistics
-        $collegeStats = [];
+    /**
+     * Calculate attendance statistics
+     */
+    private function calculateAttendanceStats($attendance)
+    {
+        return [
+            'total' => $attendance->count(),
+            'present' => $attendance->whereNull('logout')->count(),
+            'absent' => $attendance->whereNotNull('logout')->count(),
+            'borrowed' => $attendance->where('activity', 'like', '%Borrow%')->count(),
+        ];
+    }
+
+    /**
+     * Calculate college-wise statistics
+     */
+    private function calculateCollegeStats($attendance)
+    {
         $colleges = ['CICS', 'CTED', 'CCJE', 'CHM', 'CBEA', 'CA'];
-        
+        $collegeStats = [];
+
         foreach ($colleges as $college) {
-            $collegeAttendance = $todayAttendance->filter(function($attendance) use ($college) {
+            $collegeAttendance = $attendance->filter(function($attendance) use ($college) {
                 return $attendance->student && $attendance->student->college === $college;
             });
 
@@ -55,26 +114,67 @@ class AttendanceController extends Controller
             ];
         }
 
-        // Format attendance data for display with proper time formatting
-        $formattedAttendance = $todayAttendance->map(function ($attendance) {
+        return $collegeStats;
+    }
+
+    /**
+     * Format attendance data for display with borrow request status
+     */
+    private function formatAttendanceData($attendance, $borrowRequests)
+    {
+        return $attendance->map(function ($attendance) use ($borrowRequests) {
+            $studentId = $attendance->student_id;
+            $activity = $this->getActivityWithBorrowStatus($attendance, $borrowRequests, $studentId);
+
             return [
+                'id' => $attendance->id,
                 'student_id' => $attendance->student->student_id ?? 'N/A',
                 'student_name' => ($attendance->student->lname ?? 'N/A') . ', ' . ($attendance->student->fname ?? 'N/A'),
                 'profile_picture' => $attendance->student && $attendance->student->user && $attendance->student->user->profile_picture
                     ? $attendance->student->user->profile_picture
                     : null,
                 'college' => $attendance->student->college ?? 'N/A',
-                'activity' => $attendance->activity,
+                'activity' => $activity,
                 'time_in' => $attendance->login ? Carbon::parse($attendance->login)->setTimezone('Asia/Manila')->format('h:i A') : 'N/A',
                 'time_out' => $attendance->logout ? Carbon::parse($attendance->logout)->setTimezone('Asia/Manila')->format('h:i A') : 'N/A'
             ];
         });
+    }
 
-        return view('admin.attendance.index', [
-            'todayAttendance' => $formattedAttendance,
-            'stats' => $stats,
-            'collegeStats' => $collegeStats
-        ]);
+    /**
+     * Get activity text with borrow request status
+     */
+    private function getActivityWithBorrowStatus($attendance, $borrowRequests, $studentId)
+    {
+        $activity = $attendance->activity;
+        $studentBorrowRequests = $borrowRequests->get($studentId, collect());
+
+        // Get all borrow requests linked to this attendance record
+        $linkedBorrowRequests = $studentBorrowRequests->where('attendance_id', $attendance->id);
+
+        if ($linkedBorrowRequests->isNotEmpty()) {
+            // Get the most recent borrow request by creation date
+            $mostRecentRequest = $linkedBorrowRequests->sortByDesc('created_at')->first();
+
+            switch ($mostRecentRequest->status) {
+                case 'pending':
+                    $activity = 'Wait for approval';
+                    break;
+                case 'approved':
+                    $activity = $mostRecentRequest->book ? 'Borrow:' . $mostRecentRequest->book->book_code : $attendance->activity;
+                    break;
+                case 'rejected':
+                    $activity = 'Borrow book rejected';
+                    break;
+                case 'returned':
+                    $activity = 'Book returned';
+                    break;
+                default:
+                    $activity = $attendance->activity;
+            }
+        }
+
+        return $activity;
     }
 
     public function history(Request $request)
@@ -104,7 +204,7 @@ class AttendanceController extends Controller
 
             return view('admin.attendance.history', compact('history', 'colleges', 'activities'));
         } catch (\Exception $e) {
-                LogFacade::error('Error in attendance history: ' . $e->getMessage());
+            Log::error('Error in attendance history: ' . $e->getMessage());
             return view('admin.attendance.history', [
                 'history' => collect(),
                 'colleges' => collect(),
@@ -185,7 +285,7 @@ class AttendanceController extends Controller
 
         } catch (\Exception $e) {
             // Log the error
-            \Log::error('Error in attendance insights: ' . $e->getMessage());
+            Log::error('Error in attendance insights: ' . $e->getMessage());
             
             // Return view with empty data
             return view('admin.attendance.insights', [
@@ -365,32 +465,45 @@ class AttendanceController extends Controller
 
     public function saveAndReset()
     {
-        // Get today's attendance records
-        $today = Carbon::today()->toDateString();
-        $todayAttendance = Attendance::with(['student' => function($query) {
-                $query->select('student_id', 'lname', 'fname', 'college');
-            }])
-            ->whereDate('login', $today)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $startOfDay = Carbon::today()->startOfDay();
+        $endOfDay = Carbon::today()->endOfDay();
 
-        // Create attendance history records
-        foreach ($todayAttendance as $attendance) {
-            AttendanceHistory::create([
-                'student_id' => $attendance->student_id,
-                'college' => $attendance->student->college,
-                'activity' => $attendance->activity,
-                'time_in' => $attendance->login,
-                'time_out' => $attendance->logout,
-                'date' => $today
-            ]);
-        }
+        // Get today's attendance with optimized query
+        $todayAttendance = $this->getTodayAttendance($startOfDay, $endOfDay);
+
+        // Get borrow requests with optimized query
+        $borrowRequests = $this->getTodayBorrowRequests();
+
+        // Create attendance history records with proper activity status
+        $this->createAttendanceHistoryRecords($todayAttendance, $borrowRequests);
 
         // Delete today's attendance records
         $todayAttendance->each->delete();
 
         return redirect()->route('admin.attendance.index')
             ->with('success', 'Attendance records have been saved and reset successfully.');
+    }
+
+    /**
+     * Create attendance history records with proper activity status
+     */
+    private function createAttendanceHistoryRecords($attendance, $borrowRequests)
+    {
+        $today = Carbon::today()->toDateString();
+
+        foreach ($attendance as $record) {
+            $studentId = $record->student_id;
+            $activity = $this->getActivityWithBorrowStatus($record, $borrowRequests, $studentId);
+
+            AttendanceHistory::create([
+                'student_id' => $record->student_id,
+                'college' => $record->student->college,
+                'activity' => $activity,
+                'time_in' => $record->login,
+                'time_out' => $record->logout,
+                'date' => $today
+            ]);
+        }
     }
 
     public function getHistoryData(Request $request)
@@ -713,6 +826,40 @@ class AttendanceController extends Controller
         ]);
     }
 
+    /**
+     * Get real-time attendance data for AJAX polling
+     */
+    public function getRealtimeAttendance(Request $request)
+    {
+        try {
+            $startOfDay = Carbon::today()->startOfDay();
+            $endOfDay = Carbon::today()->endOfDay();
+
+            // Get today's attendance with optimized query
+            $todayAttendance = $this->getTodayAttendance($startOfDay, $endOfDay);
+
+            // Get borrow requests with optimized query
+            $borrowRequests = $this->getTodayBorrowRequests();
+
+            // Process attendance data with borrow request status
+            $processedData = $this->processAttendanceData($todayAttendance, $borrowRequests);
+
+            return response()->json([
+                'success' => true,
+                'data' => array_merge($processedData, [
+                    'last_updated' => now()->toISOString()
+                ])
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error in getRealtimeAttendance: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to fetch attendance data',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
     /**
      * Return available books (active and not currently borrowed) for quick borrowing.
      */

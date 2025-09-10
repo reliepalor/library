@@ -18,6 +18,9 @@ Route::prefix('admin')->group(function () {
 
         // Added route for attendance analytics
         Route::get('overdue/check-emails', [OverdueBookController::class, 'checkOverdueEmails'])->name('admin.overdue.check-emails');
+
+        // Route for sending overdue book reminders
+        Route::post('overdue/books/send-reminders', [OverdueBookController::class, 'sendReminders'])->name('admin.overdue.books.send-reminders');
     });
 });
 

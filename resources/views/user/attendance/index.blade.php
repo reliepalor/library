@@ -18,8 +18,7 @@
     <style>
         /* Modern College Badge Styles */
         .college-CICS { 
-            background: linear-gradient(135deg, #8b5cf6, #a855f7);
-            color: white;
+            background-color: #c77dff;
             padding: 0.375rem 0.75rem;
             border-radius: 50px;
             font-size: 0.75rem;
@@ -29,8 +28,7 @@
             transition: all 0.2s ease;
         }
         .college-CTED { 
-            background: linear-gradient(135deg, #06b6d4, #0891b2);
-            color: white;
+            background-color: #90e0ef;
             padding: 0.375rem 0.75rem;
             border-radius: 50px;
             font-size: 0.75rem;
@@ -40,8 +38,7 @@
             transition: all 0.2s ease;
         }
         .college-CCJE { 
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: white;
+            background-color: #ff4d6d; 
             padding: 0.375rem 0.75rem;
             border-radius: 50px;
             font-size: 0.75rem;
@@ -51,8 +48,7 @@
             transition: all 0.2s ease;
         }
         .college-CHM { 
-            background: linear-gradient(135deg, #ec4899, #db2777);
-            color: white;
+            background-color: #ffc8dd; 
             padding: 0.375rem 0.75rem;
             border-radius: 50px;
             font-size: 0.75rem;
@@ -62,8 +58,7 @@
             transition: all 0.2s ease;
         }
         .college-CBEA { 
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: white;
+            background-color: #fae588;
             padding: 0.375rem 0.75rem;
             border-radius: 50px;
             font-size: 0.75rem;
@@ -73,8 +68,7 @@
             transition: all 0.2s ease;
         }
         .college-CA { 
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
+            background-color: #80ed99;
             padding: 0.375rem 0.75rem;
             border-radius: 50px;
             font-size: 0.75rem;
@@ -250,15 +244,24 @@
                                     </td>
                                     <td class="px-6 py-4 text-sm text-gray-600 hidden sm:table-cell">{{ $attendance->student->year ?? '' }}</td>
                                     <td class="px-6 py-4">
-                                        @if(str_contains($attendance->activity, 'Borrow'))
+                                        @php
+                                            $activityText = $attendance->activity ?? '';
+                                            $lower = strtolower($activityText);
+                                        @endphp
+                                        @if(str_contains($lower, 'wait for approval'))
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">{{ $activityText }}</span>
+                                        @elseif(str_contains($lower, 'borrow:'))
                                             @php
-                                                $parts = explode(':', $attendance->activity);
-                                                $activity = $parts[0];
-                                                $bookCode = $parts[1] ?? 'N/A';
+                                                $parts = explode(':', $activityText);
+                                                $code = $parts[1] ?? '';
                                             @endphp
-                                            <span class="activity-badge">{{ $activity }}: {{ $bookCode }}</span>
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Borrow: {{ trim($code) }}</span>
+                                        @elseif(str_contains($lower, 'borrow book rejected'))
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">{{ $activityText }}</span>
+                                        @elseif(str_contains($lower, 'book returned'))
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">{{ $activityText }}</span>
                                         @else
-                                            <span class="activity-badge">{{ $attendance->activity ?? '' }}</span>
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">{{ $activityText }}</span>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4">
@@ -305,6 +308,103 @@
                 el.style.animationDelay = `${index * 0.1}s`;
             });
         });
+
+        // Realtime updates for user attendance table
+        (function() {
+            // Asset bases for images
+            const storageBase = "{{ asset('storage') }}/";
+            const defaultProfile = "{{ asset('images/default-profile.png') }}";
+            const tbody = document.getElementById('attendance-table-body');
+            if (!tbody) return;
+
+            const getActivityBadge = (text) => {
+                if (!text) return '';
+                const lower = String(text).toLowerCase();
+                if (lower.includes('wait for approval')) {
+                    return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">${text}</span>`;
+                }
+                if (lower.startsWith('borrow:')) {
+                    const parts = String(text).split(':');
+                    const code = (parts[1] || '').trim();
+                    return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Borrow: ${code}</span>`;
+                }
+                if (lower.includes('borrow book rejected')) {
+                    return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">${text}</span>`;
+                }
+                if (lower.includes('book returned')) {
+                    return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">${text}</span>`;
+                }
+                return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">${text}</span>`;
+            };
+
+            let inFlight = null;
+            const fetchRealtime = async () => {
+                try {
+                    // Prevent overlapping requests
+                    if (inFlight) {
+                        return;
+                    }
+                    inFlight = true;
+                    const res = await fetch('{{ route('user.attendance.realtime') }}', {
+                        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    if (!res.ok) return;
+                    const json = await res.json();
+                    if (!json?.success || !json?.data) return;
+
+                    const rows = json.data.todayAttendance || [];
+                    if (!rows.length) {
+                        tbody.innerHTML = `<tr>
+                            <td colspan="7" class="px-6 py-12 text-center">
+                                <div class="text-gray-400">
+                                    <svg class="mx-auto h-12 w-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                    </svg>
+                                    <p class="text-lg font-medium">No attendance logs yet</p>
+                                    <p class="text-sm">Student activities will appear here as they occur</p>
+                                </div>
+                            </td>
+                        </tr>`;
+                        return;
+                    }
+
+                    const frag = document.createDocumentFragment();
+                    rows.forEach(a => {
+                        const imgUrl = a.profile_picture ? (storageBase + a.profile_picture) : defaultProfile;
+                        const tr = document.createElement('tr');
+                        tr.className = 'table-row';
+                        tr.innerHTML = `
+                            <td class="px-6 py-4 font-semibold text-gray-800 text-sm">${a.student_id}</td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center space-x-3">
+                                    <img src="${imgUrl}" alt="Profile Picture" class="profile-img" onerror="this.onerror=null;this.src='${defaultProfile}'" />
+                                    <div>
+                                        <div class="font-medium text-gray-900">${a.student_name || ''}</div>
+                                        <div class="text-sm text-gray-500 sm:hidden">${a.student_id}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4"><span class="college-${a.college || ''}">${a.college || ''}</span></td>
+                            <td class="px-6 py-4 text-sm text-gray-600 hidden sm:table-cell">${a.year || ''}</td>
+                            <td class="px-6 py-4">${getActivityBadge(a.activity)}</td>
+                            <td class="px-6 py-4"><div class="text-sm font-medium text-gray-900">${a.time_in || '-'}</div><div class="text-xs text-gray-500 sm:hidden">Year: ${a.year || ''}</div></td>
+                            <td class="px-6 py-4 hidden sm:table-cell"><div class="text-sm font-medium text-gray-900">${a.time_out || '-'}</div><div class="text-xs ${a.has_logout ? 'text-emerald-600' : 'text-blue-600'}">${a.has_logout ? 'Completed' : 'Active'}</div></td>
+                        `;
+                        frag.appendChild(tr);
+                    });
+                    tbody.innerHTML = '';
+                    tbody.appendChild(frag);
+                } catch (e) {
+                    console.debug('User realtime fetch failed:', e);
+                } finally {
+                    inFlight = false;
+                }
+            };
+
+            // Initial load and poll every 5s
+            fetchRealtime();
+            setInterval(fetchRealtime, 3000);
+        })();
     </script>
 </body>
 </html>

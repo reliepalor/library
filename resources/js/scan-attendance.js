@@ -163,6 +163,22 @@
             }
         };
 
+        // Helper to update a row's status in the table
+        const updateAttendanceRowStatus = (studentId, status, timeOut) => {
+            const row = document.querySelector(`tr[data-student-id="${studentId}"]`);
+            if (row) {
+                const statusCell = row.querySelector('td:last-child span');
+                const timeOutCell = row.querySelector('td:nth-last-child(2)');
+                if (statusCell) {
+                    statusCell.textContent = status;
+                    statusCell.className = `px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${status === 'Present' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`;
+                }
+                if (timeOutCell) {
+                    timeOutCell.textContent = timeOut;
+                }
+            }
+        };
+
         // Utility functions
         const showStatus = (message, type = 'info') => {
             statusText.textContent = message;
@@ -220,7 +236,7 @@
         };
 
         const getCSRFToken = () => {
-            return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+            return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
                    document.querySelector('input[name="_token"]')?.value;
         };
 
@@ -241,6 +257,7 @@
                 initWebcamScanner();
             }
         };
+ 
 
         const switchToPhysicalMode = () => {
             currentMode = 'physical';
@@ -383,6 +400,50 @@
             }
         });
 
+        // Logout handler
+        const handleLogout = async (studentId, activity) => {
+            if (logoutInProgress) return;
+            logoutInProgress = true;
+            showLoading('Logging out...');
+            try {
+                const response = await fetch('/admin/attendance/log', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': getCSRFToken(),
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({ 
+                        student_id: studentId, 
+                        activity: activity // Pass the current activity to log out
+                    }),
+                });
+                const data = await response.json();
+                if (!response.ok || data.type !== 'logout') throw new Error(data.message || 'Failed to log out');
+                
+                showStatus(`Student ${studentId} logged out successfully.`, 'success');
+                
+                // Show a visual confirmation modal
+                logoutModal.classList.remove('hidden');
+                setTimeout(() => logoutModal.classList.add('hidden'), 2000);
+
+                // Refresh table from server to avoid mutating previous rows
+                fetchRealtimeOnce();
+
+            } catch (error) {
+                showStatus(`Logout Error: ${error.message}`, 'error');
+            } finally {
+                hideLoading();
+                logoutInProgress = false;
+                isProcessing = false; // Reset for next scan
+                if (currentMode === 'physical') {
+                    qrInput.value = '';
+                    qrInput.focus();
+                }
+            }
+        };
+
         // Main QR scan handler
         const handleQrScan = async (qrData) => {
             if (isProcessing || logoutInProgress) return;
@@ -427,56 +488,9 @@
             const checkData = await checkResponse.json();
 
             if (checkData.hasActiveSession) {
-                // If student is logged in, automatically log them out without showing activity modal or confirmation
-                const logoutResponse = await fetch('/admin/attendance/log', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken,
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                    body: JSON.stringify({
-                        student_id: studentId,
-                        activity: checkData.activity || 'Logout'
-                    }),
-                });
-                if (!logoutResponse.ok) throw new Error('Failed to log out student');
-                const logoutData = await logoutResponse.json();
-                showStatus(logoutData.message || 'Logout successful!', 'success');
-        // Update attendance table dynamically
-        // Find existing row for student and update it, or add new row if not found
-        const tableBody = document.querySelector('table tbody');
-        if (tableBody) {
-            const existingRow = tableBody.querySelector(`tr[data-student-id="${studentId}"]`);
-            if (existingRow) {
-                existingRow.querySelector('td:nth-child(4)').textContent = checkData.activity || 'Logout';
-                existingRow.querySelector('td:nth-child(6)').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-                const statusSpan = existingRow.querySelector('td:nth-child(7) span');
-                if (statusSpan) {
-                    statusSpan.textContent = 'Logged Out';
-                    statusSpan.className = 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800';
-                }
-            } else {
-                addAttendanceRow({
-                    student_id: studentId,
-                    student_name: studentInfoDiv.querySelector('p.font-medium')?.textContent || '',
-                    college: studentInfoDiv.querySelector('p.text-sm.text-gray-600:nth-child(3)')?.textContent.replace('College: ', '') || '',
-                    activity: checkData.activity || 'Logout',
-                    time_in: '', // No change for login time
-                    time_out: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }),
-                    status: 'Logged Out'
-                });
-            }
-        }
-        // Show logout success modal
-        logoutModal.classList.remove('hidden');
-        setTimeout(() => {
-            logoutModal.classList.add('hidden');
-        }, 1800);
-        hideLoading();
-        isProcessing = false;
-        return;
+                // Rescan while active => perform logout with confirmation UI (modal already implemented in handleLogout)
+                await handleLogout(studentId, checkData.activity);
+                return;
             }
 
                 // If not logged in, show the activity modal for login
@@ -629,16 +643,8 @@
                 if (!response.ok) throw new Error(data.message || 'Failed to log attendance');
                 showStatus(data.message || 'Attendance logged successfully!', 'success');
                 activityModal.classList.add('hidden');
-                // Dynamically add the new attendance row to the table
-                addAttendanceRow({
-                    student_id: studentId,
-                    student_name: document.querySelector('#student-details p.text-lg')?.textContent || '',
-                    college: (document.querySelector('#student-details span[class*="college-"]')?.textContent) || '',
-                    activity: activity,
-                    time_in: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }),
-                    time_out: 'N/A',
-                    status: 'Present'
-                });
+                // Refresh table to show the newly created attendance row
+                fetchRealtimeOnce();
                 // Reset for next scan
                 if (currentMode === 'physical') {
                     qrInput.value = '';
@@ -658,12 +664,10 @@
             const bookId = document.getElementById('book_id').value;
             const activityType = activitySelect.value === 'Stay&Borrow' ? 'Stay&Borrow' : 'Borrow';
             try {
-                // Close the modal immediately; spinner shows only if slow due to delayed show
                 borrowModal.classList.add('hidden');
-                showStatus('Processing borrow request...');
                 showLoading('Requesting book...');
-                // First check if book can be borrowed (admin route)
-                const borrowResponse = await fetch('/admin/borrow/request', {
+
+                const response = await fetch('/admin/borrow/request', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -673,53 +677,30 @@
                     },
                     body: JSON.stringify({ 
                         student_id: studentId, 
-                        book_id: bookId 
+                        book_id: bookId,
+                        activity: activityType // Pass the activity type
                     }),
                 });
-                if (!borrowResponse.ok) {
-                    const errorData = await borrowResponse.json().catch(() => ({}));
-                    showStatus(errorData.message || 'Failed to request book', 'error');
-                    borrowModal.classList.add('hidden');
-                    document.getElementById('book_id').value = '';
-                    return;
+
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to request book');
                 }
-                // Only log attendance if book borrow request was successful
-                showLoading('Logging attendance...');
-                const attendanceResponse = await fetch('/admin/attendance/log', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': getCSRFToken(),
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                    body: JSON.stringify({ 
-                        student_id: studentId, 
-                        activity: `${activityType}:${bookId}`
-                    }),
-                });
-                if (!attendanceResponse.ok) {
-                    const errorData = await attendanceResponse.json().catch(() => ({}));
-                    throw new Error(errorData.message || 'Failed to log attendance');
-                }
-                const data = await borrowResponse.json();
+
                 showStatus(data.message || 'Book borrow request successful!', 'success');
-                borrowModal.classList.add('hidden');
                 document.getElementById('book_id').value = '';
-                // Add a row immediately without reload
-                addAttendanceRow({
-                    student_id: studentId,
-                    student_name: document.querySelector('#student-details p.text-lg')?.textContent || '',
-                    college: (document.querySelector('#student-details span[class*="college-"]')?.textContent) || '',
-                    activity: `${activityType}:${bookId}`,
-                    time_in: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }),
-                    time_out: 'N/A',
-                    status: 'Present'
-                });
+
+                // The backend now creates/links the attendance record; refresh table once
+                fetchRealtimeOnce();
+
             } catch (error) {
-                showStatus(`Error processing borrow request: ${error.message}`, 'error');
+                showStatus(`Error: ${error.message}`, 'error');
             } finally {
                 hideLoading();
+                if (currentMode === 'physical') {
+                    qrInput.value = '';
+                    qrInput.focus();
+                }
             }
         });
 
@@ -829,25 +810,255 @@
             location.reload();
         });
 
+        // Real-time attendance updates
+        let lastUpdateTime = null;
+        let updateInterval = null;
+
+        const fetchRealtimeOnce = async () => {
+            try {
+                const response = await fetch('/admin/attendance/realtime', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    }
+                });
+                if (!response.ok) return;
+                const data = await response.json();
+                if (data?.data?.todayAttendance) {
+                    updateAttendanceTable(data.data.todayAttendance);
+                    lastUpdateTime = data.data.last_updated || lastUpdateTime;
+                }
+            } catch (e) {
+                // ignore
+            }
+        };
+
+        const startRealtimeUpdates = () => {
+            if (updateInterval) clearInterval(updateInterval);
+            updateInterval = setInterval(async () => {
+                try {
+                    const response = await fetch('/admin/attendance/realtime', {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': getCSRFToken()
+                        }
+                    });
+
+                    if (!response.ok) return;
+
+                    const data = await response.json();
+                    if (data.success && data.data) {
+                        // Check if data has changed
+                        const newUpdateTime = data.data.last_updated;
+                        if (lastUpdateTime !== newUpdateTime) {
+                            lastUpdateTime = newUpdateTime;
+                            updateAttendanceTable(data.data.todayAttendance);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error fetching realtime attendance:', error);
+                }
+            }, 3000); // Update every 3 seconds
+        };
+
+        const updateAttendanceTable = (attendanceData) => {
+            const tableBody = document.querySelector('table tbody');
+            if (!tableBody) return;
+
+            // Clear existing rows
+            tableBody.innerHTML = '';
+
+            if (!attendanceData || attendanceData.length === 0) {
+                const emptyRow = document.createElement('tr');
+                emptyRow.innerHTML = `
+                    <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">
+                        No attendance records for today
+                    </td>
+                `;
+                tableBody.appendChild(emptyRow);
+                return;
+            }
+
+            // Add updated rows
+            attendanceData.forEach(attendance => {
+                const tr = document.createElement('tr');
+                tr.setAttribute('data-attendance-id', attendance.id);
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${attendance.student_id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex items-center space-x-3">
+                        <img src="${attendance.profile_picture ? (window.assetBaseUrl + 'storage/' + attendance.profile_picture) : (window.assetBaseUrl + 'images/default-profile.png')}"
+                             alt="Profile Picture"
+                             onerror="this.onerror=null;this.src='${window.assetBaseUrl}images/default-profile.png';"
+                             class="w-10 h-10 rounded-full object-cover shadow-sm ring-1 ring-blue-100 transition-transform duration-300 hover:scale-105" />
+                        <span class="font-medium">${attendance.student_name}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full college-${attendance.college}">${attendance.college}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${getActivityDisplay(attendance.activity)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${attendance.time_in}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${attendance.time_out}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${attendance.time_out === 'N/A' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">${attendance.time_out === 'N/A' ? 'Present' : 'Logged Out'}</span>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        };
+
+        // Start real-time updates when page loads
+        startRealtimeUpdates();
+
+        // Handle borrow request status updates
+        const handleBorrowStatusUpdate = async (borrowRequestId, newStatus, bookCode = null) => {
+            try {
+                const response = await fetch(`/admin/borrow-requests/${borrowRequestId}/update-status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': getCSRFToken(),
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({
+                        status: newStatus
+                    }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || 'Failed to update borrow request status');
+                }
+
+                const data = await response.json();
+
+                // Update the attendance table immediately based on the new status
+                const tableBody = document.querySelector('table tbody');
+                if (tableBody) {
+                    // Find the row that needs to be updated (we'll need to get student_id from the borrow request)
+                    // For now, we'll trigger a real-time update to refresh the table
+                    setTimeout(() => {
+                        // Force a real-time update to get the latest data
+                        if (updateInterval) {
+                            clearInterval(updateInterval);
+                        }
+                        startRealtimeUpdates();
+                    }, 500);
+                }
+
+                showStatus(data.message || 'Borrow request status updated successfully!', 'success');
+                return data;
+            } catch (error) {
+                showStatus(`Error updating borrow request: ${error.message}`, 'error');
+                throw error;
+            }
+        };
+
+        // Add event listeners for borrow request actions (if they exist on this page)
+        document.addEventListener('click', async (e) => {
+            // Handle approve button clicks
+            if (e.target.matches('.approve-borrow-btn') || e.target.closest('.approve-borrow-btn')) {
+                e.preventDefault();
+                const button = e.target.matches('.approve-borrow-btn') ? e.target : e.target.closest('.approve-borrow-btn');
+                const borrowRequestId = button.getAttribute('data-id');
+                const bookCode = button.getAttribute('data-book-code');
+
+                if (borrowRequestId && confirm('Are you sure you want to approve this borrow request?')) {
+                    try {
+                        await handleBorrowStatusUpdate(borrowRequestId, 'approved', bookCode);
+                        // Update the button's parent row or remove it from pending list
+                        const row = button.closest('tr');
+                        if (row) {
+                            row.remove();
+                        }
+                    } catch (error) {
+                        console.error('Failed to approve borrow request:', error);
+                    }
+                }
+            }
+
+            // Handle reject button clicks
+            if (e.target.matches('.reject-borrow-btn') || e.target.closest('.reject-borrow-btn')) {
+                e.preventDefault();
+                const button = e.target.matches('.reject-borrow-btn') ? e.target : e.target.closest('.reject-borrow-btn');
+                const borrowRequestId = button.getAttribute('data-id');
+
+                if (borrowRequestId && confirm('Are you sure you want to reject this borrow request?')) {
+                    try {
+                        await handleBorrowStatusUpdate(borrowRequestId, 'rejected');
+                        // Update the button's parent row or remove it from pending list
+                        const row = button.closest('tr');
+                        if (row) {
+                            row.remove();
+                        }
+                    } catch (error) {
+                        console.error('Failed to reject borrow request:', error);
+                    }
+                }
+            }
+        });
+
         // Logout confirmation modal buttons
         // Removed logout confirmation modal event listeners as per user request
     });
+
+    // Helper function to get activity display with appropriate styling
+    function getActivityDisplay(activity) {
+        if (!activity) return '';
+
+        if (activity === 'Borrow book rejected') {
+            return `<span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">${activity}</span>`;
+        } else if (activity.toLowerCase().startsWith('borrow:')) {
+            return `<span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">${activity}</span>`;
+        } else if (activity === 'Wait for approval') {
+            return `<span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">${activity}</span>`;
+        } else if (activity === 'Stay&Borrow' || activity === 'Stay' || activity === 'Borrow') {
+            return `<span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">${activity}</span>`;
+        } else if (activity.toLowerCase().startsWith('other:')) {
+            return `<span class="px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">${activity}</span>`;
+        } else {
+            return activity;
+        }
+    }
 
     // Add this helper function to append a row to the attendance table
     function addAttendanceRow(row) {
         const tableBody = document.querySelector('table tbody');
         if (!tableBody) return;
+
+        // Check if row already exists for this student
+        const existingRow = tableBody.querySelector(`tr[data-student-id="${row.student_id}"]`);
+        if (existingRow) {
+            // Update existing row instead of adding new one
+            existingRow.querySelector('td:nth-child(4)').textContent = row.activity;
+            existingRow.querySelector('td:nth-child(5)').textContent = row.time_in;
+            existingRow.querySelector('td:nth-child(6)').textContent = row.time_out;
+            const statusSpan = existingRow.querySelector('td:nth-child(7) span');
+            if (statusSpan) {
+                statusSpan.textContent = row.status;
+                statusSpan.className = 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800';
+            }
+            return;
+        }
+
         const tr = document.createElement('tr');
+        tr.setAttribute('data-student-id', row.student_id);
         tr.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${row.student_id}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex items-center space-x-3">
-        <img src="${row.profile_picture ? window.assetBaseUrl + 'storage/' + row.profile_picture : window.assetBaseUrl + 'images/default-profile.png'}"
-             alt="Profile Picture"
-             class="w-10 h-10 rounded-full object-cover shadow-sm ring-1 ring-blue-100 transition-transform duration-300 hover:scale-105" />
+                <img src="${row.profile_picture || window.assetBaseUrl + 'images/default-profile.png'}"
+                     alt="Profile Picture"
+                     class="w-10 h-10 rounded-full object-cover shadow-sm ring-1 ring-blue-100 transition-transform duration-300 hover:scale-105"
+                     onerror="this.onerror=null;this.src='${window.assetBaseUrl}images/default-profile.png';" />
                 <span class="font-medium">${row.student_name}</span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full college-${row.college}">${row.college}</span></td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${row.activity}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                ${getActivityDisplay(row.activity)}
+            </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${row.time_in}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${row.time_out}</td>
             <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">${row.status}</span></td>

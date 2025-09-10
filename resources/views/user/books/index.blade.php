@@ -247,14 +247,23 @@
                                  @else bg-gray-100 text-gray-800 @endif">
                         {{ $book->section }}
                     </span>
-                    @if($book->isBorrowed())
-                        <span class="absolute top-3 left-3 bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-1 
-                                     rounded-full shadow-sm transform transition-all duration-200 hover:scale-105">
-                            Borrowed
-                            @if($book->borrowedBy())
-                                by {{ $book->borrowedBy()->lname ?? '' }}
-                            @endif
-                        </span>
+                    @php
+                        $borrowedBy = $book->borrowedBy();
+                    @endphp
+                    @if($borrowedBy)
+                        @if($borrowedBy->status === 'pending')
+                            <span class="absolute top-3 left-3 bg-yellow-100 text-yellow-800 text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm transform transition-all duration-200 hover:scale-105">
+                                Waiting for approval
+                            </span>
+                        @elseif($borrowedBy->status === 'approved' && $borrowedBy->student)
+                            <span class="absolute top-3 left-3 bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm transform transition-all duration-200 hover:scale-105">
+                                Borrowed by {{ $borrowedBy->student->lname }}
+                            </span>
+                        @else
+                            <span class="absolute top-3 left-3 bg-gray-100 text-gray-800 text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm transform transition-all duration-200 hover:scale-105">
+                                Status: {{ ucfirst($borrowedBy->status) }}
+                            </span>
+                        @endif
                     @endif
                 </div>
                 <div class="p-5 space-y-2">

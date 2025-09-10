@@ -17,12 +17,26 @@ class Attendance extends Model
         'activity',
         'login',
         'logout',
+        'system_logout',
     ];
 
     protected $casts = [
-        'login' => 'datetime',
-        'logout' => 'datetime',
+        'login' => 'datetime:Y-m-d H:i:s',
+        'logout' => 'datetime:Y-m-d H:i:s',
+        'system_logout' => 'boolean',
     ];
+
+    protected $dates = [
+        'login',
+        'logout',
+    ];
+
+    protected $dateFormat = 'Y-m-d H:i:s';
+
+    protected function serializeDate(\DateTimeInterface $date)
+    {
+        return $date->setTimezone('Asia/Manila')->format('Y-m-d H:i:s');
+    }
 
     public function student()
     {
