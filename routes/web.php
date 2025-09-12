@@ -114,6 +114,18 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/students/{id}/unarchive', [AdminStudentController::class, 'unarchive'])->name('admin.students.unarchive');
     Route::get('/admin/students/archived', [AdminStudentController::class, 'archived'])->name('admin.students.archived');
 
+    /*---------------------------ROUTE FOR ADMIN ---TEACHERS/VISITORS------------------------------*/
+    Route::get('teachers_visitors/{id}/qr', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'generateTeacherVisitorQr'])->name('teachers_visitors.qr');
+    Route::get('admin/teachers_visitors/{id}/resend-qr', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'resendQrCode'])->name('admin.teachers_visitors.resend-qr');
+    Route::get('/admin/teachers_visitors/index', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'index'])->name('admin.teachers_visitors.index');
+    Route::get('/admin/teachers_visitors/create', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'create'])->name('admin.teachers_visitors.create');
+    Route::post('admin/teachers_visitors', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'store'])->name('admin.teachers_visitors.store');
+    Route::get('admin/teachers_visitors/{id}/edit', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'edit'])->name('admin.teachers_visitors.edit');
+    Route::put('admin/teachers_visitors/{id}', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'update'])->name('admin.teachers_visitors.update');
+    Route::post('/admin/teachers_visitors/{id}/archive', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'archive'])->name('admin.teachers_visitors.archive');
+    Route::post('/admin/teachers_visitors/{id}/unarchive', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'unarchive'])->name('admin.teachers_visitors.unarchive');
+    Route::get('/admin/teachers_visitors/archived', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'archived'])->name('admin.teachers_visitors.archived');
+
     /*---------------------------ROUTE FOR ADMIN ---BOOKS------------------------------*/
     Route::prefix('admin/books')->name('admin.books.')->group(function () {
         Route::get('/', [AdminBooksController::class, 'index'])->name('index');

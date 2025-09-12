@@ -16,22 +16,22 @@
         <style>
             /* Smooth transitions for the sidebar */
             [x-cloak] { display: none !important; }
-            
-        .main-content {
-            transition: margin-left 0.5s ease-in-out;
-        }
-        .sidebar-collapsed {
-            margin-left: 4rem;
-        }
-        .sidebar-expanded {
-            margin-left: 15rem;
-        }
-        @media (max-width: 768px) {
-            .sidebar-collapsed, .sidebar-expanded {
-                margin-left: 0;
+
+            .main-content {
+                transition: margin-left 0.5s ease-in-out;
             }
-        }
-            
+            .sidebar-collapsed {
+                margin-left: 4rem;
+            }
+            .sidebar-expanded {
+                margin-left: 15rem;
+            }
+            @media (max-width: 768px) {
+                .sidebar-collapsed, .sidebar-expanded {
+                    margin-left: 0;
+                }
+            }
+
             /* Custom nav link styling for the sidebar */
             .nav-link {
                 display: flex;
@@ -40,17 +40,17 @@
                 color: #4b5563;
                 transition: all 0.3s ease;
             }
-            
+
             .nav-link:hover {
                 background-color: #f3f4f6;
             }
-            
+
             .nav-link.active {
                 background-color: #e5e7eb;
                 color: #111827;
                 border-left: 3px solid #3b82f6;
             }
-            
+
             /* Ensure smooth transition for content area */
             .content-area {
                 transition: margin-left 0.3s ease;
@@ -67,10 +67,10 @@
             }
         </style>
     </head>
-    <body class="font-sans antialiased" x-data="{ sidebarExpanded: window.innerWidth > 768 }" @resize.window="sidebarExpanded = window.innerWidth > 768">
+    <body class="font-sans antialiased" x-data="{ sidebarExpanded: window.innerWidth > 768, showArchived: false }" @resize.window="sidebarExpanded = window.innerWidth > 768">
         <div class="min-h-screen bg-gray-100 dark:bg-gray-100 flex">
             <x-admin-nav-bar />
-            
+
             <!-- Content Area -->
             <div class="content-area flex-1" :class="{'ml-16': !sidebarExpanded, 'ml-64': sidebarExpanded}">
                 <main class="max-w-full mx-auto py-6 px-4 sm:px-6 lg:px-8">
@@ -156,7 +156,7 @@
                             <!-- Table Card -->
                             <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                                 <div class="flex flex-col md:flex-row justify-between items-center p-6 bg-gray-100 border-b border-gray-200">
-                                    <h2 class="text-xl font-semibold text-gray-800">Student List</h2>
+                                    <h2 class="text-xl font-semibold text-gray-800" x-text="showArchived ? '📚 Archived Students' : '👥 Active Students'"></h2>
                                     <div class="flex flex-wrap items-center gap-2 mb-4">
                                         <div class="flex items-center space-x-2">
                                             <div class="relative inline-block text-left">
@@ -193,128 +193,177 @@
                                             <button id="applyFiltersButton" class="glass-button px-3 py-1.5 text-gray-500 text-sm font-medium rounded-2xl transition-all duration-300 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white/10 backdrop-blur-md border border-gray-400 shadow-md hidden">
                                                 Apply
                                             </button>
-                                        
+
                                         </div>
 
-                                        <button id="print-selected-btn" class="lass-button px-4 py-2 text-gray-500 text-sm font-medium rounded-2xl flex items-center justify-between w-32 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white/10 backdrop-blur-md border border-gray-400 shadow-md">Print QR Code</button>
+                                        <button id="print-selected-btn" class="glass-button px-4 py-2 text-gray-500 text-sm font-medium rounded-2xl flex items-center justify-between w-32 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white/10 backdrop-blur-md border border-gray-400 shadow-md">Print QR Code</button>
                                     </div>
                                     <div class="flex items-center gap-4">
-                                        <a href="{{ route('admin.students.archived') }}" title="Archived Students"
-                                           class="inline-flex items-center px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-md hover:bg-gray-700 transition">
-                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-                                            </svg>
-                                           
-                                        </a>
-                                        <a href="{{ route('admin.students.create')}}" 
-                                           class="inline-flex items-center px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition">
-                                           + Add Student
+                                        <button @click="showArchived = !showArchived"
+                                                class="inline-flex items-center px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-md hover:bg-gray-700 transition">
+                                            <span x-text="showArchived ? 'View Active Students' : 'View Archived Students'"></span>
+                                        </button>
+                                        <a href="{{ route('admin.students.create')}}" class="inline-flex items-center px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition">
+                                            + Add Student
                                         </a>
                                     </div>
                                 </div>
 
-                                
 
-                                <div class="overflow-x-auto p-4">
-                                    <table class="w-full table-auto text-sm text-left text-gray-700">
-                                        <thead class="bg-gray-50 text-gray-500 uppercase text-xs font-semibold border-b">
-                                            <tr>
-                                                <th class="px-2 py-3"><input type="checkbox" id="select-all"></th>
-                                                <th class="px-6 py-3">Student ID</th>
-                                                <th class="px-6 py-3">Last Name</th>
-                                                <th class="px-6 py-3">First Name</th>
-                                                <th class="px-6 py-3">MI</th>
-                                                <th class="px-6 py-3">College</th>
-                                                <th class="px-6 py-3">Year</th>
-                                                <th class="px-2 py-3">Email</th>
-                                                <th class="px-2 py-3">QR Code</th>
-                                                <th class="px-2 py-3 text-right">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="divide-y divide-gray-100" id="student-table-body">
-                                            @foreach ($students as $student)
-                                            <tr class="hover:bg-gray-50" data-college="{{ $student->college }}">
-                                                <td class="px-2 py-4"><input type="checkbox" class="select-student" value="{{ $student->id }}" data-name="{{ $student->lname }}, {{ $student->fname }}{{ $student->MI ? ' ' . $student->MI . '.' : '' }}" data-studentid="{{ $student->student_id }}" data-qr="{{ $student->qr_code_path ? asset('storage/' . $student->qr_code_path) : '' }}"></td>
-                                                <td class="px-6 py-4">{{ $student->student_id }}</td>
-                                                <td class="px-6 py-4">{{ $student->lname }}</td>
-                                                <td class="px-6 py-4">{{ $student->fname }}</td>
-                                                <td class="px-6 py-4">{{ $student->MI }}</td>
-                                                <td class="px-6 py-4">
-                                                    <span class="px-2 py-1 text-xs font-medium rounded-md
-                                                        @if($student->college === 'CICS') bg-violet-200 text-gray-800
-                                                        @elseif($student->college === 'CTED') bg-sky-200 text-gray-800
-                                                        @elseif($student->college === 'CCJE') bg-red-300 text-gray-800
-                                                        @elseif($student->college === 'CHM') bg-pink-300 text-gray-800
-                                                        @elseif($student->college === 'CBEA') bg-yellow-200 text-gray-800
-                                                        @elseif($student->college === 'CA') bg-green-300 text-gray-800
-                                                        @else bg-gray-100 text-gray-700 @endif">
-                                                        {{ $student->college }}
-                                                    </span>
-                                                </td>
-                                                <td class="px-6 py-4">{{ $student->year }}</td>
-                                                <td class="px-2 py-4 text-gray-600 hover:underline">
-                                                    <a href="mailto:{{ $student->email }}">{{ $student->email }}</a>
-                                                </td>
-                                                <td class="px-4 py-4">
-                                                    @if($student->qr_code_path)
-                                                        <img src="{{ asset('storage/' . $student->qr_code_path) }}" alt="QR Code" class="w-16 h-16 object-contain border rounded" />
-                                                    @else
-                                                        <span class="text-xs text-gray-400">No QR</span>
-                                                    @endif
-                                                </td>
-                                     
-                                                <td class="px-2 py-4 text-right">
-                                                    <!-- Edit Button -->
-                                                    <a href="#" data-id="{{ $student->id }}"
-                                                       class="inline-flex items-center px-3 py-1 bg-yellow-100 text-yellow-800 rounded-md text-sm hover:bg-yellow-200 transition"
-                                                       title="Edit">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 3.487a2.7 2.7 0 0 1 3.818 3.818L7.227 20.758a4.5 4.5 0 0 1-1.897 1.13l-3.278.984.984-3.278a4.5 4.5 0 0 1 1.13-1.897L16.862 3.487z"/>
-                                                        </svg>
-                                                    </a>
-                                                    <!-- Resend QR Button -->
-                                                    <a href="{{ route('admin.students.resend-qr', $student->id) }}" 
-                                                       class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200 transition"
-                                                       title="Resend QR">
-                                                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" />
-                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5h.75v.75h-.75v-.75ZM13.5 19.5h.75v.75h-.75v-.75ZM19.5 13.5h.75v.75h-.75v-.75ZM19.5 19.5h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z" />
-                                                        </svg>
-                                                    </a>
-                                                    <!-- Archive Button -->
-                                                    <form action="{{ route('admin.students.archive', $student->id) }}" method="POST" class="inline">
-                                                        @csrf
-                                                        <button type="submit" 
-                                                            class="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-800 rounded-md text-sm hover:bg-gray-200 transition"
-                                                            onclick="return confirm('Are you sure you want to archive this student?')"
-                                                            title="Archive">
+                                <!-- Active Students Table -->
+                                <div x-show="!showArchived" x-transition>
+                                    <div class="overflow-x-auto p-4">
+                                        <table class="w-full table-auto text-sm text-left text-gray-700">
+                                            <thead class="bg-gray-50 text-gray-500 uppercase text-xs font-semibold border-b">
+                                                <tr>
+                                                    <th class="px-2 py-3"><input type="checkbox" id="select-all"></th>
+                                                    <th class="px-6 py-3">Student ID</th>
+                                                    <th class="px-6 py-3">Last Name</th>
+                                                    <th class="px-6 py-3">First Name</th>
+                                                    <th class="px-6 py-3">MI</th>
+                                                    <th class="px-6 py-3">College</th>
+                                                    <th class="px-6 py-3">Year</th>
+                                                    <th class="px-2 py-3">Email</th>
+                                                    <th class="px-2 py-3">QR Code</th>
+                                                    <th class="px-2 py-3 text-right">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-100" id="student-table-body">
+                                                @foreach ($students as $student)
+                                                <tr class="hover:bg-gray-50" data-college="{{ $student->college }}">
+                                                    <td class="px-2 py-4"><input type="checkbox" class="select-student" value="{{ $student->id }}" data-name="{{ $student->lname }}, {{ $student->fname }}{{ $student->MI ? ' ' . $student->MI . '.' : '' }}" data-studentid="{{ $student->student_id }}" data-qr="{{ $student->qr_code_path ? asset('storage/' . $student->qr_code_path) : '' }}"></td>
+                                                    <td class="px-6 py-4">{{ $student->student_id }}</td>
+                                                    <td class="px-6 py-4">{{ $student->lname }}</td>
+                                                    <td class="px-6 py-4">{{ $student->fname }}</td>
+                                                    <td class="px-6 py-4">{{ $student->MI }}</td>
+                                                    <td class="px-6 py-4">
+                                                        <span class="px-2 py-1 text-xs font-medium rounded-md
+                                                            @if($student->college === 'CICS') bg-violet-200 text-gray-800
+                                                            @elseif($student->college === 'CTED') bg-sky-200 text-gray-800
+                                                            @elseif($student->college === 'CCJE') bg-red-300 text-gray-800
+                                                            @elseif($student->college === 'CHM') bg-pink-300 text-gray-800
+                                                            @elseif($student->college === 'CBEA') bg-yellow-200 text-gray-800
+                                                            @elseif($student->college === 'CA') bg-green-300 text-gray-800
+                                                            @else bg-gray-100 text-gray-700 @endif">
+                                                            {{ $student->college }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="px-6 py-4">{{ $student->year }}</td>
+                                                    <td class="px-2 py-4 text-gray-600 hover:underline">
+                                                        <a href="mailto:{{ $student->email }}">{{ $student->email }}</a>
+                                                    </td>
+                                                    <td class="px-4 py-4">
+                                                        @if($student->qr_code_path)
+                                                            <img src="{{ asset('storage/' . $student->qr_code_path) }}" alt="QR Code" class="w-16 h-16 object-contain border rounded" />
+                                                        @else
+                                                            <span class="text-xs text-gray-400">No QR</span>
+                                                        @endif
+                                                    </td>
+
+                                                    <td class="px-2 py-4 text-right">
+                                                        <!-- Edit Button -->
+                                                        <a href="{{ route('admin.students.edit', $student->id) }}"
+                                                           class="inline-flex items-center px-3 py-1 bg-yellow-100 text-yellow-800 rounded-md text-sm hover:bg-yellow-200 transition"
+                                                           title="Edit">
                                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 3.487a2.7 2.7 0 0 1 3.818 3.818L7.227 20.758a4.5 4.5 0 0 1-1.897 1.13l-3.278.984.984-3.278a4.5 4.5 0 0 1 1.13-1.897L16.862 3.487z"/>
                                                             </svg>
-                                                        </button>
-                                                    </form>
-                                                </td>
-                                            </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
+                                                        </a>
+                                                        <!-- Resend QR Button -->
+                                                        <a href="{{ route('admin.students.resend-qr', $student->id) }}"
+                                                           class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200 transition"
+                                                           title="Resend QR">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" />
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5h.75v.75h-.75v-.75ZM13.5 19.5h.75v.75h-.75v-.75ZM19.5 13.5h.75v.75h-.75v-.75ZM19.5 19.5h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z" />
+                                                            </svg>
+                                                        </a>
+                                                        <!-- Archive Button -->
+                                                        <form action="{{ route('admin.students.archive', $student->id) }}" method="POST" class="inline">
+                                                            @csrf
+                                                            <button type="submit"
+                                                                class="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-800 rounded-md text-sm hover:bg-gray-200 transition"
+                                                                onclick="return confirm('Are you sure you want to archive this student?')"
+                                                                title="Archive">
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125 1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                                                                </svg>
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    @if($students->isEmpty())
+                                    <div class="p-8 text-center text-gray-500">
+                                        No active students found. Add your first student!
+                                    </div>
+                                    @endif
                                 </div>
 
-                                @if($students->isEmpty())
-                                <div class="p-8 text-center text-gray-500">
-                                    No students found. Add your first student!
-                                </div>
-                                @endif
+                                <!-- Archived Students Section -->
+                                <div x-show="showArchived" x-transition x-cloak>
+                                    <div class="p-4">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                            @forelse($archivedStudents as $student)
+                                                <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 hover:shadow-md transition-shadow">
+                                                    <div class="flex items-start justify-between">
+                                                        <div class="flex-1">
+                                                            <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ $student->fname }} {{ $student->lname }}</h3>
+                                                            <p class="text-sm text-gray-600 mb-1">Student ID: {{ $student->student_id }}</p>
+                                                            <p class="text-sm text-gray-600 mb-1">College: {{ $student->college }}</p>
+                                                            <p class="text-sm text-gray-600 mb-1">Year: {{ $student->year }}</p>
+                                                            <p class="text-sm text-gray-600 mb-1">Email: {{ $student->email }}</p>
+                                                            <p class="text-sm text-gray-500 mb-4">Archived: {{ $student->archived_at ? $student->archived_at->format('M d, Y') : 'N/A' }}</p>
 
-                     
+                                                            @if($student->qr_code_path)
+                                                                <div class="mb-4">
+                                                                    <img src="{{ asset('storage/' . $student->qr_code_path) }}"
+                                                                         alt="QR Code"
+                                                                         class="w-full h-32 object-contain rounded-lg shadow-sm">
+                                                                </div>
+                                                            @endif
+
+                                                            <div class="flex justify-end space-x-2">
+                                                                <form action="{{ route('admin.students.unarchive', $student->id) }}" method="POST" class="inline">
+                                                                    @csrf
+                                                                    @method('PATCH')
+                                                                    <button type="submit"
+                                                                            class="inline-flex items-center px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                                                            <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+                                                                        </svg>
+                                                                        Unarchive
+                                                                    </button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @empty
+                                                <div class="col-span-full text-center py-12">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                                                    </svg>
+                                                    <h3 class="mt-2 text-sm font-medium text-gray-900">No archived students</h3>
+                                                    <p class="mt-1 text-sm text-gray-500">Get started by archiving a student from the active students list.</p>
+                                                </div>
+                                            @endforelse
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
 
-                            
+
                         </div>
                     </div>
-                    
+
                 </main>
-                
+
             </div>
         </div>
 
@@ -330,77 +379,6 @@
             </div>
         </div>
 
-        <!-- Edit Student Modal -->
-        <div id="edit-student-modal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-40 hidden transition-opacity duration-300 overflow-y-auto">
-            <div class="bg-white rounded-xl shadow-lg p-8 max-w-2xl w-full relative animate-fadeIn">
-                <button id="close-edit-modal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
-                <h2 class="text-2xl font-semibold text-gray-800 mb-6">Edit Student</h2>
-                <div id="edit-modal-errors" class="mb-4 text-red-600 text-sm hidden"></div>
-                <form id="edit-student-form" class="space-y-6" method="POST" action="">
-                    @csrf
-                    @method('PUT')
-                    <input type="hidden" name="student_id_hidden" id="edit-student-id-hidden">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block mb-1 font-medium text-gray-700">Student ID</label>
-                            <input type="text" name="student_id" id="edit-student-id" required class="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-400">
-                        </div>
-                        <div>
-                            <label class="block mb-1 font-medium text-gray-700">Last Name</label>
-                            <input type="text" name="lname" id="edit-lname" required class="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-400">
-                        </div>
-                        <div>
-                            <label class="block mb-1 font-medium text-gray-700">First Name</label>
-                            <input type="text" name="fname" id="edit-fname" required class="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-400">
-                        </div>
-                        <div>
-                            <label class="block mb-1 font-medium text-gray-700">MI</label>
-                            <input type="text" name="MI" id="edit-mi" required class="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-400">
-                        </div>
-                        <div>
-                            <label class="block mb-1 font-medium text-gray-700">College</label>
-                            <select name="college" id="edit-college" required class="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-400">
-                                <option value="" disabled>Choose College</option>
-                                <option value="CICS">CICS</option>
-                                <option value="CTED">CTED</option>
-                                <option value="CCJE">CCJE</option>
-                                <option value="CHM">CHM</option>
-                                <option value="CBEA">CBEA</option>
-                                <option value="CA">CA</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block mb-1 font-medium text-gray-700">Year Level</label>
-                            <input type="number" name="year" id="edit-year" required class="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-400">
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block mb-1 font-medium text-gray-700">Email Address</label>
-                            <input type="email" name="email" id="edit-email" required class="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-400">
-                        </div>
-                    </div>
-                    <div class="flex justify-end">
-                        <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition">Update</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Toast Notification -->
-        <div id="toast" class="fixed top-6 right-6 z-50 hidden px-6 py-3 rounded shadow-lg text-white text-base font-medium transition-all duration-300"></div>
-
-        <!-- Delete Confirmation Modal -->
-        <div id="delete-confirmation-modal" class="fixed inset-0 z-[11000] flex items-center justify-center bg-black bg-opacity-50 opacity-0 pointer-events-none transition-opacity duration-300">
-            <div class="bg-white rounded-lg p-6 max-w-sm w-full shadow-lg transform scale-95 transition-transform duration-300">
-                <h3 class="text-lg font-semibold mb-4 text-gray-800">Confirm Delete</h3>
-                <p class="mb-6 text-gray-600">Are you sure you want to delete this student? This action cannot be undone.</p>
-                <div class="flex justify-end space-x-4">
-                    <button id="cancel-delete-btn" class="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400 transition">Cancel</button>
-                    <button id="confirm-delete-btn" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">Delete</button>
-                </div>
-                <button id="close-delete-modal" class="absolute top-2 right-2 text-gray-600 hover:text-gray-900 text-2xl font-bold">&times;</button>
-            </div>
-        </div>
-
         <!-- QR Code Modal -->
         <div id="qr-code-modal" class="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-70 opacity-0 pointer-events-none transition-opacity duration-300 ease-in-out">
             <div class="relative bg-white rounded-lg p-6 max-w-md w-full shadow-xl transform scale-95 transition-transform duration-300 ease-in-out">
@@ -408,6 +386,9 @@
                 <img id="qr-code-modal-img" src="" alt="QR Code" class="max-w-full max-h-[80vh] object-contain rounded-md" />
             </div>
         </div>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="fixed top-6 right-6 z-50 hidden px-6 py-3 rounded shadow-lg text-white text-base font-medium transition-all duration-300"></div>
 
         <!-- Chart.js Scripts -->
         <script>
@@ -607,52 +588,6 @@
                     }
                 });
 
-                // Edit modal logic
-                const editModal = document.getElementById('edit-student-modal');
-                const closeEditModal = document.getElementById('close-edit-modal');
-                const editForm = document.getElementById('edit-student-form');
-                const editModalErrors = document.getElementById('edit-modal-errors');
-                let currentEditId = null;
-                let currentEditRow = null;
-                document.querySelectorAll('a[title="Edit"]').forEach(btn => {
-                        btn.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            const row = this.closest('tr');
-                            currentEditRow = row;
-                            currentEditId = this.getAttribute('data-id');
-                            document.getElementById('edit-student-id-hidden').value = currentEditId;
-                            document.getElementById('edit-student-id').value = row.children[1].textContent.trim();
-                            document.getElementById('edit-lname').value = row.children[2].textContent.trim();
-                            document.getElementById('edit-fname').value = row.children[3].textContent.trim();
-                            document.getElementById('edit-mi').value = row.children[4].textContent.trim();
-                            document.getElementById('edit-college').value = row.children[5].querySelector('span').textContent.trim();
-                            document.getElementById('edit-year').value = row.children[6].textContent.trim();
-                            document.getElementById('edit-email').value = row.children[7].querySelector('a').textContent.trim();
-                            // Set the form action dynamically to the update route with the current student ID
-                            document.getElementById('edit-student-form').action = `/admin/students/${currentEditId}`;
-                            editModalErrors.classList.add('hidden');
-                            editModalErrors.innerHTML = '';
-                            editModal.classList.remove('hidden');
-                            editModal.classList.add('flex');
-                            editModal.style.opacity = 1;
-                        });
-                });
-                closeEditModal.addEventListener('click', function() {
-                    editModal.classList.add('hidden');
-                    editModal.classList.remove('flex');
-                    editModal.style.opacity = 0;
-                });
-                editModal.addEventListener('click', function(e) {
-                    if (e.target === editModal) {
-                        editModal.classList.add('hidden');
-                        editModal.classList.remove('flex');
-                        editModal.style.opacity = 0;
-                    }
-                });
-                editForm.addEventListener('submit', function(e) {
-                    // Removed JavaScript fetch submission to use standard form submission instead
-                });
-
                 // Toast logic
                 const toast = document.getElementById('toast');
                 function showToast(message, type = 'success') {
@@ -668,51 +603,6 @@
                 @elseif(session('error'))
                     showToast(@json(session('error')), 'error');
                 @endif
-
-                // Delete modal logic
-                const deleteModal = document.getElementById('delete-confirmation-modal');
-                const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
-                const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
-                const closeDeleteModalBtn = document.getElementById('close-delete-modal');
-                let formToDelete = null;
-
-                document.querySelectorAll('form.inline').forEach(form => {
-                    const deleteBtn = form.querySelector('button[type="submit"]');
-                    // Remove inline confirm
-                    deleteBtn.removeAttribute('onclick');
-                    deleteBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        formToDelete = form;
-                        deleteModal.classList.remove('opacity-0', 'pointer-events-none');
-                        deleteModal.classList.add('opacity-100');
-                        setTimeout(() => {
-                            deleteModal.querySelector('div').classList.remove('scale-95');
-                            deleteModal.querySelector('div').classList.add('scale-100');
-                        }, 10);
-                    });
-                });
-
-                function closeDeleteModal() {
-                    deleteModal.querySelector('div').classList.remove('scale-100');
-                    deleteModal.querySelector('div').classList.add('scale-95');
-                    deleteModal.classList.remove('opacity-100');
-                    deleteModal.classList.add('opacity-0', 'pointer-events-none');
-                    formToDelete = null;
-                }
-
-                cancelDeleteBtn.addEventListener('click', closeDeleteModal);
-                closeDeleteModalBtn.addEventListener('click', closeDeleteModal);
-                deleteModal.addEventListener('click', (e) => {
-                    if (e.target === deleteModal) {
-                        closeDeleteModal();
-                    }
-                });
-
-                confirmDeleteBtn.addEventListener('click', () => {
-                    if (formToDelete) {
-                        formToDelete.submit();
-                    }
-                });
             });
         </script>
     </body>
