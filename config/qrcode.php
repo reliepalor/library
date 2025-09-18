@@ -2,7 +2,7 @@
 
 return [
     'default' => 'png',
-    
+
     'renderers' => [
         'png' => [
             'extension' => 'png',
@@ -17,7 +17,9 @@ return [
     'path_generator' => [
         'default' => \SimpleSoftwareIO\QrCode\Generator::class,
     ],
-    
+
+    'image_backend' => 'gd',  // Force GD backend
+
     'image_type' => 'png',
     'image_quality' => 90,
     'error_correction' => 'H',

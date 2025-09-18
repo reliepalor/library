@@ -63,8 +63,9 @@ class TeacherVisitorController extends \App\Http\Controllers\Controller
             // Create the teacher/visitor record
             $teacherVisitor = TeacherVisitor::create($validate);
 
-            // Generate QR code data
-            $data = "{$teacherVisitor->lname} {$teacherVisitor->fname} | {$teacherVisitor->email} | {$teacherVisitor->department} | Role: {$teacherVisitor->role}";
+            // Generate QR code data in format: teacher_visitor_id|name|department|role
+            $name = $teacherVisitor->fname . ' ' . $teacherVisitor->lname;
+            $data = "{$teacherVisitor->id}|{$name}|{$teacherVisitor->department}|{$teacherVisitor->role}";
 
             // Ensure directory exists before saving QR
             $directory = 'qrcodes';
@@ -202,9 +203,11 @@ class TeacherVisitorController extends \App\Http\Controllers\Controller
 
         // If QR code needs to be regenerated (e.g., name or email changed)
         $fileName = "qrcodes/teacher_visitor_{$teacherVisitor->id}.png";
+        $name = $teacherVisitor->fname . ' ' . $teacherVisitor->lname;
+        $data = "{$teacherVisitor->id}|{$name}|{$teacherVisitor->department}|{$teacherVisitor->role}";
         \Storage::disk('public')->put($fileName, \QrCode::format('png')
             ->size(300)
-            ->generate($teacherVisitor->lname . ' ' . $teacherVisitor->fname . '|' . $teacherVisitor->email . '|' . $teacherVisitor->department . '|' . $teacherVisitor->role));
+            ->generate($data));
         $teacherVisitor->qr_code_path = $fileName;
         $teacherVisitor->save();
 
@@ -256,8 +259,9 @@ class TeacherVisitorController extends \App\Http\Controllers\Controller
         // Find the teacher/visitor by ID
         $teacherVisitor = TeacherVisitor::findOrFail($id);
 
-        // Generate QR code data
-        $data = "{$teacherVisitor->lname} {$teacherVisitor->fname} | {$teacherVisitor->email} | {$teacherVisitor->department} | Role: {$teacherVisitor->role}";
+        // Generate QR code data in format: teacher_visitor_id|name|department|role
+        $name = $teacherVisitor->fname . ' ' . $teacherVisitor->lname;
+        $data = "{$teacherVisitor->id}|{$name}|{$teacherVisitor->department}|{$teacherVisitor->role}";
 
         // Path to QR code file
         $fileName = "qrcodes/teacher_visitor_{$teacherVisitor->id}.png";

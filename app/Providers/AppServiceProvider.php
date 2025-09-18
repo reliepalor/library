@@ -13,7 +13,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton('image', function ($app) {
+            return Intervention\Image\ImageManager::gd();
+        });
     }
 
     /**

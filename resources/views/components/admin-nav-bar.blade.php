@@ -162,105 +162,7 @@
                 <div class="absolute left-0 top-6 transform -translate-x-1 w-2 h-2 bg-white rotate-45 border-l border-t border-blue-200/50"></div>
             </div>
         </div>
-
-        <!-- Teachers / Visitors Dropdown -->
-        <div class="relative"
-            x-data="{ isOpen: false, minimizedOpen: false }">
-
-            <!-- Button -->
-            <button type="button"
-                @click="if (sidebarExpanded) { isOpen = !isOpen } else { minimizedOpen = !minimizedOpen }"
-                class="flex items-center w-full px-4 py-3 group relative rounded-xl hover:bg-gradient-to-r hover:from-blue-100/60 hover:to-indigo-100/60 transition-all duration-300 hover:shadow-md hover:scale-105 active:scale-95"
-            >
-                <div class="relative">
-                    <svg class="h-5 w-5 text-gray-600 group-hover:text-blue-600 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
-                    </svg>
-                    <div class="absolute inset-0 bg-blue-400/20 rounded-full scale-0 group-hover:scale-150 transition-transform duration-300 -z-10"></div>
-                </div>
-
-                <span x-show="sidebarExpanded" 
-                    x-transition:enter="transition-all duration-200 delay-75"
-                    x-transition:enter-start="opacity-0 transform translate-x-2"
-                    x-transition:enter-end="opacity-100 transform translate-x-0"
-                    class="ml-3 text-gray-800 font-medium group-hover:text-gray-900 flex-1 text-left">
-                    Teachers / Visitors
-                </span>
-
-                <svg x-show="sidebarExpanded" 
-                    class="ml-auto h-4 w-4 transform transition-all duration-300 text-gray-500 group-hover:text-blue-600" 
-                    :class="{'rotate-180': isOpen}" 
-                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                </svg>
-            </button>
-
-            <!-- Expanded Dropdown -->
-            <div x-show="isOpen && sidebarExpanded" 
-                x-cloak
-                x-transition:enter="transition-all duration-300 ease-out"
-                x-transition:enter-start="opacity-0 transform -translate-y-2 scale-95"
-                x-transition:enter-end="opacity-100 transform translate-y-0 scale-100"
-                x-transition:leave="transition-all duration-200 ease-in"
-                x-transition:leave-start="opacity-100 transform translate-y-0 scale-100"
-                x-transition:leave-end="opacity-0 transform -translate-y-2 scale-95"
-                class="ml-4 mt-2 space-y-1 border-l-2 border-blue-200/50 pl-4">
-                
-                <x-nav-link :href="route('admin.teachers_visitors.index')"
-                        :active="request()->routeIs('admin.teachers_visitors.index')"
-                        class="flex items-center px-4 py-2.5 hover:bg-blue-50/80 rounded-lg transition-all duration-200 group hover:translate-x-1">
-                    <svg class="h-4 w-4 text-blue-500 mr-3 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                    </svg>
-                    <span class="text-sm font-medium text-gray-700 group-hover:text-gray-900">All Teachers / Visitors</span>
-                </x-nav-link>
-
-                <x-nav-link :href="route('admin.teachers_visitors.create')"
-                        :active="request()->routeIs('admin.teachers_visitors.create')"
-                        class="flex items-center px-4 py-2.5 hover:bg-blue-50/80 rounded-lg transition-all duration-200 group hover:translate-x-1">
-                    <svg class="h-4 w-4 text-green-500 mr-3 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-                    </svg>
-                    <span class="text-sm font-medium text-gray-700 group-hover:text-gray-900">Register Teacher/Visitor</span>
-                </x-nav-link>
-            </div>
-
-            <!-- Hover Dropdown for Minimized State -->
-            <div x-show="minimizedOpen && !sidebarExpanded"
-                x-cloak
-                x-transition:enter="transition ease-out duration-200"
-                x-transition:enter-start="opacity-0 transform translate-x-4 scale-95"
-                x-transition:enter-end="opacity-100 transform translate-x-0 scale-100"
-                class="absolute left-16 top-0 bg-white/95 backdrop-blur-lg rounded-xl shadow-2xl border border-blue-200/50 py-2 min-w-48 z-50"
-                @click.away="minimizedOpen = false">
-                
-                <div class="px-3 py-2 border-b border-blue-100/50">
-                    <h3 class="font-semibold text-gray-800 text-sm">Students</h3>
-                </div>
-
-                <x-nav-link :href="route('admin.students.index')" 
-                        :active="request()->routeIs('admin.students.index')" 
-                        class="flex items-center px-4 py-2.5 hover:bg-blue-50/80 transition-all duration-200 group mx-2 my-1 rounded-lg">
-                    <svg class="h-4 w-4 text-blue-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                    </svg>
-                    <span class="text-sm font-medium text-gray-700">All Students</span>
-                </x-nav-link>
-
-                <x-nav-link :href="route('admin.students.create')" 
-                        :active="request()->routeIs('admin.students.create')" 
-                        class="flex items-center px-4 py-2.5 hover:bg-blue-50/80 transition-all duration-200 group mx-2 my-1 rounded-lg">
-                    <svg class="h-4 w-4 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-                    </svg>
-                    <span class="text-sm font-medium text-gray-700">Register Student</span>
-                </x-nav-link>
-
-                <div class="absolute left-0 top-6 transform -translate-x-1 w-2 h-2 bg-white rotate-45 border-l border-t border-blue-200/50"></div>
-            </div>
-        </div>
-
-
+ 
         <!-- Attendance Dropdown -->
         <div class="relative"
             x-data="{ isOpen: false, minimizedOpen: false }">
@@ -321,14 +223,16 @@
                     <span class="text-sm font-medium text-gray-700 group-hover:text-gray-900">Attendance History</span>
                 </x-nav-link>
 
-                <x-nav-link :href="route('admin.attendance.analytics')" 
-                        :active="request()->routeIs('admin.attendance.analytics')" 
+                <x-nav-link :href="route('admin.attendance.analytics')"
+                        :active="request()->routeIs('admin.attendance.analytics')"
                         class="flex items-center px-4 py-2.5 hover:bg-blue-50/80 rounded-lg transition-all duration-200 group hover:translate-x-1">
                     <svg class="h-4 w-4 text-purple-500 mr-3 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                     </svg>
                     <span class="text-sm font-medium text-gray-700 group-hover:text-gray-900">Analytics</span>
                 </x-nav-link>
+
+
             </div>
 
             <!-- Hover Dropdown for Minimized State -->
@@ -365,8 +269,8 @@
                     <span class="text-sm font-medium text-gray-700">Attendance History</span>
                 </x-nav-link>
 
-                <x-nav-link :href="route('admin.attendance.analytics')" 
-                        :active="request()->routeIs('admin.attendance.analytics')" 
+                <x-nav-link :href="route('admin.attendance.analytics')"
+                        :active="request()->routeIs('admin.attendance.analytics')"
                         class="flex items-center px-4 py-2.5 hover:bg-blue-50/80 transition-all duration-200 group mx-2 my-1 rounded-lg">
                     <svg class="h-4 w-4 text-purple-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
@@ -374,9 +278,120 @@
                     <span class="text-sm font-medium text-gray-700">Analytics</span>
                 </x-nav-link>
 
+
+
                 <div class="absolute left-0 top-6 transform -translate-x-1 w-2 h-2 bg-white rotate-45 border-l border-t border-blue-200/50"></div>
             </div>
         </div>
+
+        <!-- Teachers / Visitors Dropdown -->
+        <div class="relative"
+            x-data="{ isOpen: false, minimizedOpen: false }">
+
+            <!-- Button -->
+            <button type="button"
+                @click="if (sidebarExpanded) { isOpen = !isOpen } else { minimizedOpen = !minimizedOpen }"
+                class="flex items-center w-full px-4 py-3 group relative rounded-xl hover:bg-gradient-to-r hover:from-blue-100/60 hover:to-indigo-100/60 transition-all duration-300 hover:shadow-md hover:scale-105 active:scale-95"
+            >
+                <div class="relative">
+                    <svg class="h-5 w-5 text-gray-600 group-hover:text-blue-600 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                    </svg>
+                    <div class="absolute inset-0 bg-blue-400/20 rounded-full scale-0 group-hover:scale-150 transition-transform duration-300 -z-10"></div>
+                </div>
+
+                <span x-show="sidebarExpanded" 
+                    x-transition:enter="transition-all duration-200 delay-75"
+                    x-transition:enter-start="opacity-0 transform translate-x-2"
+                    x-transition:enter-end="opacity-100 transform translate-x-0"
+                    class="ml-3 text-gray-800 font-medium group-hover:text-gray-900 flex-1 text-left">
+                    Teachers / Visitors
+                </span>
+
+                <svg x-show="sidebarExpanded" 
+                    class="ml-auto h-4 w-4 transform transition-all duration-300 text-gray-500 group-hover:text-blue-600" 
+                    :class="{'rotate-180': isOpen}" 
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+
+            <!-- Expanded Dropdown -->
+            <div x-show="isOpen && sidebarExpanded"
+                x-cloak
+                x-transition:enter="transition-all duration-300 ease-out"
+                x-transition:enter-start="opacity-0 transform -translate-y-2 scale-95"
+                x-transition:enter-end="opacity-100 transform translate-y-0 scale-100"
+                x-transition:leave="transition-all duration-200 ease-in"
+                x-transition:leave-start="opacity-100 transform translate-y-0 scale-100"
+                x-transition:leave-end="opacity-0 transform -translate-y-2 scale-95"
+                class="ml-4 mt-2 space-y-1 border-l-2 border-blue-200/50 pl-4">
+
+                <x-nav-link :href="route('admin.teachers_visitors.index')"
+                        :active="request()->routeIs('admin.teachers_visitors.index')"
+                        class="flex items-center px-4 py-2.5 hover:bg-blue-50/80 rounded-lg transition-all duration-200 group hover:translate-x-1">
+                    <svg class="h-4 w-4 text-blue-500 mr-3 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    <span class="text-sm font-medium text-gray-700 group-hover:text-gray-900">All Teachers / Visitors</span>
+                </x-nav-link>
+
+                <x-nav-link :href="route('admin.teachers_visitors.create')"
+                        :active="request()->routeIs('admin.teachers_visitors.create')"
+                        class="flex items-center px-4 py-2.5 hover:bg-blue-50/80 rounded-lg transition-all duration-200 group hover:translate-x-1">
+                    <svg class="h-4 w-4 text-green-500 mr-3 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                    </svg>
+                    <span class="text-sm font-medium text-gray-700 group-hover:text-gray-900">Register Teacher/Visitor</span>
+                </x-nav-link>
+
+                <x-nav-link :href="route('admin.teachers_visitors_attendance.index')"
+                        :active="request()->routeIs('admin.teachers_visitors_attendance.index')"
+                        class="flex items-center px-4 py-2.5 hover:bg-blue-50/80 rounded-lg transition-all duration-200 group hover:translate-x-1">
+                    <svg class="h-4 w-4 text-orange-500 mr-3 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                    </svg>
+                    <span class="text-sm font-medium text-gray-700 group-hover:text-gray-900">Teachers/Visitors Attendance</span>
+                </x-nav-link>
+            </div>
+
+            <!-- Hover Dropdown for Minimized State -->
+            <div x-show="minimizedOpen && !sidebarExpanded"
+                x-cloak
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 transform translate-x-4 scale-95"
+                x-transition:enter-end="opacity-100 transform translate-x-0 scale-100"
+                class="absolute left-16 top-0 bg-white/95 backdrop-blur-lg rounded-xl shadow-2xl border border-blue-200/50 py-2 min-w-48 z-50"
+                @click.away="minimizedOpen = false">
+                
+                <div class="px-3 py-2 border-b border-blue-100/50">
+                    <h3 class="font-semibold text-gray-800 text-sm">Students</h3>
+                </div>
+
+                <x-nav-link :href="route('admin.students.index')" 
+                        :active="request()->routeIs('admin.students.index')" 
+                        class="flex items-center px-4 py-2.5 hover:bg-blue-50/80 transition-all duration-200 group mx-2 my-1 rounded-lg">
+                    <svg class="h-4 w-4 text-blue-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    <span class="text-sm font-medium text-gray-700">All Students</span>
+                </x-nav-link>
+
+                <x-nav-link :href="route('admin.students.create')" 
+                        :active="request()->routeIs('admin.students.create')" 
+                        class="flex items-center px-4 py-2.5 hover:bg-blue-50/80 transition-all duration-200 group mx-2 my-1 rounded-lg">
+                    <svg class="h-4 w-4 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                    </svg>
+                    <span class="text-sm font-medium text-gray-700">Register Student</span>
+                </x-nav-link>
+
+                <div class="absolute left-0 top-6 transform -translate-x-1 w-2 h-2 bg-white rotate-45 border-l border-t border-blue-200/50"></div>
+            </div>
+        </div>
+
+
+
 
         <!-- Books Dropdown -->
         <div class="relative"

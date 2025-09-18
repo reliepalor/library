@@ -254,7 +254,7 @@
                                                     </td>
                                                     <td class="px-4 py-4">
                                                         @if($student->qr_code_path)
-                                                            <img src="{{ asset('storage/' . $student->qr_code_path) }}" alt="QR Code" class="w-16 h-16 object-contain border rounded" />
+                                                            <img src="{{ asset('storage/' . $student->qr_code_path) }}" alt="QR Code" class="w-16 h-16 object-contain border rounded" data-name="{{ $student->fname }} {{ $student->lname }}" />
                                                         @else
                                                             <span class="text-xs text-gray-400">No QR</span>
                                                         @endif
@@ -383,6 +383,7 @@
         <div id="qr-code-modal" class="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-70 opacity-0 pointer-events-none transition-opacity duration-300 ease-in-out">
             <div class="relative bg-white rounded-lg p-6 max-w-md w-full shadow-xl transform scale-95 transition-transform duration-300 ease-in-out">
                 <button id="close-qr-modal" class="absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-3xl font-bold transition-transform hover:scale-110">&times;</button>
+                <h3 id="qr-code-modal-name" class="text-lg font-semibold text-center mb-4"></h3>
                 <img id="qr-code-modal-img" src="" alt="QR Code" class="max-w-full max-h-[80vh] object-contain rounded-md" />
             </div>
         </div>
@@ -566,6 +567,7 @@
                     img.style.cursor = 'pointer';
                     img.addEventListener('click', function() {
                         qrCodeModalImg.src = this.src;
+                        document.getElementById('qr-code-modal-name').textContent = this.getAttribute('data-name');
                         qrCodeModal.classList.remove('opacity-0', 'pointer-events-none');
                         qrCodeModal.classList.add('opacity-100');
                         setTimeout(() => {
