@@ -34,7 +34,7 @@ class BooksController extends \App\Http\Controllers\Controller
         $request->validate([
             'name' => 'required',
             'author' => 'required',
-            'description' => 'required',
+            'description' => 'nullable',
             'section' => 'required',
             'image1' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'image2' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -103,7 +103,7 @@ class BooksController extends \App\Http\Controllers\Controller
         $request->validate([
             'name' => 'required',
             'author' => 'required',
-            'description' => 'required',
+            'description' => 'nullable',
             'section' => 'required',
             'image1' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'image2' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',

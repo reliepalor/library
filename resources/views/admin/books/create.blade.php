@@ -85,7 +85,7 @@
 
                         <div>
                             <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
-                            <textarea name="description" id="description" rows="4" placeholder="Enter book description" required
+                            <textarea name="description" id="description" rows="4" placeholder="Enter book description" 
                                       class="mt-1 block w-full rounded-lg border border-gray-200 py-2 px-3 text-sm focus:border-gray-900 focus:ring-2 focus:ring-gray-200 transition"></textarea>
                         </div>
 
