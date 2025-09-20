@@ -414,9 +414,10 @@
 
         <!-- QR Code Modal -->
         <div id="qr-code-modal" class="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-70 opacity-0 pointer-events-none transition-opacity duration-300 ease-in-out">
-            <div class="relative bg-white rounded-lg p-6 max-w-md w-full shadow-xl transform scale-95 transition-transform duration-300 ease-in-out">
+            <div class="relative bg-white rounded-lg p-6 max-w-md w-full shadow-xl transform scale-95 transition-transform duration-300 ease-in-out flex justify-center items-center flex-col">
                 <button id="close-qr-modal" class="absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-3xl font-bold transition-transform hover:scale-110">&times;</button>
-                <img id="qr-code-modal-img" src="" alt="QR Code" class="max-w-full max-h-[80vh] object-contain rounded-md" />
+                <h3 id="qr-modal-name" class="text-lg font-semibold mb-4 text-center"></h3>
+                <img id="qr-code-modal-img" src="" alt="QR Code" class="max-w-full max-h-[80vh] object-contain rounded-md " />
             </div>
         </div>
 
@@ -594,6 +595,12 @@
                 document.querySelectorAll('td.px-4.py-4 img').forEach(img => {
                     img.style.cursor = 'pointer';
                     img.addEventListener('click', function() {
+                        const row = this.closest('tr');
+                        const lastName = row.children[1].textContent.trim();
+                        const firstName = row.children[2].textContent.trim();
+                        const middleName = row.children[3].textContent.trim();
+                        const fullName = `${lastName}, ${firstName}${middleName ? ' ' + middleName + '.' : ''}`;
+                        document.getElementById('qr-modal-name').textContent = fullName;
                         qrCodeModalImg.src = this.src;
                         qrCodeModal.classList.remove('opacity-0', 'pointer-events-none');
                         qrCodeModal.classList.add('opacity-100');

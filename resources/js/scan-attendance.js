@@ -282,20 +282,34 @@
         const initWebcamScanner = () => {
             if (scannerRunning || currentMode !== 'webcam') return;
             try {
-                html5QrCode = new Html5Qrcode('qr-reader');
-                html5QrCode.start(
-                    { facingMode: 'environment' },
-                    { fps: 10, qrbox: { width: 250, height: 250 } },
-                    (decodedText) => {
-                        handleQrScan(decodedText);
-                    },
-                    (error) => {}
-                ).then(() => {
-                    scannerRunning = true;
-                }).catch(err => {
-                    qrReader.innerHTML = '<p class="text-orange-600 text-center">Camera access failed. Please allow camera access or use physical scanner.</p>';
-                    scannerRunning = false;
-                });
+                if (html5QrCode) {
+                    html5QrCode.stop().then(() => {
+                        html5QrCode = null;
+                        scannerRunning = false;
+                        startScanner();
+                    }).catch(() => {
+                        startScanner();
+                    });
+                } else {
+                    startScanner();
+                }
+
+                function startScanner() {
+                    html5QrCode = new Html5Qrcode('qr-reader');
+                    html5QrCode.start(
+                        { facingMode: 'environment' },
+                        { fps: 10, qrbox: { width: 250, height: 250 } },
+                        (decodedText) => {
+                            handleQrScan(decodedText);
+                        },
+                        (error) => {}
+                    ).then(() => {
+                        scannerRunning = true;
+                    }).catch(err => {
+                        qrReader.innerHTML = '<p class="text-orange-600 text-center">Camera access failed. Please allow camera access or use physical scanner.</p>';
+                        scannerRunning = false;
+                    });
+                }
             } catch (err) {
                 qrReader.innerHTML = '<p class="text-red-600 text-center">Camera initialization failed. Use physical scanner instead.</p>';
                 scannerRunning = false;

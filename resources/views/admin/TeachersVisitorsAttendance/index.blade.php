@@ -79,7 +79,7 @@
             id="fullscreen-section">
                 <!-- QR Attendance Logging (moved from user) -->
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-semibold text-gray-800">QR Attendance Logging</h2>
+                    <h2 class="text-2xl font-semibold text-gray-800">Teacher / Visitor QR Attendance</h2>
                     <div class="flex space-x-2">
                         <div>
                             <button 
@@ -117,7 +117,7 @@
                         placeholder="Scan QR code here..." autofocus>
                 </div>
                 <div class="my-6 p-6 bg-blue-50 border border-blue-200 rounded-lg text-center">
-                    <p class="text-lg font-medium text-blue-800">Scan teacher/visitor QR code to log attendance</p>
+                    <p class="text-lg font-medium text-blue-800">Scan Teacher / Visitor QR code to log attendance</p>
                     <p id="mode-description" class="text-sm text-blue-600">Using webcam scanner - point camera at QR code</p>
                 </div>
                 <div id="status-display" class="mb-4 p-3 bg-gray-50 rounded-lg hidden">
