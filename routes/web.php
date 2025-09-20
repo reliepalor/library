@@ -16,6 +16,7 @@ use App\Http\Middleware\UserMiddleware;
 use App\Http\Controllers\Admin\Auth\DashboardController;
 use App\Http\Controllers\Admin\Auth\OverdueBookController;
 use App\Http\Controllers\Admin\Auth\BorrowRequestController;
+use App\Http\Controllers\Admin\Auth\CampusNewsController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -47,7 +48,7 @@ Route::middleware(['auth', UserMiddleware::class])->group(function () {
     Route::get('/user/books', [UserBooksController::class, 'index'])->name('user.books.index');
     Route::get('/user/books/{id}', [UserBooksController::class, 'show'])->name('user.books.show');
     Route::post('/user/books/{id}/reserve', [UserBooksController::class, 'reserve'])->name('user.books.reserve');
-    
+
     /*---------------------------ROUTE FOR USER ---ATTENDANCE------------------------------*/
     Route::prefix('user/attendance')->name('user.attendance.')->group(function () {
         Route::get('/', [UserAttendanceController::class, 'index'])->name('index');
@@ -143,6 +144,20 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/borrow-requests', [BorrowRequestController::class, 'index'])->name('borrow-requests.index');
         Route::post('/borrow-requests/{borrowRequest}/update-status', [BorrowRequestController::class, 'updateStatus'])->name('borrow-requests.update-status');
     });
+
+    /*---------------------------ROUTE FOR ADMIN ---CAMPUS NEWS------------------------------*/
+    Route::prefix('admin/campus-news')->name('admin.campus-news.')->group(function () {
+        Route::get('/', [CampusNewsController::class, 'index'])->name('index');
+        Route::get('/create', [CampusNewsController::class, 'create'])->name('create');
+        Route::post('/', [CampusNewsController::class, 'store'])->name('store');
+        Route::get('/{campusNews}', [CampusNewsController::class, 'show'])->name('show');
+        Route::get('/{campusNews}/edit', [CampusNewsController::class, 'edit'])->name('edit');
+        Route::put('/{campusNews}', [CampusNewsController::class, 'update'])->name('update');
+        Route::delete('/{campusNews}', [CampusNewsController::class, 'destroy'])->name('destroy');
+        Route::patch('/{campusNews}/status', [CampusNewsController::class, 'updateStatus'])->name('update-status');
+        Route::patch('/{campusNews}/featured', [CampusNewsController::class, 'toggleFeatured'])->name('toggle-featured');
+    });
+
 });
 
 require __DIR__.'/auth.php';
@@ -161,8 +176,3 @@ Route::post('/login', [AuthenticatedSessionController::class, 'store'])
 
 Route::post('/register', [RegisteredUserController::class, 'store'])
     ->middleware('guest');
-
-
-
-
-
