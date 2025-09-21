@@ -1,10 +1,65 @@
-@extends('layouts.admin')
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus News Management - Library System</title>
+    <link rel="icon" type="image/x-icon" href="/favicon/Library.png">
 
-@section('title', 'Campus News Management')
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
-@section('content')
-<div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-    <!-- Header -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .shadcn-card {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .main-content {
+            transition: margin-left 0.5s ease-in-out;
+        }
+        .sidebar-collapsed {
+            margin-left: 4rem;
+        }
+        .sidebar-expanded {
+            margin-left: 15rem;
+        }
+        @media (max-width: 768px) {
+            .sidebar-collapsed, .sidebar-expanded {
+                margin-left: 0;
+            }
+        }
+
+ 
+    #dropdownButton[aria-expanded="true"] svg {
+        transform: rotate(180deg);
+    }
+    a:hover svg {
+        color: #3B82F6;
+    }
+    </style>
+    <script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
+
+    <script>
+        window.assetBaseUrl = "{{ asset('') }}";
+    </script>
+</head>
+<body class="bg-gray-50">
+    <div class="flex h-screen" x-data="{ sidebarExpanded: window.innerWidth > 768 }" @resize.window="sidebarExpanded = window.innerWidth > 768">
+        <x-admin-nav-bar />
+
+        <!-- Main Content -->
+        <div class="main-content flex-1 overflow-auto" :class="sidebarExpanded ? 'sidebar-expanded' : 'sidebar-collapsed'">
+            <div class="container mx-auto px-4 py-8">
+                <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+                    <!-- Header -->
     <div class="bg-white/80 backdrop-blur-lg border-b border-blue-200/40 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center py-6">
@@ -313,9 +368,11 @@
                 </div>
             </div>
             @endif
+                </div>
+            </div>
         </div>
     </div>
-</div>
+</body>
 
 <script>
 function confirmDelete(newsId) {
@@ -332,4 +389,5 @@ function confirmDelete(newsId) {
     }
 }
 </script>
-@endsection
+</html>
+
