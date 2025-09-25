@@ -1,0 +1,5 @@
+- [x] Add campus news section to resources/views/welcome.blade.php
+- [x] Add campus news section to resources/views/user/dashboard.blade.php
+- [x] Ensure responsive design with Tailwind CSS
+- [x] Use neutral color scheme and Apple-inspired subtle design
+- [x] Test the UI for cleanliness and modernity

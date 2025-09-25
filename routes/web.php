@@ -17,17 +17,17 @@ use App\Http\Controllers\Admin\Auth\DashboardController;
 use App\Http\Controllers\Admin\Auth\OverdueBookController;
 use App\Http\Controllers\Admin\Auth\BorrowRequestController;
 use App\Http\Controllers\Admin\Auth\CampusNewsController;
+use App\Http\Controllers\User\DashboardController as UserDashboardController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [HomeController::class, 'index']);
+
+// Public campus news routes
+Route::get('/campus-news/{campusNews}', [HomeController::class, 'showNews'])->name('campus-news.show');
 
 Route::get('/services', [App\Http\Controllers\ServicesController::class, 'index'])->name('services.index');
 Route::post('/services/register-qr', [App\Http\Controllers\ServicesController::class, 'registerQr'])->name('services.register-qr');
 
-Route::get('/dashboard', function () {
-    return view('user.dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [UserDashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -41,9 +41,7 @@ Route::middleware('auth')->group(function () {
 
 /*---------------------------ROUTE FOR USER MIDDLEWARE------------------------------*/
 Route::middleware(['auth', UserMiddleware::class])->group(function () {
-    Route::get('/user', function () {
-        return view('user.dashboard');
-    })->name('user.dashboard');
+    Route::get('/user', [UserDashboardController::class, 'index'])->name('user.dashboard');
 
     Route::get('/user/books', [UserBooksController::class, 'index'])->name('user.books.index');
     Route::get('/user/books/{id}', [UserBooksController::class, 'show'])->name('user.books.show');

@@ -2,16 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CampusNews;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display the home page with campus news.
      */
     public function index()
     {
-        return view('admin.dashboard');
+        $campusNews = CampusNews::where('status', 'published')
+            ->orderBy('publish_date', 'desc')
+            ->get();
+
+        return view('welcome', compact('campusNews'));
     }
 
     /**
@@ -52,6 +57,22 @@ class HomeController extends Controller
     public function update(Request $request, string $id)
     {
         //
+    }
+
+    /**
+     * Display the specified campus news item.
+     */
+    public function showNews(CampusNews $campusNews)
+    {
+        // Only show published news
+        if ($campusNews->status !== 'published') {
+            abort(404);
+        }
+
+        // Increment view count
+        $campusNews->incrementViews();
+
+        return view('campus-news.show', compact('campusNews'));
     }
 
     /**
