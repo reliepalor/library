@@ -1073,7 +1073,7 @@
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 ${getActivityDisplay(row.activity)}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${row.time_in}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm tresources\views\admin\attendance\index.blade.phpext-gray-900">${row.time_in}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${row.time_out}</td>
             <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">${row.status}</span></td>
         `;
