@@ -121,7 +121,7 @@
                     <p id="mode-description" class="text-sm text-blue-600">Using webcam scanner - point camera at QR code</p>
                 </div>
                 <div id="status-display" class="mb-4 p-3 bg-gray-50 rounded-lg hidden">
-                    <p id="status-text" class="text-sm text-gray-700"></p>
+                    <p id="status-text" class="text-sm text-gray-700 hidden"></p>
                 </div>
                 <!-- Loading Overlay -->
                 <div id="loading-overlay" class="hidden fixed inset-0 z-50 bg-white/70 backdrop-blur-sm flex items-center justify-center opacity-0 transition-opacity duration-200">
@@ -291,9 +291,8 @@
                                         <tr data-attendance-id="{{ $attendance['id'] }}">
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $attendance['student_id'] }}</td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex items-center space-x-3">
-                                                <img src="{{ $attendance['profile_picture'] ? asset('storage/' . $attendance['profile_picture']) : \App\Services\AvatarService::getPlaceholderAvatar($attendance['student_name'], 100) }}"
+                                                <img src="{{ \App\Services\AvatarService::getPlaceholderAvatar($attendance['student_name'], 100) }}"
                                                     alt="Profile Picture"
-                                                    onerror="this.onerror=null;this.src='{{ \App\Services\AvatarService::getPlaceholderAvatar($attendance['student_name'], 100) }}';"
                                                     class="w-10 h-10 rounded-full object-cover shadow-sm ring-1 ring-blue-100 transition-transform duration-300 hover:scale-105" />
                                                 <span class="font-medium">{{ $attendance['student_name'] }}</span>
                                             </td>

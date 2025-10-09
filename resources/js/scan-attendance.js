@@ -4,20 +4,33 @@
     // Helper function to generate avatar URL similar to PHP AvatarService
     function generateAvatarUrl(name, size = 100) {
         // Generate initials from name
-        const initials = name ? name.split(' ').map(part => part.charAt(0).toUpperCase()).join('').substring(0, 2) : 'U';
-        
-        // Generate consistent color from string (simplified version)
+        const initials = name ? name.split(' ').map(part => part.charAt(0).toUpperCase()).join('') : 'U';
+
+        // Generate consistent color from string using CRC32 like PHP
         const colors = [
             '1abc9c', '2ecc71', '3498db', '9b59b6', 'e74c3c',
             'f39c12', '34495e', '16a085', '27ae60', '2980b9',
             '8e44ad', 'c0392b', 'd35400', '7f8c8d', '95a5a6'
         ];
-        
-        // Simple hash function to get consistent color
-        let hash = 0;
-        for (let i = 0; i < name.length; i++) {
-            hash = name.charCodeAt(i) + ((hash << 5) - hash);
+
+        // CRC32 implementation
+        function crc32(str) {
+            let table = [];
+            for (let i = 0; i < 256; i++) {
+                let c = i;
+                for (let j = 0; j < 8; j++) {
+                    c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+                }
+                table[i] = c;
+            }
+            let crc = 0 ^ (-1);
+            for (let i = 0; i < str.length; i++) {
+                crc = (crc >>> 8) ^ table[(crc ^ str.charCodeAt(i)) & 0xFF];
+            }
+            return (crc ^ (-1)) >>> 0;
         }
+
+        const hash = crc32(name || 'default');
         const background = colors[Math.abs(hash) % colors.length];
         
         // Return UI Avatars URL
@@ -67,6 +80,7 @@
         let scannerRunning = false;
         let justLoggedOut = false;
         let logoutInProgress = false;
+        let borrowProcessing = false;
 
         // Add transition classes for smooth fade
         webcamContainer.classList.add('transition-opacity', 'duration-500', 'ease-in-out');
@@ -674,6 +688,8 @@
         // Borrow form submission
         document.getElementById('borrow-form').addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (borrowProcessing) return;
+            borrowProcessing = true;
             const studentId = borrowStudentId.value;
             const bookId = document.getElementById('book_id').value;
             const activityType = activitySelect.value === 'Stay&Borrow' ? 'Stay&Borrow' : 'Borrow';
@@ -689,8 +705,8 @@
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
                     },
-                    body: JSON.stringify({ 
-                        student_id: studentId, 
+                    body: JSON.stringify({
+                        student_id: studentId,
                         book_id: bookId,
                         activity: activityType // Pass the activity type
                     }),
@@ -711,6 +727,7 @@
                 showStatus(`Error: ${error.message}`, 'error');
             } finally {
                 hideLoading();
+                borrowProcessing = false;
                 if (currentMode === 'physical') {
                     qrInput.value = '';
                     qrInput.focus();
@@ -901,9 +918,9 @@
                 tr.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${attendance.student_id}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex items-center space-x-3">
-                        <img src="${attendance.profile_picture ? (window.assetBaseUrl + 'storage/' + attendance.profile_picture) : (window.assetBaseUrl + 'images/default-profile.png')}"
+                        <img src="${attendance.profile_picture ? (window.assetBaseUrl + 'storage/' + attendance.profile_picture) : generateAvatarUrl(attendance.student_name, 100)}"
                              alt="Profile Picture"
-                             onerror="this.onerror=null;this.src='${window.assetBaseUrl}images/default-profile.png';"
+                             onerror="this.onerror=null;this.src='${generateAvatarUrl(attendance.student_name, 100)}';"
                              class="w-10 h-10 rounded-full object-cover shadow-sm ring-1 ring-blue-100 transition-transform duration-300 hover:scale-105" />
                         <span class="font-medium">${attendance.student_name}</span>
                     </td>
@@ -1063,10 +1080,10 @@
         tr.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${row.student_id}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex items-center space-x-3">
-                <img src="${row.profile_picture || window.assetBaseUrl + 'images/default-profile.png'}"
+                <img src="${row.profile_picture ? (window.assetBaseUrl + 'storage/' + row.profile_picture) : generateAvatarUrl(row.student_name, 100)}"
                      alt="Profile Picture"
                      class="w-10 h-10 rounded-full object-cover shadow-sm ring-1 ring-blue-100 transition-transform duration-300 hover:scale-105"
-                     onerror="this.onerror=null;this.src='${window.assetBaseUrl}images/default-profile.png';" />
+                     onerror="this.onerror=null;this.src='${generateAvatarUrl(row.student_name, 100)}';" />
                 <span class="font-medium">${row.student_name}</span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full college-${row.college}">${row.college}</span></td>

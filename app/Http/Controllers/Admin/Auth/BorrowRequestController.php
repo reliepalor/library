@@ -22,6 +22,19 @@ class BorrowRequestController extends Controller
         // Convert book_id to uppercase for validation
         $bookCode = strtoupper($request->book_id);
 
+        // Check if a pending borrow request for the same student and book already exists
+        $existingRequest = \App\Models\BorrowedBook::where('student_id', $request->student_id)
+            ->where('book_id', $bookCode)
+            ->where('status', 'pending')
+            ->exists();
+
+        if ($existingRequest) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'A borrow request for this book is already pending.'], 422);
+            }
+            return back()->withErrors(['book_id' => 'A borrow request for this book is already pending.']);
+        }
+
         // Validate book code exists
         $book = \App\Models\Books::where('book_code', $bookCode)->first();
         if (!$book) {
@@ -122,30 +135,6 @@ class BorrowRequestController extends Controller
                 $attendance->save();
             }
 
-            // Handle multiple borrow requests - if there are other pending requests for the same attendance,
-            // we need to create separate attendance records for them
-            $otherPendingRequests = \App\Models\BorrowedBook::where('student_id', $studentId)
-                ->whereDate('created_at', Carbon::today())
-                ->where('status', 'pending')
-                ->where('id', '!=', $id)
-                ->where('attendance_id', $attendance->id)
-                ->get();
-
-            if ($otherPendingRequests->isNotEmpty()) {
-                // Create new attendance records for other pending requests
-                foreach ($otherPendingRequests as $pendingRequest) {
-                    $newAttendance = \App\Models\Attendance::create([
-                        'student_id' => $studentId,
-                        'activity' => 'Wait for approval',
-                        'login' => now()->setTimezone('Asia/Manila'),
-                    ]);
-
-                    // Update the pending request to use the new attendance record
-                    $pendingRequest->update(['attendance_id' => $newAttendance->id]);
-                }
-
-                Log::info("Created separate attendance records for {$otherPendingRequests->count()} other pending borrow requests for student {$studentId}");
-            }
 
             // Send notification email to student if they have an email
             if ($borrowRequest->student && $borrowRequest->student->email) {

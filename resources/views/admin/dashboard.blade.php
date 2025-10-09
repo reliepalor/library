@@ -275,25 +275,13 @@
                                     <thead class="bg-gray-50">
                                         <tr>
                                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Book</th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Borrowed Date</th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Days Overdue</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Overdue Books</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email Status</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="bg-white divide-y divide-gray-200" id="overdueBooksList">
-                                        <tr>
-                                            <td colspan="5" class="px-6 py-8 text-center">
-                                                <div class="flex flex-col items-center justify-center space-y-3">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                    </svg>
-                                                    <h3 class="text-sm font-medium text-gray-900">No Overdue Books Yet</h3>
-                                                    <p class="text-sm text-gray-500">Click "Send Reminders" to notify students with overdue books.</p>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
+                    <tbody class="bg-white divide-y divide-gray-200" id="overdueBooksList">
+                    </tbody>
                                 </table>
                             </div>
                         </div>
@@ -304,6 +292,19 @@
 
         @push('scripts')
         <script>
+function showToast(message, type = 'success', duration = 3000) {
+    const toast = document.createElement('div');
+    toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white z-50 ${type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500'}`;
+    toast.innerHTML = message;
+    toast.style.maxWidth = '400px';
+    toast.style.wordWrap = 'break-word';
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, duration - 300);
+}
+
         document.addEventListener('DOMContentLoaded', function() {
             const container = document.getElementById('overdueBooksList');
             
@@ -321,28 +322,27 @@
                         if (!books || books.length === 0) {
                             container.innerHTML = `
                                 <tr>
-                                    <td colspan="5" class="px-6 py-8 text-center">
+                                    <td colspan="4" class="px-6 py-8 text-center">
                                         <div class="flex flex-col items-center justify-center space-y-3">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                             </svg>
-                                            <h3 class="text-sm font-medium text-gray-900">No Overdue Books Yet</h3>
-                                            <p class="text-sm text-gray-500">Click "Send Reminders" to notify students with overdue books.</p>
+                                            <h3 class="text-sm font-medium text-gray-900">No Students with Overdue Book Reminders</h3>
+                                            <p class="text-sm text-gray-500">Students who receive overdue book reminders will appear here.</p>
                                         </div>
                                     </td>
                                 </tr>`;
                             return;
                         }
                         
-                        const html = books.map(book => {
-                            const studentName = `${book.student.fname} ${book.student.lname}`;
-                            const studentId = book.student.student_id;
-                            const bookName = book.book.name;
-                            const bookId = book.book.book_id;
-                            const borrowedDate = new Date(book.created_at).toLocaleDateString();
-                            const daysOverdue = book.days_overdue;
-                            const emailStatus = book.email_sent ? 'Sent' : 'Pending';
-                            const emailStatusClass = book.email_sent ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+                        const html = books.map(studentData => {
+                            const student = studentData.student;
+                            const studentName = `${student.fname} ${student.lname}`;
+                            const studentId = student.student_id;
+                            const booksList = studentData.books.map(b => `${b.name} (${b.book_id})`).join(', ');
+                            const totalBooks = studentData.total_books;
+                            const emailStatus = studentData.email_sent ? 'Sent' : 'Pending';
+                            const emailStatusClass = studentData.email_sent ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
 
                             return `
                                 <tr class="hover:bg-gray-50 transition-colors duration-150">
@@ -361,16 +361,13 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">${bookName}</div>
-                                        <div class="text-sm text-gray-500">${bookId}</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">${borrowedDate}</div>
+                                    <td class="px-6 py-4">
+                                        <div class="text-sm text-gray-900">${booksList}</div>
+                                        <div class="text-sm text-gray-500">${totalBooks} book${totalBooks > 1 ? 's' : ''}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                            ${daysOverdue} days
+                                            Reminder Sent
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
@@ -388,7 +385,7 @@
                         console.error('Error loading overdue books:', error);
                         container.innerHTML = `
                             <tr>
-                                <td colspan="5" class="px-6 py-8 text-center">
+                                <td colspan="4" class="px-6 py-8 text-center">
                                     <div class="flex flex-col items-center justify-center space-y-3">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

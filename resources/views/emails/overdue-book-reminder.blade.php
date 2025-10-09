@@ -9,7 +9,7 @@ This is a reminder that you have an overdue book that needs to be returned to th
 - Book Title: {{ $borrowedBook->book->name }}
 - Book Code: {{ $borrowedBook->book_id }}
 - Borrowed Date: {{ $borrowedBook->created_at->format('M d, Y') }}
-- Days Overdue: {{ $daysOverdue }} days
+
 
 Please return the book as soon as possible to avoid any penalties.
 

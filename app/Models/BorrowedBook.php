@@ -13,6 +13,7 @@ class BorrowedBook extends Model
         'rejection_reason',
         'returned_at',
         'attendance_id',
+        'email_sent_at',
     ];
 
     public function book()
