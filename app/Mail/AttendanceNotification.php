@@ -10,6 +10,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use App\Models\Student;
+use App\Models\TeacherVisitor;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\View;
 
@@ -18,6 +19,8 @@ class AttendanceNotification extends Mailable implements ShouldQueue
     use Queueable, SerializesModels;
 
     public $student;
+    public $teacherVisitor;
+    public $userType;
     public $type;
     public $time;
     public $activity;
@@ -26,9 +29,17 @@ class AttendanceNotification extends Mailable implements ShouldQueue
     /**
      * Create a new message instance.
      */
-    public function __construct(Student $student, string $type, Carbon $time, string $activity = null, string $duration = null)
+    public function __construct($user, string $userType, string $type, Carbon $time, string $activity = null, string $duration = null)
     {
-        $this->student = $student;
+        if ($userType === 'student') {
+            $this->student = $user;
+            $this->teacherVisitor = null;
+        } else {
+            $this->teacherVisitor = $user;
+            $this->student = null;
+        }
+
+        $this->userType = $userType;
         $this->type = $type;
         $this->time = $time;
         $this->activity = $activity;
@@ -49,6 +60,8 @@ class AttendanceNotification extends Mailable implements ShouldQueue
                     ->markdown($viewName)
                     ->with([
                         'student' => $this->student,
+                        'teacherVisitor' => $this->teacherVisitor,
+                        'userType' => $this->userType,
                         'loginTime' => $this->type === 'login' ? $this->time->setTimezone('Asia/Manila')->format('F j, Y g:i A') : null,
                         'logoutTime' => $this->type === 'logout' ? $this->time->setTimezone('Asia/Manila')->format('F j, Y g:i A') : null,
                         'activity' => $this->activity,
@@ -65,4 +78,4 @@ class AttendanceNotification extends Mailable implements ShouldQueue
     {
         return [];
     }
-} 
+}

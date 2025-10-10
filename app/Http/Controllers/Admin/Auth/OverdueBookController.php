@@ -8,6 +8,7 @@ use App\Models\OverdueReminderLog;
 use App\Mail\OverdueBookReminder;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -19,8 +20,8 @@ class OverdueBookController extends Controller
         
         // Get current time in Asia/Manila timezone
         $now = Carbon::now('Asia/Manila');
-        $startTime = $now->copy()->setTime(17, 0, 0); // 5:00 PM
-        $endTime = $now->copy()->setTime(18, 0, 0);   // 6:00 PM
+        $startTime = $now->copy()->setTime(17, 0, 0); // 5:00 PM cut-off reference
+        $endTime = $now->copy()->setTime(18, 0, 0);   // 6:00 PM cut-off reference
 
         // Only send reminders if current time is between 5-6 PM
         // Temporarily disabled for testing
@@ -33,20 +34,32 @@ class OverdueBookController extends Controller
         //     return back()->with('error', $message);
         // }
 
-        // Get all approved books that haven't been returned and are overdue (borrowed more than 1 day ago)
-        $overdueBooks = BorrowedBook::where('status', 'approved')
-            ->whereNull('returned_at')
-            ->where('created_at', '<', Carbon::now()->subDays(1))
+        // Candidates: all approved, not yet returned
+        $candidates = BorrowedBook::whereNull('returned_at')
             ->with(['student', 'book'])
             ->get();
+
+        // Determine overdue: due date is next day at 5:00 PM (within 5–6 PM window, consider 5 PM cutoff)
+        $overdueBooks = $candidates->filter(function ($borrow) use ($now) {
+            $borrowedAt = $borrow->borrowed_at ?? $borrow->created_at;
+            $borrowedAt = $borrowedAt ? Carbon::parse($borrowedAt, 'Asia/Manila') : Carbon::now('Asia/Manila');
+            $dueAt = $borrowedAt->copy()->addDay()->setTime(17, 0, 0); // 5 PM next day
+            return $now->greaterThan($dueAt);
+        });
 
         // Group by student
         $studentsWithOverdueBooks = $overdueBooks->groupBy('student_id')->filter(function ($books) {
             $student = $books->first()->student;
-            // Check if student already received reminder today
-            return $student && !OverdueReminderLog::where('student_id', $student->student_id)
-                ->whereDate('reminder_sent_at', Carbon::today())
-                ->exists();
+            // Check if student already received reminder today (by email or student_code)
+            if (!$student) return false;
+
+            $query = OverdueReminderLog::query();
+            $query->where('student_email', $student->email);
+            if (Schema::hasColumn('overdue_reminder_logs', 'student_code')) {
+                $query->orWhere('student_code', $student->student_id);
+            }
+            $query->whereDate('reminder_sent_at', Carbon::today('Asia/Manila'));
+            return !$query->exists();
         });
 
         Log::info('Found ' . $studentsWithOverdueBooks->count() . ' students with overdue books to remind');
@@ -66,30 +79,39 @@ class OverdueBookController extends Controller
                         ->send(new OverdueBookReminder($student, $books));
 
                     // Log the reminder
-                    OverdueReminderLog::create([
-                        'student_id' => $student->student_id,
-                        'student_name' => $student->fname . ' ' . $student->lname,
+                    $logData = [
+                        // Keep numeric placeholder due to column type; preserve true code separately when available
+                        'student_id' => 0,
+                        'student_name' => ($student->fname ?? '') . ' ' . ($student->lname ?? ''),
                         'student_email' => $student->email,
                         'college' => $student->college,
-                        'books' => $books->map(function ($book) {
+                        'books' => $books->map(function ($borrow) use ($now) {
+                            $borrowedAt = $borrow->borrowed_at ?? $borrow->created_at;
+                            $borrowedAt = $borrowedAt ? Carbon::parse($borrowedAt, 'Asia/Manila') : Carbon::now('Asia/Manila');
+                            $dueAt = $borrowedAt->copy()->addDay()->setTime(17, 0, 0);
                             return [
-                                'book_id' => $book->book_id,
-                                'name' => $book->book->name,
-                                'borrowed_at' => $book->created_at,
-                                'days_overdue' => Carbon::parse($book->created_at)->diffInDays(Carbon::now())
+                                'book_id' => $borrow->book_id,
+                                'name' => optional($borrow->book)->name,
+                                'borrowed_at' => $borrowedAt->toDateTimeString(),
+                                'due_at' => $dueAt->toDateTimeString(),
+                                'days_overdue' => max(0, $dueAt->diffInDays($now)),
                             ];
-                        })->toArray(),
+                        })->values()->toArray(),
                         'reminder_sent_at' => $now,
-                    ]);
+                    ];
+                    if (Schema::hasColumn('overdue_reminder_logs', 'student_code')) {
+                        $logData['student_code'] = $student->student_id;
+                    }
+                    OverdueReminderLog::create($logData);
 
                     $sentCount++;
 
                     // Track which students received emails
                     $sentEmails[] = [
                         'student_id' => $student->student_id,
-                        'name' => $student->student_name,
-                        'email' => $student->student_email,
-                        'book' => $books->pluck('book.name')->join(', '),
+                        'name' => trim(($student->fname ?? '') . ' ' . ($student->lname ?? '')),
+                        'email' => $student->email,
+                        'book' => $books->map(fn($b) => optional($b->book)->name)->filter()->implode(', '),
                         'college' => $student->college
                     ];
 
@@ -121,23 +143,37 @@ class OverdueBookController extends Controller
         try {
             Log::info('Fetching overdue reminder logs');
 
-            $reminderLogs = OverdueReminderLog::orderBy('reminder_sent_at', 'desc')->get();
+            $reminderLogs = OverdueReminderLog::with(['student', 'student.user'])
+                ->orderBy('reminder_sent_at', 'desc')
+                ->get();
 
             Log::info('Found ' . $reminderLogs->count() . ' reminder logs');
 
             $formattedLogs = $reminderLogs->map(function ($log) {
+                $student = $log->student;
+                $fname = $student->fname ?? ($log->student_name ? explode(' ', $log->student_name)[0] : '');
+                $lname = $student->lname ?? ($log->student_name ? explode(' ', $log->student_name)[1] ?? '' : '');
+                // Determine avatar URL from linked user profile or fallback
+                $profilePicture = $student && $student->user ? $student->user->profile_picture : null;
+                $avatarUrl = $profilePicture
+                    ? (str_starts_with($profilePicture, 'http') || str_starts_with($profilePicture, '/')
+                        ? $profilePicture
+                        : asset('storage/' . ltrim($profilePicture, '/')))
+                    : asset('images/default-profile.png');
+
                 return [
                     'student' => [
-                        'fname' => explode(' ', $log->student_name)[0] ?? '',
-                        'lname' => explode(' ', $log->student_name)[1] ?? '',
-                        'student_id' => $log->student_id,
-                        'email' => $log->student_email,
-                        'college' => $log->college
+                        'fname' => $fname,
+                        'lname' => $lname,
+                        'student_id' => $student->student_id ?? $log->student_code ?? $log->student_id,
+                        'email' => $student->email ?? $log->student_email,
+                        'college' => $student->college ?? $log->college,
+                        'avatar_url' => $avatarUrl,
                     ],
                     'books' => $log->books,
-                    'total_books' => count($log->books),
+                    'total_books' => is_array($log->books) ? count($log->books) : 0,
                     'email_sent' => true,
-                    'reminder_sent_at' => $log->reminder_sent_at
+                    'reminder_sent_at' => $log->reminder_sent_at,
                 ];
             });
 
@@ -152,8 +188,7 @@ class OverdueBookController extends Controller
 
     public function checkOverdueEmails()
     {
-        $overdueBooks = BorrowedBook::where('status', 'approved')
-            ->whereNull('returned_at')
+        $overdueBooks = BorrowedBook::whereNull('returned_at')
             ->with('student')
             ->get()
             ->map(function ($book) {

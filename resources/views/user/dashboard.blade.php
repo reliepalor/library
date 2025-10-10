@@ -204,7 +204,7 @@
                             <h3 class="text-lg font-semibold text-gray-900 mb-2 leading-tight">{{ $campusNews[0]->title }}</h3>
                             <p class="text-gray-600 text-sm leading-relaxed mb-4">{{ $campusNews[0]->excerpt }}</p>
                             <a href="{{ route('campus-news.show', $campusNews[0]) }}" 
-                            class="inline-flex items-center text-csu-blue hover:text-csu-light-blue font-medium text-sm transition-all duration-200">
+                            class="inline-flex items-center bg-purple-400 text-csu-blue hover:text-csu-light-blue font-medium text-sm transition-all duration-200">
                                 Read full article
                                 <i class="fas fa-arrow-right ml-2 text-xs"></i>
                             </a>

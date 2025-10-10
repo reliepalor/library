@@ -25,6 +25,11 @@
     }
     
     document.addEventListener('DOMContentLoaded', () => {
+    const pageKind = document.body?.dataset?.attendancePage;
+    if (pageKind && pageKind !== 'teachers') {
+        // Do not run this script on non-teachers pages
+        return;
+    }
         // DOM Elements
         const qrInput = document.getElementById('qr-input');
         const qrReader = document.getElementById('qr-reader');
@@ -831,7 +836,7 @@
 
         const fetchRealtimeOnce = async () => {
             try {
-                const response = await fetch('/admin/attendance/realtime', {
+                const response = await fetch('/admin/teachers-visitors-attendance/realtime', {
                     headers: {
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
@@ -853,7 +858,7 @@
             if (updateInterval) clearInterval(updateInterval);
             updateInterval = setInterval(async () => {
                 try {
-                    const response = await fetch('/admin/attendance/realtime', {
+                    const response = await fetch('/admin/teachers-visitors-attendance/realtime', {
                         headers: {
                             'Accept': 'application/json',
                             'X-Requested-With': 'XMLHttpRequest',

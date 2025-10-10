@@ -38,7 +38,25 @@
         .animate-fadeInUp { animation: fadeInUp 0.3s ease-out forwards; }
     </style>
     <script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
-    <script>window.assetBaseUrl = "{{ asset('') }}";</script>
+    <script src="https://js.pusher.com/7.2/pusher.min.js"></script>
+    <script>
+        window.assetBaseUrl = "{{ asset('') }}";
+        
+        // Pusher configuration
+        window.pusherConfig = {
+            key: '{{ config('broadcasting.connections.pusher.key') }}',
+            cluster: '{{ config('broadcasting.connections.pusher.options.cluster', 'mt1') }}',
+            wsHost: '{{ config('broadcasting.connections.pusher.options.host', `ws-${config('broadcasting.connections.pusher.options.cluster', 'mt1')}.pusher.com`) }}',
+            wsPort: {{ config('broadcasting.connections.pusher.options.port', 80) }},
+            wssPort: {{ config('broadcasting.connections.pusher.options.port', 443) }},
+            forceTLS: {{ config('broadcasting.connections.pusher.options.useTLS', true) ? 'true' : 'false' }},
+            enabledTransports: ['ws', 'wss'],
+            disableStats: true
+        };
+        
+        // Log Pusher config for debugging
+        console.log('[INIT] Pusher config:', window.pusherConfig);
+    </script>
 </head>
 <body class="bg-gray-50" data-attendance-page="unified">
     <div class="flex h-screen" x-data="{ sidebarExpanded: window.innerWidth > 768 }" @resize.window="sidebarExpanded = window.innerWidth > 768">
@@ -85,11 +103,21 @@
 
                     <!-- Scanner Containers -->
                     <div id="webcam-container" class="mb-4">
-                        <div id="qr-reader" class="my-4 mx-auto" style="width: 500px;"></div>
+                        <div id="scanner-loading" class="text-center p-8 bg-gray-100 rounded-lg">
+                            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+                            <p class="mt-2 text-sm text-gray-600">Initializing scanner...</p>
+                        </div>
+                        <div id="qr-reader" class="my-4 mx-auto" style="width: 500px; min-height: 300px; display: none;"></div>
+                        <div id="scanner-error" class="hidden p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg"></div>
                     </div>
                     <div id="physical-container" class="mb-4 hidden">
                         <label for="qr-input" class="block mb-2 text-sm font-medium text-gray-700">QR Scanner Input:</label>
-                        <input type="text" id="qr-input" autocomplete="off" class="border border-gray-300 p-3 w-full max-w-md mx-auto block rounded-lg" placeholder="Scan QR code here..." autofocus>
+                        <input type="text" 
+                               id="qr-input" 
+                               autocomplete="off" 
+                               class="border border-gray-300 p-3 w-full max-w-md mx-auto block rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                               placeholder="Scan QR code here..." 
+                               autofocus>
                     </div>
 
                     <div class="my-6 p-6 bg-gradient-to-r from-blue-50 via-purple-50 to-blue-50 border-2 border-blue-300 rounded-xl text-center shadow-sm">
@@ -147,7 +175,7 @@
                         <div class="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-blue-100">
                             <div class="flex justify-between items-center">
                                 <div>
-                                    <h2 class="text-xl font-bold text-gray-900">👨‍🎓 Students Attendance</h2>
+                                    <h2 class="text-xl font-bold text-gray-900">Students Attendance</h2>
                                     <p class="text-sm text-gray-600 mt-1">
                                         Total: {{ $studentStats['total'] }} | Present: {{ $studentStats['present'] }} | Logged Out: {{ $studentStats['logged_out'] }}
                                     </p>
@@ -216,7 +244,7 @@
                         <div class="p-6 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-purple-100">
                             <div class="flex justify-between items-center">
                                 <div>
-                                    <h2 class="text-xl font-bold text-gray-900">👨‍🏫 Teachers & Visitors Attendance</h2>
+                                    <h2 class="text-xl font-bold text-gray-900">Teachers & Visitors Attendance</h2>
                                     <p class="text-sm text-gray-600 mt-1">
                                         Total: {{ $teacherStats['total'] }} | Present: {{ $teacherStats['present'] }} | Logged Out: {{ $teacherStats['logged_out'] }}
                                     </p>
@@ -277,53 +305,57 @@
                             </table>
                         </div>
                     </div>
+                                <input type="hidden" name="user_type" id="borrow-user-type" value="">
+                                <input type="hidden" name="identifier" id="borrow-identifier" value="">
 
-                    <!-- Activity Modal (Unified for both user types) -->
-                    <div id="activity-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-                        <div class="bg-white rounded-lg shadow-lg p-6 w-96" id="modal-container">
-                            <!-- Dynamic Header -->
-                            <div class="mb-4 p-3 rounded-lg" id="modal-header">
-                                <div class="flex items-center justify-between">
-                                    <h3 class="text-lg font-bold" id="modal-title">Select Activity</h3>
-                                    <span class="px-3 py-1 rounded-full text-xs font-semibold" id="user-type-badge"></span>
-                                </div>
-                            </div>
-                            
-                            <form id="activity-form">
-                                @csrf
-                                <input type="hidden" name="user_type" id="modal-user-type" value="">
-                                <input type="hidden" name="identifier" id="modal-identifier" value="">
-                                
-                                <div id="user-info" class="mb-4 p-4 rounded-lg" style="border: 2px solid #e5e7eb;">
-                                    <div class="flex items-center space-x-4">
-                                        <div class="flex-shrink-0">
-                                            <div class="relative">
-                                                <img id="user-profile-pic" src="{{ \App\Services\AvatarService::getPlaceholderAvatar('User', 100) }}" 
-                                                     alt="Profile" class="w-16 h-16 rounded-full object-cover border-2 shadow-sm" id="profile-pic-border">
-                                                <div class="absolute -bottom-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center text-xl" id="user-type-icon"></div>
-                                            </div>
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <div id="user-details" class="space-y-1">
-                                                <p class="text-sm font-medium text-gray-700">Loading...</p>
-                                            </div>
-                                        </div>
+                                <!-- Search and Filter -->
+                                <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label for="available-books-search" class="block text-sm font-medium text-gray-700 mb-2">Search Books</label>
+                                        <input type="text" id="available-books-search" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Search by title, author, or code...">
+                                    </div>
+                                    <div>
+                                        <label for="available-books-college" class="block text-sm font-medium text-gray-700 mb-2">Filter by College</label>
+                                        <select id="available-books-college" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            <option value="">All Colleges</option>
+                                            <option value="CICS">CICS</option>
+                                            <option value="CTED">CTED</option>
+                                            <option value="CCJE">CCJE</option>
+                                            <option value="CHM">CHM</option>
+                                            <option value="CBEA">CBEA</option>
+                                            <option value="CA">CA</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex items-end">
+                                        <button type="button" id="refresh-available-books" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                            🔄 Refresh List
+                                        </button>
                                     </div>
                                 </div>
-                                
-                                <div class="mb-4">
-                                    <label for="activity" class="block mb-1 font-medium text-gray-700">Activity</label>
-                                    <select name="activity" id="activity" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="Study">Study</option>
-                                        <option value="Borrow">Borrow Books</option>
-                                        <option value="Stay&Borrow">Stay and Borrow Books</option>
-                                        <option value="Other">Other Activities</option>
-                                    </select>
+
+                                <!-- Available Books Grid -->
+                                <div class="mb-6">
+                                    <h4 class="text-lg font-semibold text-gray-800 mb-3">Available Books</h4>
+                                    <div id="available-books-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+                                        <!-- Books will be loaded here -->
+                                    </div>
                                 </div>
-                                
-                                <div class="flex justify-end space-x-2">
-                                    <button type="button" id="modal-cancel" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">Cancel</button>
-                                    <button type="submit" id="modal-submit" class="px-4 py-2 text-white rounded-lg transition-colors" style="background-color: #3b82f6;">Log Attendance</button>
+
+                                <!-- Manual Book Entry -->
+                                <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                                    <h4 class="text-lg font-semibold text-gray-800 mb-3">Or Enter Book Code Manually</h4>
+                                    <div class="flex gap-2">
+                                        <input type="text" id="manual-book-code" class="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter book code (e.g., LIB-001)">
+                                        <button type="button" id="manual-borrow-btn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                                            Borrow
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="flex justify-end space-x-3">
+                                    <button type="button" id="borrow-modal-cancel" class="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">Cancel</button>
+                                    <button type="submit" id="borrow-modal-submit" class="px-6 py-2 text-white rounded-lg transition-colors" style="background-color: #3b82f6;">Submit Borrow Request</button>
                                 </div>
                             </form>
                         </div>

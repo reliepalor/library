@@ -235,7 +235,7 @@
                                 @forelse($todayAttendanceRecords as $attendance)
                                     <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                         <div>
-                                            <p class="font-medium text-gray-800">{{ $attendance->student->name }}</p>
+                                            <p class="font-medium text-gray-800">{{ $attendance->getAttendeeName() }}</p>
                                             <p class="text-sm text-gray-600">{{ $attendance->created_at->format('h:i A') }}</p>
                                         </div>
                                         <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
@@ -290,7 +290,6 @@
             </div>
         </div>
 
-        @push('scripts')
         <script>
 function showToast(message, type = 'success', duration = 3000) {
     const toast = document.createElement('div');
@@ -343,17 +342,14 @@ function showToast(message, type = 'success', duration = 3000) {
                             const totalBooks = studentData.total_books;
                             const emailStatus = studentData.email_sent ? 'Sent' : 'Pending';
                             const emailStatusClass = studentData.email_sent ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+                            const avatarUrl = student.avatar_url || '/images/default-profile.png';
 
                             return `
                                 <tr class="hover:bg-gray-50 transition-colors duration-150">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center">
                                             <div class="flex-shrink-0 h-10 w-10">
-                                                <div class="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                    </svg>
-                                                </div>
+                                                <img src="${avatarUrl}" alt="${studentName}" class="h-10 w-10 rounded-full object-cover" onerror="this.src='/images/default-profile.png'" />
                                             </div>
                                             <div class="ml-4">
                                                 <div class="text-sm font-medium text-gray-900">${studentName}</div>
@@ -406,6 +402,18 @@ function showToast(message, type = 'success', duration = 3000) {
                 sendRemindersForm.addEventListener('submit', async function(e) {
                     e.preventDefault();
                     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    const btn = sendRemindersForm.querySelector('button[type="submit"]');
+                    const originalBtnHtml = btn ? btn.innerHTML : '';
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.classList.add('opacity-70', 'cursor-not-allowed');
+                        btn.innerHTML = `
+                            <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                            </svg>
+                            Sending…`;
+                    }
                     try {
                         const response = await fetch('{{ route("admin.overdue.books.send-reminders") }}', {
                             method: 'POST',
@@ -446,6 +454,12 @@ function showToast(message, type = 'success', duration = 3000) {
                     } catch (error) {
                         console.error('Error sending reminders:', error);
                         showToast('An error occurred while sending reminders.', 'error');
+                    } finally {
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.classList.remove('opacity-70', 'cursor-not-allowed');
+                            btn.innerHTML = originalBtnHtml;
+                        }
                     }
                 });
             }
@@ -499,6 +513,5 @@ function showToast(message, type = 'success', duration = 3000) {
             });
         });
         </script>
-        @endpush
     </body>
 </html>

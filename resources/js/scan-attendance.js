@@ -38,6 +38,11 @@
     }
     
     document.addEventListener('DOMContentLoaded', () => {
+    const pageKind = document.body?.dataset?.attendancePage;
+    if (pageKind && pageKind !== 'student') {
+        // Do not run this script on non-student pages
+        return;
+    }
         // DOM Elements
         const qrInput = document.getElementById('qr-input');
         const qrReader = document.getElementById('qr-reader');

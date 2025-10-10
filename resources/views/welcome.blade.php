@@ -365,7 +365,7 @@ function showFeaturedNews(index, clickedElement) {
                     <p class="text-gray-600 leading-relaxed mb-4 flex-1">${excerpt}</p>
                 </div>
                 <div class="mt-auto">
-                    <a href="${url}" class="inline-flex items-center text-csu-blue hover:text-csu-light-blue font-medium transition-all duration-200 hover:translate-x-1">
+                    <a href="${url}" class="inline-flex items-center bg-purple-600 text-csu-blue hover:text-csu-light-blue font-medium transition-all duration-200 hover:translate-x-1">
                         Read full article
                         <i class="fas fa-arrow-right ml-2 text-sm"></i>
                     </a>

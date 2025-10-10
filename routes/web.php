@@ -68,11 +68,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('admin/attendance/realtime', [\App\Http\Controllers\Admin\AttendanceController::class, 'getRealtimeAttendance'])
         ->name('admin.attendance.realtime');
 
-    // Overdue Book Routes - Moved here and fixed paths
-    Route::post('admin/overdue-books/send-reminders', [OverdueBookController::class, 'sendReminders'])
-        ->name('admin.overdue-books.send-reminders');
-    Route::get('admin/overdue-books', [OverdueBookController::class, 'getOverdueBooks'])
-        ->name('admin.overdue.books');
+    // Overdue Book Routes are defined in routes/admin-auth.php to avoid duplication
 
     /*---------------------------ROUTE FOR ADMIN ---ATTENDANCE------------------------------*/
     Route::prefix('admin/attendance')->name('admin.attendance.')->group(function () {
