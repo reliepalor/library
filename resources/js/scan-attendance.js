@@ -1,4 +1,4 @@
- // Main JavaScript for admin scan/webcam attendance
+ use // Main JavaScript for admin scan/webcam attendance
     // (Copied and adapted from user attendance, all AJAX endpoints use /admin/attendance/...)
     
     // Helper function to generate avatar URL similar to PHP AvatarService

@@ -8,6 +8,7 @@ use App\Models\AttendanceHistory;
 use App\Models\Student;
 use App\Models\TeacherVisitor;
 use App\Models\BorrowedBook;
+use App\Models\Books;
 use App\Mail\AttendanceNotification;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -79,7 +80,8 @@ class UnifiedAttendanceController extends Controller
     {
         return Attendance::teachers()
             ->with(['teacherVisitor' => function($query) {
-                $query->select('id', 'lname', 'fname', 'department', 'role', 'email');
+                $query->select('id', 'lname', 'fname', 'department', 'role', 'email')
+                      ->with('user:id,profile_picture');
             }])
             ->whereBetween('login', [$startOfDay, $endOfDay])
             ->orderBy('created_at', 'desc')
@@ -116,17 +118,23 @@ class UnifiedAttendanceController extends Controller
 
         $formattedAttendance = $attendance->map(function ($record) use ($borrowRequests) {
             $activity = $this->getActivityWithBorrowStatus($record, $borrowRequests, $record->student_id);
-            
+
+            // Build name from available data
+            $student = $record->student;
+            $fname = $student ? ($student->fname ?? '') : '';
+            $lname = $student ? ($student->lname ?? '') : '';
+            $name = trim(($fname && $lname) ? $lname . ', ' . $fname : ($fname ?: $lname ?: $record->student_id));
+
             return [
                 'id' => $record->id,
                 'user_type' => 'student',
-                'identifier' => $record->student->student_id ?? 'N/A',
-                'name' => $record->getAttendeeName(),
-                'profile_picture' => $record->student?->user?->profile_picture,
-                'college_or_dept' => $record->student->college ?? 'N/A',
+                'identifier' => $student ? ($student->student_id ?? $record->student_id) : $record->student_id,
+                'name' => $name ?: 'Unknown Student',
+                'profile_picture' => $student?->user?->profile_picture,
+                'college_or_dept' => $student ? ($student->college ?? '') : '',
                 'activity' => $activity,
                 'time_in' => $record->login ? Carbon::parse($record->login)->format('h:i A') : 'N/A',
-                'time_out' => $record->logout ? Carbon::parse($record->logout)->format('h:i A') : 'N/A'
+                'time_out' => $record->logout ? Carbon::parse($record->logout)->format('h:i A') : ''
             ];
         });
 
@@ -149,17 +157,23 @@ class UnifiedAttendanceController extends Controller
         ];
 
         $formattedAttendance = $attendance->map(function ($record) {
+            // Build name from available data
+            $teacher = $record->teacherVisitor;
+            $fname = $teacher ? ($teacher->fname ?? '') : '';
+            $lname = $teacher ? ($teacher->lname ?? '') : '';
+            $name = trim(($fname && $lname) ? $lname . ', ' . $fname : ($fname ?: $lname ?: $record->teacher_visitor_id));
+
             return [
                 'id' => $record->id,
                 'user_type' => 'teacher',
                 'identifier' => $record->teacher_visitor_id,
-                'name' => $record->getAttendeeName(),
-                'profile_picture' => null,
-                'college_or_dept' => $record->teacherVisitor->department ?? 'N/A',
-                'role' => $record->teacherVisitor->role ?? 'N/A',
+                'name' => $name ?: 'Unknown Staff',
+                'profile_picture' => $teacher?->user?->profile_picture,
+                'college_or_dept' => $teacher ? ($teacher->department ?? '') : '',
+                'role' => $teacher ? ($teacher->role ?? '') : '',
                 'activity' => $record->activity,
                 'time_in' => $record->login ? Carbon::parse($record->login)->format('h:i A') : 'N/A',
-                'time_out' => $record->logout ? Carbon::parse($record->logout)->format('h:i A') : 'N/A'
+                'time_out' => $record->logout ? Carbon::parse($record->logout)->format('h:i A') : ''
             ];
         });
 
@@ -304,8 +318,8 @@ class UnifiedAttendanceController extends Controller
     private function handleLogout($attendance, $now)
     {
         DB::transaction(function () use ($attendance, $now) {
-            $attendance->logout = $now;
-            $attendance->save();
+            // Explicitly update only the logout field to prevent any side effects
+            $attendance->update(['logout' => $now]);
 
             // Handle book return if borrowing
             if (str_contains($attendance->activity, 'Borrow')) {
@@ -330,8 +344,8 @@ class UnifiedAttendanceController extends Controller
 
         // Get the user's name for the response
         $userName = $attendance->user_type === 'student' 
-            ? ($attendance->student->name ?? 'Unknown Student')
-            : ($attendance->teacherVisitor->name ?? 'Unknown Staff');
+            ? ($attendee ? ($attendee->full_name ?? $attendee->lname . ', ' . $attendee->fname ?? 'Unknown Student') : 'Unknown Student')
+            : ($attendee ? ($attendee->full_name ?? $attendee->lname . ', ' . $attendee->fname ?? 'Unknown Staff') : 'Unknown Staff');
 
         // Prepare the response data
         $responseData = [
@@ -361,18 +375,30 @@ class UnifiedAttendanceController extends Controller
             ];
 
             if ($attendance->user_type === 'student') {
+                // Build name from available data
+                $student = $attendance->student;
+                $fname = $student ? ($student->fname ?? '') : '';
+                $lname = $student ? ($student->lname ?? '') : '';
+                $name = trim(($fname && $lname) ? $lname . ', ' . $fname : ($fname ?: $lname ?: $attendance->student_id));
+
                 $record['student_id'] = $attendance->student_id;
                 $record['student'] = [
-                    'name' => $attendance->student->name ?? 'N/A',
-                    'section' => $attendance->student->section ?? null,
-                    'college' => $attendance->student->college ?? null,
-                    'course' => $attendance->student->course ?? null,
+                    'name' => $name ?: 'Unknown Student',
+                    'section' => $student ? ($student->section ?? null) : null,
+                    'college' => $student ? ($student->college ?? null) : null,
+                    'course' => $student ? ($student->course ?? null) : null,
                 ];
             } else {
+                // Build name from available data
+                $teacher = $attendance->teacherVisitor;
+                $fname = $teacher ? ($teacher->fname ?? '') : '';
+                $lname = $teacher ? ($teacher->lname ?? '') : '';
+                $name = trim(($fname && $lname) ? $lname . ', ' . $fname : ($fname ?: $lname ?: $attendance->teacher_visitor_id));
+
                 $record['teacher_id'] = $attendance->teacher_visitor_id;
                 $record['teacher'] = [
-                    'name' => $attendance->teacherVisitor->name ?? 'N/A',
-                    'type' => $attendance->teacherVisitor->type ?? 'Staff',
+                    'name' => $name ?: 'Unknown Staff',
+                    'type' => $teacher ? ($teacher->type ?? 'Staff') : 'Staff',
                 ];
             }
 
@@ -428,8 +454,8 @@ class UnifiedAttendanceController extends Controller
 
         // Get the user's name for the response
         $userName = $userType === 'student' 
-            ? ($attendance->student->name ?? 'Unknown Student')
-            : ($attendance->teacherVisitor->name ?? 'Unknown Staff');
+            ? ($attendee ? ($attendee->full_name ?? $attendee->lname . ', ' . $attendee->fname ?? 'Unknown Student') : 'Unknown Student')
+            : ($attendee ? ($attendee->full_name ?? $attendee->lname . ', ' . $attendee->fname ?? 'Unknown Staff') : 'Unknown Staff');
 
         // Prepare the response data
         $responseData = [
@@ -457,18 +483,30 @@ class UnifiedAttendanceController extends Controller
             ];
 
             if ($userType === 'student') {
+                // Build name from available data
+                $student = $attendance->student;
+                $fname = $student ? ($student->fname ?? '') : '';
+                $lname = $student ? ($student->lname ?? '') : '';
+                $name = trim(($fname && $lname) ? $lname . ', ' . $fname : ($fname ?: $lname ?: $attendance->student_id));
+
                 $record['student_id'] = $attendance->student_id;
                 $record['student'] = [
-                    'name' => $attendance->student->name ?? 'N/A',
-                    'section' => $attendance->student->section ?? null,
-                    'college' => $attendance->student->college ?? null,
-                    'course' => $attendance->student->course ?? null,
+                    'name' => $name ?: 'Unknown Student',
+                    'section' => $student ? ($student->section ?? null) : null,
+                    'college' => $student ? ($student->college ?? null) : null,
+                    'course' => $student ? ($student->course ?? null) : null,
                 ];
             } else {
+                // Build name from available data
+                $teacher = $attendance->teacherVisitor;
+                $fname = $teacher ? ($teacher->fname ?? '') : '';
+                $lname = $teacher ? ($teacher->lname ?? '') : '';
+                $name = trim(($fname && $lname) ? $lname . ', ' . $fname : ($fname ?: $lname ?: $attendance->teacher_visitor_id));
+
                 $record['teacher_id'] = $attendance->teacher_visitor_id;
                 $record['teacher'] = [
-                    'name' => $attendance->teacherVisitor->name ?? 'N/A',
-                    'type' => $attendance->teacherVisitor->type ?? 'Staff',
+                    'name' => $name ?: 'Unknown Staff',
+                    'type' => $teacher ? ($teacher->type ?? 'Staff') : 'Staff',
                 ];
             }
 
@@ -578,8 +616,8 @@ class UnifiedAttendanceController extends Controller
                     'identifier' => $user->student_id
                 ]);
             } else {
-                $user = TeacherVisitor::find($identifier);
-                
+                $user = TeacherVisitor::with('user')->find($identifier);
+
                 if (!$user) {
                     return response()->json(['error' => 'Teacher/Visitor not found'], 404);
                 }
@@ -587,7 +625,7 @@ class UnifiedAttendanceController extends Controller
                 return response()->json([
                     'user_type' => 'teacher',
                     'user' => $user,
-                    'profile_picture' => null,
+                    'profile_picture' => $user->user?->profile_picture,
                     'name' => $user->fname . ' ' . $user->lname,
                     'identifier' => $user->id
                 ]);
@@ -707,6 +745,33 @@ class UnifiedAttendanceController extends Controller
     }
 
     /**
+     * Get list of colleges for filtering books
+     */
+    public function colleges()
+    {
+        try {
+            $colleges = Books::active()
+                ->select('section')
+                ->distinct()
+                ->whereNotNull('section')
+                ->where('section', '!=', '')
+                ->orderBy('section')
+                ->pluck('section')
+                ->filter()
+                ->values()
+                ->toArray();
+
+            return response()->json($colleges);
+        } catch (\Exception $e) {
+            Log::error('Error fetching colleges: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Server error',
+                'message' => 'Failed to fetch colleges.'
+            ], 500);
+        }
+    }
+
+    /**
      * Get realtime attendance data for both students and teachers
      */
     public function realtime()
@@ -728,13 +793,19 @@ class UnifiedAttendanceController extends Controller
 
             // Format the response to match what the frontend expects
             $formattedStudentAttendance = $studentAttendance->map(function($record) {
+                // Build name from available data
+                $student = $record->student;
+                $fname = $student ? ($student->fname ?? '') : '';
+                $lname = $student ? ($student->lname ?? '') : '';
+                $name = trim(($fname && $lname) ? $lname . ', ' . $fname : ($fname ?: $lname ?: $record->student_id));
+
                 return [
                     'student_id' => $record->student_id,
                     'student' => [
-                        'name' => $record->student->name ?? 'N/A',
-                        'section' => $record->student->section ?? null,
-                        'college' => $record->student->college ?? null,
-                        'course' => $record->student->course ?? null,
+                        'name' => $name ?: 'Unknown Student',
+                        'section' => $student ? ($student->section ?? null) : null,
+                        'college' => $student ? ($student->college ?? null) : null,
+                        'course' => $student ? ($student->course ?? null) : null,
                     ],
                     'time_in' => $record->login,
                     'time_out' => $record->logout,
@@ -743,17 +814,31 @@ class UnifiedAttendanceController extends Controller
                 ];
             });
 
-            $formattedTeacherAttendance = $teacherAttendance->map(function($record) {
+            $formattedTeacherAttendance = $teacherAttendance->map(function($record) use ($borrowRequests) {
+                // Build name from available data
+                $teacher = $record->teacherVisitor;
+                $fname = $teacher ? ($teacher->fname ?? '') : '';
+                $lname = $teacher ? ($teacher->lname ?? '') : '';
+                $name = trim(($fname && $lname) ? $lname . ', ' . $fname : ($fname ?: $lname ?: $record->teacher_visitor_id));
+
+                // Get activity with borrow status
+                $activity = $this->getActivityWithBorrowStatus($record, $borrowRequests, $record->teacher_visitor_id);
+
                 return [
+                    'id' => $record->id,
                     'teacher_id' => $record->teacher_visitor_id,
                     'teacher' => [
-                        'name' => $record->teacherVisitor->name ?? 'N/A',
-                        'type' => $record->teacherVisitor->type ?? 'teacher',
+                        'name' => $name ?: 'Unknown Staff',
+                        'type' => $teacher ? ($teacher->type ?? 'teacher') : 'teacher',
+                        'department' => $teacher ? ($teacher->department ?? null) : null,
+                        'department_name' => $teacher ? ($teacher->department ?? null) : null, // Alias for compatibility
                     ],
                     'time_in' => $record->login,
                     'time_out' => $record->logout,
-                    'activity' => $record->activity,
-                    'status' => $record->logout ? 'out' : 'in'
+                    'activity' => $activity, // Use the processed activity
+                    'status' => $record->logout ? 'out' : 'in',
+                    'created_at' => $record->created_at,
+                    'updated_at' => $record->updated_at
                 ];
             });
 
@@ -765,7 +850,7 @@ class UnifiedAttendanceController extends Controller
                 ]
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error in realtime attendance: ' . $e->getMessage());
+            Log::error('Error in realtime attendance: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch attendance data',

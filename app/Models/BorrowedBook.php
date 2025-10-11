@@ -8,6 +8,7 @@ class BorrowedBook extends Model
 {
     protected $fillable = [
         'student_id',
+        'user_type',
         'book_id',
         'status',
         'rejection_reason',

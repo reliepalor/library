@@ -182,15 +182,26 @@
                 </p>
             </div>
             
-            <!-- CTA Button -->
+            <!-- Activity Selection Buttons -->
             <div class="fade-in-slow mb-16">
-                <a href="#get-started" 
-                   class="modern-button inline-flex items-center px-8 py-4 bg-gray-800 text-white font-medium rounded-2xl transition-all duration-300 hover:bg-gray-900 group">
-                    <span>Get Started</span>
-                    <svg class="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </a>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button onclick="openBorrowModal('borrow')"
+                       class="modern-button inline-flex items-center px-8 py-4 bg-blue-600 text-white font-medium rounded-2xl transition-all duration-300 hover:bg-blue-700 group">
+                        <i class="fas fa-book mr-3 transition-transform group-hover:rotate-12"></i>
+                        <span>Borrow Books</span>
+                        <svg class="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                    <button onclick="openBorrowModal('stay')"
+                       class="modern-button inline-flex items-center px-8 py-4 bg-green-600 text-white font-medium rounded-2xl transition-all duration-300 hover:bg-green-700 group">
+                        <i class="fas fa-clock mr-3 transition-transform group-hover:scale-110"></i>
+                        <span>Stay and Borrow</span>
+                        <svg class="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
             
             

@@ -86,6 +86,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/insights', [AttendanceController::class, 'insights'])->name('insights');
         Route::get('/insights-data', [AttendanceController::class, 'insightsData'])->name('insights-data');
         Route::get('/available-books', [AttendanceController::class, 'availableBooks'])->name('available-books');
+        Route::get('/books/colleges', [AttendanceController::class, 'booksColleges'])->name('books.colleges');
     });
 
     /*---------------------------ROUTE FOR ADMIN ---BORROW REQUESTS------------------------------*/

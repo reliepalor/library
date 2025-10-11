@@ -92,23 +92,27 @@
                     <!-- Scanner Mode Toggle -->
                     <div class="flex justify-center mb-6">
                         <div class="bg-gray-100 p-2 rounded-lg flex space-x-2">
-                            <button id="physical-mode-btn" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md font-medium transition-colors hover:bg-gray-400">
+                            <button type="button" id="physical-mode-btn" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md font-medium transition-colors hover:bg-gray-400">
                                 🔍 Physical Scanner
                             </button>
-                            <button id="webcam-mode-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md font-medium transition-colors">
+                            <button type="button" id="webcam-mode-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md font-medium transition-colors">
                                 📷 Webcam Scanner
                             </button>
                         </div>
                     </div>
 
                     <!-- Scanner Containers -->
-                    <div id="webcam-container" class="mb-4">
+                    <div id="webcam-container" class="mb-4 hidden">
                         <div id="scanner-loading" class="text-center p-8 bg-gray-100 rounded-lg">
                             <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
                             <p class="mt-2 text-sm text-gray-600">Initializing scanner...</p>
                         </div>
-                        <div id="qr-reader" class="my-4 mx-auto" style="width: 500px; min-height: 300px; display: none;"></div>
                         <div id="scanner-error" class="hidden p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg"></div>
+                        <div class="flex justify-center">
+                            <div id="qr-reader" class="w-full max-w-md">
+                                <!-- The scanner will be inserted here by the JavaScript -->
+                            </div>
+                        </div>
                     </div>
                     <div id="physical-container" class="mb-4 hidden">
                         <label for="qr-input" class="block mb-2 text-sm font-medium text-gray-700">QR Scanner Input:</label>
@@ -187,7 +191,8 @@
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Student ID</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Profile</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">College</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Activity</th>
@@ -199,16 +204,47 @@
                                 <tbody class="bg-white divide-y divide-gray-200" id="student-attendance-table-body">
                                     @forelse($studentAttendance as $attendance)
                                         <tr data-attendance-id="{{ $attendance['id'] }}" data-user-type="student">
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $attendance['identifier'] }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex items-center space-x-3">
-                                                <img src="{{ $attendance['profile_picture'] ?? \App\Services\AvatarService::getPlaceholderAvatar($attendance['name'], 100) }}"
-                                                    alt="Profile" class="w-10 h-10 rounded-full object-cover shadow-sm ring-1 ring-blue-100" />
-                                                <span class="font-medium">{{ $attendance['name'] }}</span>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full college-{{ $attendance['college_or_dept'] }}">
-                                                    {{ $attendance['college_or_dept'] }}
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-700">
+                                                    <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-blue-600" fill="currentColor" viewBox="0 0 8 8">
+                                                        <circle cx="4" cy="4" r="3" />
+                                                    </svg>
+                                                    Student
                                                 </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <img src="{{ $attendance['profile_picture'] ?? \App\Services\AvatarService::getPlaceholderAvatar($attendance['name'], 100) }}" alt="Profile" class="w-10 h-10 rounded-full object-cover shadow-sm ring-1 ring-blue-100" />
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm font-medium text-gray-900">{{ $attendance['name'] }}</div>
+                                                <div class="text-xs text-gray-500">{{ $attendance['identifier'] ?? '' }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                @if(!empty($attendance['college_or_dept']))
+                                                    <span class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full 
+                                                        @if($attendance['college_or_dept'] === 'CICS') bg-violet-100 text-violet-800
+                                                        @elseif($attendance['college_or_dept'] === 'CTED') bg-sky-100 text-sky-800
+                                                        @elseif($attendance['college_or_dept'] === 'CCJE') bg-red-100 text-red-800
+                                                        @elseif($attendance['college_or_dept'] === 'CHM') bg-pink-100 text-pink-800
+                                                        @elseif($attendance['college_or_dept'] === 'CBEA') bg-yellow-100 text-yellow-800
+                                                        @elseif($attendance['college_or_dept'] === 'CA') bg-green-100 text-green-800
+                                                        @else bg-gray-100 text-gray-800 @endif">
+                                                        <svg class="-ml-0.5 mr-1.5 h-2 w-2 
+                                                            @if($attendance['college_or_dept'] === 'CICS') text-violet-600
+                                                            @elseif($attendance['college_or_dept'] === 'CTED') text-sky-600
+                                                            @elseif($attendance['college_or_dept'] === 'CCJE') text-red-600
+                                                            @elseif($attendance['college_or_dept'] === 'CHM') text-pink-600
+                                                            @elseif($attendance['college_or_dept'] === 'CBEA') text-yellow-600
+                                                            @elseif($attendance['college_or_dept'] === 'CA') text-green-600
+                                                            @else text-gray-500 @endif" 
+                                                            fill="currentColor" viewBox="0 0 8 8">
+                                                            <circle cx="4" cy="4" r="3" />
+                                                        </svg>
+                                                        {{ $attendance['college_or_dept'] }}
+                                                    </span>
+                                                @else
+                                                    <span class="text-xs text-gray-400">No college</span>
+                                                @endif
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                 @if(str_contains(strtolower($attendance['activity']), 'wait for approval'))
@@ -219,19 +255,41 @@
                                                     {{ $attendance['activity'] }}
                                                 @endif
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $attendance['time_in'] }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $attendance['time_out'] }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                @if($attendance['time_out'] === 'N/A')
-                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Present</span>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                @if(!empty($attendance['time_in']))
+                                                    {{ $attendance['time_in'] }}
                                                 @else
-                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Logged Out</span>
+                                                    <span class="text-gray-400">-</span>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                @if(!empty($attendance['time_out']) && $attendance['time_out'] !== 'N/A')
+                                                    {{ $attendance['time_out'] }}
+                                                @else
+                                                    <span class="text-gray-400">-</span>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                @if(empty($attendance['time_out']) || $attendance['time_out'] === 'N/A')
+                                                    <span class="px-2 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                        <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-green-600" fill="currentColor" viewBox="0 0 8 8">
+                                                            <circle cx="4" cy="4" r="3" />
+                                                        </svg>
+                                                        Active
+                                                    </span>
+                                                @else
+                                                    <span class="px-2 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                                        <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-gray-600" fill="currentColor" viewBox="0 0 8 8">
+                                                            <circle cx="4" cy="4" r="3" />
+                                                        </svg>
+                                                        Logged Out
+                                                    </span>
                                                 @endif
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">No student attendance records for today</td>
+                                            <td colspan="8" class="px-6 py-4 text-center text-sm text-gray-500">No student attendance records for today</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -256,10 +314,9 @@
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Department</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Profile</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Department</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Activity</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time In</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time Out</th>
@@ -269,30 +326,71 @@
                                 <tbody class="bg-white divide-y divide-gray-200" id="teacher-attendance-table-body">
                                     @forelse($teacherAttendance as $attendance)
                                         <tr data-attendance-id="{{ $attendance['id'] }}" data-user-type="teacher">
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $attendance['identifier'] }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex items-center space-x-3">
-                                                <img src="{{ \App\Services\AvatarService::getPlaceholderAvatar($attendance['name'], 100) }}"
-                                                    alt="Profile" class="w-10 h-10 rounded-full object-cover shadow-sm ring-1 ring-purple-100" />
-                                                <span class="font-medium">{{ $attendance['name'] }}</span>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
-                                                    {{ $attendance['college_or_dept'] }}
-                                                </span>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                <span class="px-2 py-1 text-xs font-medium rounded {{ $attendance['role'] === 'teacher' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full {{ $attendance['role'] === 'teacher' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
+                                                    <svg class="-ml-0.5 mr-1.5 h-2 w-2 {{ $attendance['role'] === 'teacher' ? 'text-blue-600' : 'text-gray-600' }}" fill="currentColor" viewBox="0 0 8 8">
+                                                        <circle cx="4" cy="4" r="3" />
+                                                    </svg>
                                                     {{ ucfirst($attendance['role']) }}
                                                 </span>
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $attendance['activity'] }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $attendance['time_in'] }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $attendance['time_out'] }}</td>
                                             <td class="px-6 py-4 whitespace-nowrap">
-                                                @if($attendance['time_out'] === 'N/A')
-                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Present</span>
+                                                <img src="{{ $attendance['profile_picture'] ?? \App\Services\AvatarService::getPlaceholderAvatar($attendance['name'], 100) }}" alt="Profile" class="w-10 h-10 rounded-full object-cover shadow-sm ring-1 ring-purple-100" />
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm font-medium text-gray-900">{{ $attendance['name'] }}</div>
+                                                <div class="text-xs text-gray-500">{{ $attendance['email'] ?? '' }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                @if(!empty($attendance['college_or_dept']))
+                                                    <span class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                                                        <svg class="mr-1.5 h-2 w-2 text-purple-400" fill="currentColor" viewBox="0 0 8 8">
+                                                            <circle cx="4" cy="4" r="3" />
+                                                        </svg>
+                                                        {{ $attendance['college_or_dept'] }}
+                                                    </span>
                                                 @else
-                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Logged Out</span>
+                                                    <span class="text-xs text-gray-500">No department</span>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                @if(str_contains(strtolower($attendance['activity'] ?? ''), 'wait for approval'))
+                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">{{ $attendance['activity'] }}</span>
+                                                @elseif(str_contains(strtolower($attendance['activity'] ?? ''), 'borrow:'))
+                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">{{ $attendance['activity'] }}</span>
+                                                @else
+                                                    {{ $attendance['activity'] ?? 'N/A' }}
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                @if(!empty($attendance['time_in']))
+                                                    {{ \Carbon\Carbon::parse($attendance['time_in'])->format('h:i A') }}
+                                                @else
+                                                    <span class="text-gray-400">-</span>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                @if(!empty($attendance['time_out']) && $attendance['time_out'] !== 'N/A')
+                                                    {{ \Carbon\Carbon::parse($attendance['time_out'])->format('h:i A') }}
+                                                @else
+                                                    <span class="text-gray-400">-</span>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                @if(empty($attendance['time_out']) || $attendance['time_out'] === 'N/A')
+                                                    <span class="px-2 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                        <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-green-600" fill="currentColor" viewBox="0 0 8 8">
+                                                            <circle cx="4" cy="4" r="3" />
+                                                        </svg>
+                                                        Active
+                                                    </span>
+                                                @else
+                                                    <span class="px-2 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                                        <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-gray-600" fill="currentColor" viewBox="0 0 8 8">
+                                                            <circle cx="4" cy="4" r="3" />
+                                                        </svg>
+                                                        Logged Out
+                                                    </span>
                                                 @endif
                                             </td>
                                         </tr>

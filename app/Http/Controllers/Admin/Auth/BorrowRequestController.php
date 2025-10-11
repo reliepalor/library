@@ -19,11 +19,15 @@ class BorrowRequestController extends Controller
             'book_id' => 'required|string',
         ]);
 
+        // For now, assume student, but store user_type if provided
+        $userType = $request->input('user_type', 'student');
+        $identifier = $request->student_id;
+
         // Convert book_id to uppercase for validation
         $bookCode = strtoupper($request->book_id);
 
-        // Check if a pending borrow request for the same student and book already exists
-        $existingRequest = \App\Models\BorrowedBook::where('student_id', $request->student_id)
+        // Check if a pending borrow request for the same user and book already exists
+        $existingRequest = \App\Models\BorrowedBook::where('student_id', $identifier)
             ->where('book_id', $bookCode)
             ->where('status', 'pending')
             ->exists();
@@ -52,32 +56,45 @@ class BorrowRequestController extends Controller
 
         if ($isBorrowed) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'This book is already borrowed by another student.'], 422);
+                return response()->json(['message' => 'This book is already borrowed by another user.'], 422);
             }
-            return back()->withErrors(['book_id' => 'This book is already borrowed by another student.']);
+            return back()->withErrors(['book_id' => 'This book is already borrowed by another user.']);
         }
 
-        // Find or create attendance session for this student today
+        // Find or create attendance session for this user today
         $startOfDay = \Carbon\Carbon::today()->startOfDay();
         $endOfDay = \Carbon\Carbon::today()->endOfDay();
 
-        $currentAttendance = \App\Models\Attendance::where('student_id', $request->student_id)
+        $currentAttendance = \App\Models\Attendance::where(function($q) use ($userType, $identifier) {
+            if ($userType === 'student') {
+                $q->where('student_id', $identifier);
+            } else {
+                $q->where('teacher_visitor_id', $identifier);
+            }
+        })
             ->whereBetween('login', [$startOfDay, $endOfDay])
             ->whereNull('logout')
             ->first();
 
         // If no active attendance session exists, ALWAYS create a new attendance row for visibility
         if (!$currentAttendance) {
-            $currentAttendance = \App\Models\Attendance::create([
-                'student_id' => $request->student_id,
+            $attendanceData = [
+                'user_type' => $userType,
                 'activity' => 'Wait for approval',
                 'login' => now()->setTimezone('Asia/Manila'),
-            ]);
-            Log::info("Created new attendance record for student {$request->student_id} when creating borrow request (no active session)");
+            ];
+            if ($userType === 'student') {
+                $attendanceData['student_id'] = $identifier;
+            } else {
+                $attendanceData['teacher_visitor_id'] = $identifier;
+            }
+            $currentAttendance = \App\Models\Attendance::create($attendanceData);
+            Log::info("Created new attendance record for {$userType} {$identifier} when creating borrow request (no active session)");
         }
 
         $borrow = \App\Models\BorrowedBook::create([
-            'student_id' => $request->student_id,
+            'student_id' => $identifier,
+            'user_type' => $userType,
             'book_id' => $bookCode, // Use the uppercase version
             'status' => 'pending',
             'attendance_id' => $currentAttendance->id,
@@ -101,14 +118,15 @@ class BorrowRequestController extends Controller
         try {
             $borrowRequest = \App\Models\BorrowedBook::findOrFail($id);
             $attendanceId = $borrowRequest->attendance_id;
-            $studentId = $borrowRequest->student_id;
+            $userType = $borrowRequest->user_type;
+            $identifier = $borrowRequest->student_id;
             $bookCode = $borrowRequest->book_id;
 
             // Update the borrow request status
             $borrowRequest->status = 'approved';
             $borrowRequest->save();
 
-            // Find or create attendance record for this student today
+            // Find or create attendance record for this user today
             $startOfDay = Carbon::today()->startOfDay();
             $endOfDay = Carbon::today()->endOfDay();
 
@@ -120,28 +138,30 @@ class BorrowRequestController extends Controller
 
             if (!$attendance) {
                 // Create a new attendance record to reflect approval state clearly
-                $attendance = \App\Models\Attendance::create([
-                    'student_id' => $studentId,
+                $attendanceData = [
+                    'user_type' => $userType,
                     'activity' => 'Borrow:' . $bookCode,
                     'login' => now()->setTimezone('Asia/Manila'),
-                ]);
-                Log::info("Created new attendance record for student {$studentId} when approving borrow request (no linked attendance)");
-
-                // Link the borrow request to the new attendance record
-                $borrowRequest->update(['attendance_id' => $attendance->id]);
+                ];
+                if ($userType === 'student') {
+                    $attendanceData['student_id'] = $identifier;
+                } else {
+                    $attendanceData['teacher_visitor_id'] = $identifier;
+                }
+                $attendance = \App\Models\Attendance::create($attendanceData);
+                Log::info("Created new attendance record for {$userType} {$identifier} when approving borrow request (no linked attendance)");
             } else {
                 // Update the existing attendance activity without touching logout
                 $attendance->activity = 'Borrow:' . $bookCode;
                 $attendance->save();
             }
 
-
-            // Send notification email to student if they have an email
+            // Send notification email to user if they have an email
             if ($borrowRequest->student && $borrowRequest->student->email) {
                 try {
                     // You can add a BorrowRequestApproval mail class here if needed
                     // For now, we'll just log the approval
-                    Log::info("Borrow request approved for student {$studentId} - Book: {$bookCode}");
+                    Log::info("Borrow request approved for {$userType} {$identifier} - Book: {$bookCode}");
                 } catch (\Exception $e) {
                     Log::error('Failed to send approval notification: ' . $e->getMessage());
                 }
@@ -174,14 +194,15 @@ class BorrowRequestController extends Controller
     {
         $borrow = \App\Models\BorrowedBook::findOrFail($id);
         $attendanceId = $borrow->attendance_id;
-        $studentId = $borrow->student_id;
+        $userType = $borrow->user_type;
+        $identifier = $borrow->student_id;
 
         // Update the borrow request status
         $borrow->status = 'rejected';
         $borrow->rejection_reason = $request->input('rejection_reason');
         $borrow->save();
 
-        // Find or create attendance record for this student today to ensure proper tracking
+        // Find or create attendance record for this user today to ensure proper tracking
         $startOfDay = Carbon::today()->startOfDay();
         $endOfDay = Carbon::today()->endOfDay();
 
@@ -192,12 +213,18 @@ class BorrowRequestController extends Controller
 
         if (!$attendance) {
             // Create a new attendance record to reflect rejection state clearly
-            $attendance = \App\Models\Attendance::create([
-                'student_id' => $studentId,
+            $attendanceData = [
+                'user_type' => $userType,
                 'activity' => 'Borrow book rejected',
                 'login' => now()->setTimezone('Asia/Manila'),
-            ]);
-            Log::info("Created new attendance record for student {$studentId} when rejecting borrow request (no linked attendance)");
+            ];
+            if ($userType === 'student') {
+                $attendanceData['student_id'] = $identifier;
+            } else {
+                $attendanceData['teacher_visitor_id'] = $identifier;
+            }
+            $attendance = \App\Models\Attendance::create($attendanceData);
+            Log::info("Created new attendance record for {$userType} {$identifier} when rejecting borrow request (no linked attendance)");
 
             // Link the borrow request to the new attendance record
             $borrow->update(['attendance_id' => $attendance->id]);
@@ -206,8 +233,8 @@ class BorrowRequestController extends Controller
             $attendance->save();
         }
 
-        // Check if there are any other active (pending or approved) borrow requests for this student today
-        $otherActiveRequests = \App\Models\BorrowedBook::where('student_id', $studentId)
+        // Check if there are any other active (pending or approved) borrow requests for this user today
+        $otherActiveRequests = \App\Models\BorrowedBook::where('student_id', $identifier)
             ->whereDate('created_at', Carbon::today())
             ->whereIn('status', ['pending', 'approved'])
             ->where('id', '!=', $id)
@@ -215,14 +242,14 @@ class BorrowRequestController extends Controller
 
         if (!$otherActiveRequests) {
             // If no other active requests, we still keep the attendance record but update activity
-            Log::info("Borrow request rejected for student {$studentId} - attendance record updated for visibility");
+            Log::info("Borrow request rejected for {$userType} {$identifier} - attendance record updated for visibility");
         }
 
-        // Send email to student if they have an email
+        // Send email to user if they have an email
         if ($borrow->student && $borrow->student->email) {
             try {
                 Mail::to($borrow->student->email)->send(new BorrowRequestRejection(
-                    $borrow, 
+                    $borrow,
                     $request->input('rejection_reason')
                 ));
             } catch (\Exception $e) {

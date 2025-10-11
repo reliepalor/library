@@ -27,6 +27,7 @@ Route::prefix('admin')->group(function () {
             Route::post('/save-reset', [UnifiedAttendanceController::class, 'saveAndReset'])->name('save-reset');
             Route::get('/realtime', [UnifiedAttendanceController::class, 'realtime'])->name('realtime');
             Route::get('/available-books', [UnifiedAttendanceController::class, 'availableBooks'])->name('available-books');
+            Route::get('/books/colleges', [UnifiedAttendanceController::class, 'colleges'])->name('books.colleges');
         });
 
         // Added route for attendance analytics

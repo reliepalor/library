@@ -26,11 +26,7 @@ class Attendance extends Model
         'login' => 'datetime:Y-m-d H:i:s',
         'logout' => 'datetime:Y-m-d H:i:s',
         'system_logout' => 'boolean',
-    ];
-
-    protected $dates = [
-        'login',
-        'logout',
+        'archived_at' => 'datetime:Y-m-d H:i:s',
     ];
 
     protected $dateFormat = 'Y-m-d H:i:s';

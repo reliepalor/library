@@ -224,11 +224,11 @@
                                         <thead class="bg-gray-50 text-gray-500 uppercase text-xs font-semibold border-b">
                                             <tr>
                                                 <th class="px-2 py-3"><input type="checkbox" id="select-all"></th>
+                                                <th class="px-6 py-3">Role</th>
                                                 <th class="px-6 py-3">Last Name</th>
                                                 <th class="px-6 py-3">First Name</th>
                                                 <th class="px-6 py-3">MI</th>
                                                 <th class="px-6 py-3">Department</th>
-                                                <th class="px-6 py-3">Role</th>
                                                 <th class="px-2 py-3">Email</th>
                                                 <th class="px-2 py-3">QR Code</th>
                                                 <th class="px-2 py-3 text-right">Actions</th>
@@ -238,29 +238,48 @@
                                             @foreach ($teachersVisitors as $teacherVisitor)
                                             <tr class="hover:bg-gray-50" data-department="{{ $teacherVisitor->department }}">
                                                 <td class="px-2 py-4"><input type="checkbox" class="select-teacher-visitor" value="{{ $teacherVisitor->id }}" data-name="{{ $teacherVisitor->last_name }}, {{ $teacherVisitor->first_name }}{{ $teacherVisitor->middle_name ? ' ' . $teacherVisitor->middle_name . '.' : '' }}" data-role="{{ $teacherVisitor->role }}" data-qr="{{ $teacherVisitor->qr_code_path ? asset('storage/' . $teacherVisitor->qr_code_path) : '' }}"></td>
+                                                <td class="px-6 py-4">
+                                                    <span class="px-3 py-1.5 inline-flex items-center text-xs font-medium rounded-full
+                                                        @if($teacherVisitor->role === 'teacher') bg-blue-100 text-blue-800
+                                                        @elseif($teacherVisitor->role === 'visitor') bg-green-100 text-green-800
+                                                        @else bg-gray-100 text-gray-700 @endif">
+                                                        <svg class="-ml-0.5 mr-1.5 h-2 w-2 {{ $teacherVisitor->role === 'teacher' ? 'text-blue-600' : 'text-green-600' }}" fill="currentColor" viewBox="0 0 8 8">
+                                                            <circle cx="4" cy="4" r="3" />
+                                                        </svg>
+                                                        {{ ucfirst($teacherVisitor->role) }}
+                                                    </span>
+                                                </td>
                                                 <td class="px-6 py-4">{{ $teacherVisitor->last_name }}</td>
                                                 <td class="px-6 py-4">{{ $teacherVisitor->first_name }}</td>
                                                 <td class="px-6 py-4">{{ $teacherVisitor->middle_name }}</td>
                                                 <td class="px-6 py-4">
-                                                    <span class="px-2 py-1 text-xs font-medium rounded-md
-                                                        @if($teacherVisitor->department === 'CICS') bg-violet-200 text-gray-800
-                                                        @elseif($teacherVisitor->department === 'CTED') bg-sky-200 text-gray-800
-                                                        @elseif($teacherVisitor->department === 'CCJE') bg-red-300 text-gray-800
-                                                        @elseif($teacherVisitor->department === 'CHM') bg-pink-300 text-gray-800
-                                                        @elseif($teacherVisitor->department === 'CBEA') bg-yellow-200 text-gray-800
-                                                        @elseif($teacherVisitor->department === 'CA') bg-green-300 text-gray-800
-                                                        @elseif($teacherVisitor->department === 'Guest') bg-gray-200 text-gray-800
-                                                        @else bg-gray-100 text-gray-700 @endif">
-                                                        {{ $teacherVisitor->department }}
-                                                    </span>
-                                                </td>
-                                                <td class="px-6 py-4">
-                                                    <span class="px-2 py-1 text-xs font-medium rounded-md
-                                                        @if($teacherVisitor->role === 'teacher') bg-blue-200 text-gray-800
-                                                        @elseif($teacherVisitor->role === 'visitor') bg-green-200 text-gray-800
-                                                        @else bg-gray-100 text-gray-700 @endif">
-                                                        {{ ucfirst($teacherVisitor->role) }}
-                                                    </span>
+                                                    @if(!empty($teacherVisitor->department))
+                                                        <span class="px-3 py-1.5 inline-flex items-center text-xs font-medium rounded-full
+                                                            @if($teacherVisitor->department === 'CICS') bg-violet-100 text-violet-800
+                                                            @elseif($teacherVisitor->department === 'CTED') bg-sky-100 text-sky-800
+                                                            @elseif($teacherVisitor->department === 'CCJE') bg-red-100 text-red-800
+                                                            @elseif($teacherVisitor->department === 'CHM') bg-pink-100 text-pink-800
+                                                            @elseif($teacherVisitor->department === 'CBEA') bg-yellow-100 text-yellow-800
+                                                            @elseif($teacherVisitor->department === 'CA') bg-green-100 text-green-800
+                                                            @elseif($teacherVisitor->department === 'Guest') bg-gray-100 text-gray-800
+                                                            @else bg-gray-100 text-gray-700 @endif">
+                                                            <svg class="-ml-0.5 mr-1.5 h-2 w-2 
+                                                                @if($teacherVisitor->department === 'CICS') text-violet-600
+                                                                @elseif($teacherVisitor->department === 'CTED') text-sky-600
+                                                                @elseif($teacherVisitor->department === 'CCJE') text-red-600
+                                                                @elseif($teacherVisitor->department === 'CHM') text-pink-600
+                                                                @elseif($teacherVisitor->department === 'CBEA') text-yellow-600
+                                                                @elseif($teacherVisitor->department === 'CA') text-green-600
+                                                                @elseif($teacherVisitor->department === 'Guest') text-gray-600
+                                                                @else text-gray-500 @endif" 
+                                                                fill="currentColor" viewBox="0 0 8 8">
+                                                                <circle cx="4" cy="4" r="3" />
+                                                            </svg>
+                                                            {{ $teacherVisitor->department }}
+                                                        </span>
+                                                    @else
+                                                        <span class="text-xs text-gray-400">No department</span>
+                                                    @endif
                                                 </td>
                                                 <td class="px-2 py-4 text-gray-600 hover:underline">
                                                     <a href="mailto:{{ $teacherVisitor->email }}">{{ $teacherVisitor->email }}</a>

@@ -74,4 +74,12 @@ class TeacherVisitor extends Model
     {
         return $query->where('archived', true);
     }
+
+    /**
+     * Relationship to User model (if teachers have user accounts)
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'email', 'email');
+    }
 }

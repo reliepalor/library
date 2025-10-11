@@ -15,6 +15,7 @@ use App\Mail\AttendanceNotification;
 use Psr\Log\LoggerInterface;
 use Illuminate\Support\Collection;
 use App\Models\Books;
+use App\Services\AvatarService;
 
 class AttendanceController extends Controller
 {
@@ -23,14 +24,29 @@ class AttendanceController extends Controller
         $startOfDay = Carbon::today()->startOfDay();
         $endOfDay = Carbon::today()->endOfDay();
 
-        // Get today's attendance with optimized query
-        $todayAttendance = $this->getTodayAttendance($startOfDay, $endOfDay);
+        // Get today's attendance for both students and teachers
+        $todayStudentAttendance = $this->getTodayStudentAttendance($startOfDay, $endOfDay);
+        $todayTeacherAttendance = $this->getTodayTeacherAttendance($startOfDay, $endOfDay);
 
         // Get borrow requests with optimized query
         $borrowRequests = $this->getTodayBorrowRequests();
 
         // Process attendance data with borrow request status
-        $processedData = $this->processAttendanceData($todayAttendance, $borrowRequests);
+        $studentProcessedData = $this->processStudentAttendanceData($todayStudentAttendance, $borrowRequests);
+        $teacherProcessedData = $this->processTeacherAttendanceData($todayTeacherAttendance);
+
+        $processedData = [
+            'todayAttendance' => $studentProcessedData['todayAttendance']->merge($teacherProcessedData['todayAttendance']),
+            'stats' => [
+                'total' => $studentProcessedData['stats']['total'] + $teacherProcessedData['stats']['total'],
+                'present' => $studentProcessedData['stats']['present'] + $teacherProcessedData['stats']['present'],
+                'absent' => $studentProcessedData['stats']['logged_out'] + $teacherProcessedData['stats']['logged_out'],
+                'borrowed' => $studentProcessedData['todayAttendance']->where('activity', 'like', '%Borrow%')->count(),
+            ],
+            'collegeStats' => $this->calculateCollegeStats($todayStudentAttendance), // Only for students
+            'studentAttendance' => $studentProcessedData['todayAttendance'],
+            'teacherAttendance' => $teacherProcessedData['todayAttendance']
+        ];
 
         return view('admin.attendance.index', $processedData);
     }
@@ -681,25 +697,44 @@ class AttendanceController extends Controller
     public function log(Request $request)
     {
         try {
-            $request->validate([
-                'student_id' => 'required|string|exists:students,student_id',
-                'activity' => 'required|string',
-            ]);
+            $userType = $request->input('user_type', 'student');
+            $identifier = $request->input($userType === 'student' ? 'student_id' : 'identifier');
+            $activity = $request->input('activity');
 
-            $studentId = $request->student_id;
-            $activity = $request->activity;
+            // Conditional validation
+            if ($userType === 'student') {
+                $request->validate([
+                    'student_id' => 'required|string|exists:students,student_id',
+                    'activity' => 'required|string',
+                ]);
+            } else {
+                $request->validate([
+                    'user_type' => 'required|in:student,teacher',
+                    'identifier' => 'required|integer|exists:teachers_visitors,id',
+                    'activity' => 'required|string',
+                ]);
+            }
+
             // Use range to enable index usage
             $startOfDay = Carbon::today()->startOfDay();
             $endOfDay = Carbon::today()->endOfDay();
             $now = now();
 
-            $attendance = Attendance::where('student_id', $studentId)
+            // Check for active session based on user type
+            $attendance = Attendance::where('user_type', $userType)
+                ->where(function($q) use ($userType, $identifier) {
+                    if ($userType === 'student') {
+                        $q->where('student_id', $identifier);
+                    } else {
+                        $q->where('teacher_visitor_id', $identifier);
+                    }
+                })
                 ->whereBetween('login', [$startOfDay, $endOfDay])
                 ->whereNull('logout')
                 ->first();
 
             if ($attendance) {
-                // Ensure atomicity for logout and any related updates
+                // Logout
                 DB::transaction(function () use ($attendance, $now) {
                     $attendance->logout = $now;
                     $attendance->save();
@@ -720,40 +755,57 @@ class AttendanceController extends Controller
 
                 $duration = $attendance->login->diffForHumans($now, ['parts' => 2]);
 
-                $student = Student::where('student_id', $studentId)->first();
+                // Get user for email
+                $user = $this->getUserByType($userType, $identifier);
 
                 // Send attendance notification email for logout
-                try {
-                    Mail::to($student->email)->queue(new AttendanceNotification($student, 'logout', $now, $attendance->activity, $duration));
-                } catch (\Exception $e) {
-                    Log::error('Failed to send logout email: ' . $e->getMessage());
+                if ($user && $user->email) {
+                    try {
+                        Mail::to($user->email)->queue(new AttendanceNotification($user, 'logout', $now, $attendance->activity, $duration));
+                    } catch (\Exception $e) {
+                        Log::error('Failed to send logout email: ' . $e->getMessage());
+                    }
                 }
 
                 return response()->json([
                     'message' => 'Logout time recorded successfully.',
                     'type' => 'logout',
-                    'student_id' => $studentId
+                    'identifier' => $identifier,
+                    'user_type' => $userType
                 ]);
             } else {
-                $attendance = Attendance::create([
-                    'student_id' => $studentId,
+                // Login - create new attendance record
+                $attendanceData = [
+                    'user_type' => $userType,
                     'activity' => $activity,
                     'login' => $now,
-                ]);
+                ];
 
-                $student = Student::where('student_id', $studentId)->first();
+                if ($userType === 'student') {
+                    $attendanceData['student_id'] = $identifier;
+                } else {
+                    $attendanceData['teacher_visitor_id'] = $identifier;
+                }
+
+                $attendance = Attendance::create($attendanceData);
+
+                // Get user for email
+                $user = $this->getUserByType($userType, $identifier);
 
                 // Send attendance notification email for login
-                try {
-                    Mail::to($student->email)->queue(new AttendanceNotification($student, 'login', $now, $activity));
-                } catch (\Exception $e) {
-                    Log::error('Failed to send login email: ' . $e->getMessage());
+                if ($user && $user->email) {
+                    try {
+                        Mail::to($user->email)->queue(new AttendanceNotification($user, 'login', $now, $activity));
+                    } catch (\Exception $e) {
+                        Log::error('Failed to send login email: ' . $e->getMessage());
+                    }
                 }
 
                 return response()->json([
                     'message' => 'Login time recorded successfully.',
                     'type' => 'login',
-                    'student_id' => $studentId
+                    'identifier' => $identifier,
+                    'user_type' => $userType
                 ]);
             }
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -772,57 +824,67 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Check if student has an active attendance session today (admin).
+     * Check if user has an active attendance session today (admin).
      */
     public function check(Request $request)
     {
-        $studentId = $request->query('student_id');
+        $userType = $request->query('user_type', 'student');
+        $identifier = $request->query($userType === 'student' ? 'student_id' : 'identifier');
 
-        if (!$studentId) {
-            return response()->json(['error' => 'Student ID is required'], 400);
+        if (!$identifier) {
+            return response()->json(['error' => ucfirst($userType) . ' identifier is required'], 400);
         }
 
         // Use range to enable index usage
         $startOfDay = Carbon::today()->startOfDay();
         $endOfDay = Carbon::today()->endOfDay();
-        $attendance = Attendance::where('student_id', $studentId)
+
+        $attendance = Attendance::where('user_type', $userType)
+            ->where(function($q) use ($userType, $identifier) {
+                if ($userType === 'student') {
+                    $q->where('student_id', $identifier);
+                } else {
+                    $q->where('teacher_visitor_id', $identifier);
+                }
+            })
             ->whereBetween('login', [$startOfDay, $endOfDay])
             ->whereNull('logout')
             ->first();
 
         return response()->json([
             'hasActiveSession' => (bool) $attendance,
-            'student_id' => $studentId,
+            'identifier' => $identifier,
+            'user_type' => $userType,
             'activity' => $attendance ? $attendance->activity : null
         ]);
     }
 
     /**
-     * Show the attendance scan page (admin).
+     * Get user details for attendance scan (admin).
      */
     public function scan(Request $request)
     {
-        $studentId = $request->query('student_id');
+        $userType = $request->query('user_type', 'student');
+        $identifier = $request->query($userType === 'student' ? 'student_id' : 'identifier');
 
-        if (!$studentId) {
-            return response()->json(['error' => 'Student ID is required'], 400);
+        if (!$identifier) {
+            return response()->json(['error' => ucfirst($userType) . ' identifier is required'], 400);
         }
 
-        $student = Student::with('user')->where('student_id', $studentId)->first();
+        $user = $this->getUserByType($userType, $identifier);
 
-        if (!$student) {
-            return response()->json(['error' => 'Student not found'], 404);
+        if (!$user) {
+            return response()->json(['error' => ucfirst($userType) . ' not found'], 404);
         }
 
-        // Get student's full name
-        $studentName = $student->fname . ' ' . $student->lname;
-        
+        // Get user's full name
+        $userName = $user->fname . ' ' . $user->lname;
+
         return response()->json([
-            'students' => $student,
-            'profile_picture' => $student->user && $student->user->profile_picture
-                ? $student->user->profile_picture
-                : null,
-            'student_name' => $studentName
+            'user' => $user,
+            'profile_picture' => $this->getUserProfilePicture($userType, $user),
+            'name' => $userName,
+            'user_type' => $userType
         ]);
     }
 
@@ -835,20 +897,42 @@ class AttendanceController extends Controller
             $startOfDay = Carbon::today()->startOfDay();
             $endOfDay = Carbon::today()->endOfDay();
 
-            // Get today's attendance with optimized query
-            $todayAttendance = $this->getTodayAttendance($startOfDay, $endOfDay);
+            // Get today's attendance for both students and teachers
+            $todayStudentAttendance = Attendance::with(['student.user'])
+                ->where('user_type', 'student')
+                ->whereBetween('login', [$startOfDay, $endOfDay])
+                ->orderBy('created_at', 'desc')
+                ->orderBy('login', 'desc')
+                ->get();
+
+            $todayTeacherAttendance = Attendance::with(['teacherVisitor.user'])
+                ->where('user_type', 'teacher')
+                ->whereBetween('login', [$startOfDay, $endOfDay])
+                ->orderBy('created_at', 'desc')
+                ->orderBy('login', 'desc')
+                ->get();
 
             // Get borrow requests with optimized query
             $borrowRequests = $this->getTodayBorrowRequests();
 
             // Process attendance data with borrow request status
-            $processedData = $this->processAttendanceData($todayAttendance, $borrowRequests);
+            $studentProcessedData = $this->processStudentAttendanceData($todayStudentAttendance, $borrowRequests);
+            $teacherProcessedData = $this->processTeacherAttendanceData($todayTeacherAttendance);
 
             return response()->json([
                 'success' => true,
-                'data' => array_merge($processedData, [
+                'data' => [
+                    'studentAttendance' => $studentProcessedData['todayAttendance'],
+                    'teacherAttendance' => $teacherProcessedData['todayAttendance'],
+                    'overallStats' => [
+                        'total' => $studentProcessedData['stats']['total'] + $teacherProcessedData['stats']['total'],
+                        'students_present' => $studentProcessedData['stats']['present'],
+                        'teachers_present' => $teacherProcessedData['stats']['present']
+                    ],
+                    'studentStats' => $studentProcessedData['stats'],
+                    'teacherStats' => $teacherProcessedData['stats'],
                     'last_updated' => now()->toISOString()
-                ])
+                ]
             ]);
 
         } catch (\Exception $e) {
@@ -906,5 +990,211 @@ class AttendanceController extends Controller
                 'message' => 'Failed to fetch available books.'
             ], 500);
         }
+    }
+
+    /**
+     * Get available colleges for book filtering
+     */
+    public function booksColleges(Request $request)
+    {
+        try {
+            $colleges = Books::active()
+                ->whereNotNull('section')
+                ->where('section', '!=', '')
+                ->distinct()
+                ->pluck('section')
+                ->sort()
+                ->values();
+
+            return response()->json($colleges);
+        } catch (\Exception $e) {
+            Log::error('Error fetching colleges: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Server error',
+                'message' => 'Failed to fetch colleges.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get user by type and identifier
+     */
+    private function getUserByType($userType, $identifier)
+    {
+        if ($userType === 'student') {
+            return Student::with('user')->where('student_id', $identifier)->first();
+        } else {
+            return \App\Models\TeacherVisitor::where('id', $identifier)->first();
+        }
+    }
+
+    /**
+     * Get user profile picture
+     */
+    private function getUserProfilePicture($userType, $user)
+    {
+        if ($userType === 'student') {
+            return $user->user && $user->user->profile_picture ? $user->user->profile_picture : null;
+        } else {
+            // Teachers don't have profile pictures in the current setup
+            return null;
+        }
+    }
+
+    /**
+     * Get today's student attendance records
+     */
+    private function getTodayStudentAttendance($startOfDay, $endOfDay)
+    {
+        return Attendance::with(['student.user'])
+            ->where('user_type', 'student')
+            ->whereBetween('login', [$startOfDay, $endOfDay])
+            ->orderBy('created_at', 'desc')
+            ->orderBy('login', 'desc')
+            ->get();
+    }
+
+    /**
+     * Get today's teacher attendance records
+     */
+    private function getTodayTeacherAttendance($startOfDay, $endOfDay)
+    {
+        return Attendance::with(['teacherVisitor.user'])
+            ->where('user_type', 'teacher')
+            ->whereBetween('login', [$startOfDay, $endOfDay])
+            ->orderBy('created_at', 'desc')
+            ->orderBy('login', 'desc')
+            ->get();
+    }
+
+    /**
+     * Process student attendance data
+     */
+    private function processStudentAttendanceData($attendance, $borrowRequests)
+    {
+        $stats = $this->calculateStudentAttendanceStats($attendance);
+        $formattedAttendance = $this->formatStudentAttendanceData($attendance, $borrowRequests);
+
+        return [
+            'todayAttendance' => $formattedAttendance,
+            'stats' => $stats
+        ];
+    }
+
+    /**
+     * Process teacher attendance data
+     */
+    private function processTeacherAttendanceData($attendance)
+    {
+        $stats = $this->calculateTeacherAttendanceStats($attendance);
+        $formattedAttendance = $this->formatTeacherAttendanceData($attendance);
+
+        return [
+            'todayAttendance' => $formattedAttendance,
+            'stats' => $stats
+        ];
+    }
+
+    /**
+     * Calculate student attendance statistics
+     */
+    private function calculateStudentAttendanceStats($attendance)
+    {
+        return [
+            'total' => $attendance->count(),
+            'present' => $attendance->whereNull('logout')->count(),
+            'logged_out' => $attendance->whereNotNull('logout')->count(),
+        ];
+    }
+
+    /**
+     * Calculate teacher attendance statistics
+     */
+    private function calculateTeacherAttendanceStats($attendance)
+    {
+        return [
+            'total' => $attendance->count(),
+            'present' => $attendance->whereNull('logout')->count(),
+            'logged_out' => $attendance->whereNotNull('logout')->count(),
+        ];
+    }
+
+    /**
+     * Format student attendance data for display
+     */
+    private function formatStudentAttendanceData($attendance, $borrowRequests)
+    {
+        return $attendance->map(function ($attendance) use ($borrowRequests) {
+            $studentId = $attendance->student_id;
+            $activity = $this->getActivityWithBorrowStatus($attendance, $borrowRequests, $studentId);
+
+            // Determine status
+            $status = $attendance->logout ? 'out' : 'in';
+
+            // Build name from available data
+            $student = $attendance->student;
+            $fname = $student ? ($student->fname ?? null) : null;
+            $lname = $student ? ($student->lname ?? null) : null;
+            $name = ($fname && $lname) ? $lname . ', ' . $fname : ($fname ?: $lname ?: $studentId);
+
+            $profilePicture = $student && $student->user && $student->user->profile_picture
+                ? $student->user->profile_picture
+                : null;
+
+            if (!$profilePicture) {
+                $profilePicture = AvatarService::getPlaceholderAvatar($name, 100);
+            }
+
+            return [
+                'id' => $attendance->id,
+                'identifier' => $student ? ($student->student_id ?? $studentId) : $studentId,
+                'name' => $name,
+                'profile_picture' => $profilePicture,
+                'college_or_dept' => $student ? ($student->college ?? 'N/A') : 'N/A',
+                'activity' => $activity,
+                'time_in' => $attendance->login ? Carbon::parse($attendance->login)->setTimezone('Asia/Manila')->format('h:i A') : 'N/A',
+                'time_out' => $attendance->logout ? Carbon::parse($attendance->logout)->setTimezone('Asia/Manila')->format('h:i A') : '',
+                'status' => $status
+            ];
+        });
+    }
+
+    /**
+     * Format teacher attendance data for display
+     */
+    private function formatTeacherAttendanceData($attendance)
+    {
+        return $attendance->map(function ($attendance) {
+            // Determine status
+            $status = $attendance->logout ? 'out' : 'in';
+
+            // Build name from available data
+            $teacher = $attendance->teacherVisitor;
+            $fname = $teacher ? ($teacher->fname ?? null) : null;
+            $lname = $teacher ? ($teacher->lname ?? null) : null;
+            $teacherId = $attendance->teacher_visitor_id;
+            $name = ($fname && $lname) ? $lname . ', ' . $fname : ($fname ?: $lname ?: $teacherId);
+
+            $profilePicture = $teacher && $teacher->user && $teacher->user->profile_picture
+                ? $teacher->user->profile_picture
+                : null;
+
+            if (!$profilePicture) {
+                $profilePicture = AvatarService::getPlaceholderAvatar($name, 100);
+            }
+
+            return [
+                'id' => $attendance->id,
+                'identifier' => $attendance->teacher_visitor_id ?? $teacherId,
+                'name' => $name,
+                'profile_picture' => $profilePicture,
+                'college_or_dept' => $teacher ? ($teacher->department ?? 'N/A') : 'N/A',
+                'role' => $teacher ? ($teacher->role ?? 'N/A') : 'N/A',
+                'activity' => $attendance->activity,
+                'time_in' => $attendance->login ? Carbon::parse($attendance->login)->setTimezone('Asia/Manila')->format('h:i A') : 'N/A',
+                'time_out' => $attendance->logout ? Carbon::parse($attendance->logout)->setTimezone('Asia/Manila')->format('h:i A') : '',
+                'status' => $status
+            ];
+        });
     }
 }

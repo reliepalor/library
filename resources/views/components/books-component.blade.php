@@ -160,6 +160,7 @@
                         <span class="ml-1 font-light">Categories</span>
                     </div>
                     
+                    
                     <div class="flex items-center text-slate-400 hover:text-white transition-colors duration-300">
                         <div class="w-2 h-2 bg-emerald-400 rounded-full mr-3 animate-pulse" style="animation-delay: 1s;"></div>
                         <i class="fas fa-check-circle mr-2"></i>
@@ -176,6 +177,7 @@
             
         </section>
     </div>
+                    </div>
 
     <script>
         // Modern Intersection Observer for scroll animations

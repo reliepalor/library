@@ -13,14 +13,6 @@ console.log('[INIT] Script loaded at:', new Date().toLocaleTimeString());
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('[INIT] Starting attendance system...');
 
-    // Check if Html5Qrcode library is loaded
-    if (typeof Html5Qrcode === 'undefined') {
-        console.error('[INIT] Html5Qrcode library not loaded');
-        showNotification('Scanner library not loaded. Please refresh the page.', 'error');
-        return;
-    }
-    console.log('[INIT] Html5Qrcode library available');
-
     // Verify required elements exist
     const qrInput = document.getElementById('qr-input');
     const qrReader = document.getElementById('qr-reader');
@@ -32,6 +24,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Check for core required elements
     const coreMissing = [];
+    if (!qrInput) coreMissing.push('qr-input');
     if (!qrReader) coreMissing.push('qr-reader');
     if (!webcamContainer) coreMissing.push('webcam-container');
     if (!physicalContainer) coreMissing.push('physical-container');
@@ -47,33 +40,45 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     console.log('[INIT] Core elements found. Proceeding with scanner setup.');
 
+    // Set up scanner modes and physical scanner first
+    setupScannerModes();
+    setupPhysicalScanner();
+
+    // Check if Html5Qrcode library is loaded
+    if (typeof Html5Qrcode === 'undefined') {
+        console.error('[INIT] Html5Qrcode library not loaded');
+        showNotification('Scanner library not loaded. Webcam scanner will not work, but physical scanner is available.', 'error');
+
+        // Default to physical scanner
+        const physicalModeBtn = document.getElementById('physical-mode-btn');
+        if (physicalModeBtn) {
+            physicalModeBtn.click();
+        }
+        return;
+    }
+    console.log('[INIT] Html5Qrcode library available');
+
     // Initialize scanner components
     try {
         // Initialize HTML5 QR Code scanner
         html5QrCode = new Html5Qrcode("qr-reader");
         console.log('[INIT] HTML5 QR Code scanner initialized successfully');
 
-        // Set up scanner modes and physical scanner
-        setupScannerModes();
-        setupPhysicalScanner();
-
-        // Always default to physical scanner for reliability
-        console.log('[INIT] Defaulting to physical scanner');
-        physicalModeBtn.click();
+        // Already set up, just default to physical
+        const physicalModeBtn = document.getElementById('physical-mode-btn');
+        if (physicalModeBtn) {
+            physicalModeBtn.click();
+        }
 
         console.log('[INIT] Scanner initialized successfully');
     } catch (error) {
         console.error('[INIT] Error initializing scanner:', error);
-        showNotification('Error initializing scanner. Falling back to physical mode.', 'error');
+        showNotification('Error initializing scanner. Physical scanner is available.', 'error');
 
-        // Fallback to physical scanner
-        try {
-            setupScannerModes();
-            setupPhysicalScanner();
+        // Physical scanner is already set up
+        const physicalModeBtn = document.getElementById('physical-mode-btn');
+        if (physicalModeBtn) {
             physicalModeBtn.click();
-        } catch (fallbackError) {
-            console.error('[INIT] Fallback initialization also failed:', fallbackError);
-            showNotification('Scanner initialization completely failed. Please refresh the page.', 'error');
         }
     }
 
@@ -100,7 +105,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     };
 
     // Start polling
-    startPolling();
+    // startPolling();
 
     // Also refresh when the window regains focus
     window.addEventListener('focus', () => {
@@ -109,89 +114,116 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     });
 
-    // Borrow modal helpers
-    let borrowUiInitialized = false;
-    let sectionsInitialized = false;
+    // Activity select change listener
+    document.getElementById('activity').addEventListener('change', function() {
+        const activity = this.value;
+        const submitBtn = document.getElementById('modal-submit');
 
-        const renderAvailableBooks = (books = []) => {
-            if (!availableBooksList) return;
-            availableBooksList.innerHTML = '';
-            if (!books.length) {
-                availableBooksList.innerHTML = '<div class="p-6 text-gray-500 text-sm col-span-3">No available books found.</div>';
-                return;
+        if (activity === 'Borrow' || activity === 'Stay&Borrow') {
+            const userType = document.getElementById('modal-user-type').value;
+            const identifier = document.getElementById('modal-identifier').value;
+            showBookSelectionModal(userType, identifier, activity);
+            // Hide submit button since modal is shown
+            submitBtn.style.display = 'none';
+        } else {
+            // Show submit button for other activities
+            submitBtn.style.display = 'inline-block';
+        }
+    });
+
+    // Activity modal event listeners
+    document.getElementById('activity-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const userType = document.getElementById('modal-user-type').value;
+        const identifier = document.getElementById('modal-identifier').value;
+        const activity = document.getElementById('activity').value;
+        
+        // Check if this is a borrowing activity
+        if (activity === 'Borrow' || activity === 'Stay&Borrow') {
+            // Show book selection modal instead of logging attendance directly
+            showBookSelectionModal(userType, identifier, activity);
+            return;
+        }
+        
+        showLoadingOverlay("Logging attendance...");
+        
+        try {
+            let requestBody;
+            if (userType === 'student') {
+                requestBody = {
+                    student_id: identifier,
+                    activity: activity
+                };
+            } else {
+                requestBody = {
+                    user_type: userType,
+                    identifier: identifier,
+                    activity: activity
+                };
             }
-            // Do NOT rebuild dropdown on every render; it will hide other options when filtered.
-            const frag = document.createDocumentFragment();
-            books.forEach((b) => {
-                const li = document.createElement('div');
-                // Product-like card: breathable but compact
-                li.className = 'bg-white rounded-xl shadow-sm ring-1 ring-gray-100 hover:shadow-md transition p-4 flex flex-col gap-3';
-                const imgSrc = b.image1 ? (window.assetBaseUrl + 'storage/' + b.image1) : (window.assetBaseUrl + 'images/book-placeholder.png');
-                li.innerHTML = `
-                    <div class="w-full aspect-[5/3] bg-gray-50 rounded-lg overflow-hidden ring-1 ring-gray-200">
-                        <img src="${imgSrc}" alt="${b.name || 'Book'}" class="w-full h-full object-cover" onerror="this.src='${window.assetBaseUrl}images/book-placeholder.png'">
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-start justify-between gap-2">
-                            <div class="min-w-0">
-                                <p class="font-semibold text-gray-900 truncate">${b.name || 'Untitled'}</p>
-                                <p class="text-sm text-gray-600 truncate">${b.author || 'Unknown author'}</p>
-                                ${b.section ? `<p class="text-xs text-gray-500 mt-0.5 truncate">Section: ${b.section}</p>` : ''}
-                            </div>
-                            <span class="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 ring-1 ring-blue-200">${b.book_code}</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-end pt-1">
-                        <button class="borrow-book-btn px-3 py-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-700" data-code="${b.book_code}">Borrow</button>
-                    </div>
-                `;
-                frag.appendChild(li);
+            
+            const response = await fetch('/admin/attendance/log', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(requestBody)
             });
-            availableBooksList.appendChild(frag);
-        };
+            
+            const data = await response.json();
+            
+            if (response.ok && data && (data.success || data.action === 'logged in' || data.action === 'logged out')) {
+                const modal = document.getElementById('activity-modal');
+                if (modal) modal.classList.add('hidden');
 
-        const loadAvailableBooks = async (search = '', college = '') => {
-            try {
-                // Show subtle inline loading state in the container
-                if (availableBooksList) {
-                    availableBooksList.innerHTML = '<div class="p-4 text-sm text-gray-500 col-span-3">Loading available books...</div>';
-                }
-                const url = new URL(window.location.origin + '/admin/attendance/available-books');
-                if (search) url.searchParams.set('search', search);
-                if (college) url.searchParams.set('college', college);
-                url.searchParams.set('limit', '100');
-                const res = await fetch(url.toString(), { headers: { 'Accept': 'application/json' } });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.message || 'Failed fetching available books');
-                // Initialize section/college dropdown only once using the first unfiltered payload
-                if (!sectionsInitialized && availableBooksCollege) {
-                    const isUnfiltered = !search && !college;
-                    if (isUnfiltered) {
-                        const unique = Array.from(new Set((data.data || []).map(b => b.section).filter(Boolean))).sort();
-                        // Build options once
-                        availableBooksCollege.innerHTML = '';
-                        const allOpt = document.createElement('option');
-                        allOpt.value = '';
-                        allOpt.textContent = 'All Colleges';
-                        availableBooksCollege.appendChild(allOpt);
-                        unique.forEach(sec => {
-                            const o = document.createElement('option');
-                            o.value = sec;
-                            o.textContent = sec;
-                            availableBooksCollege.appendChild(o);
-                        });
-                        sectionsInitialized = true;
-                    }
-                }
-                renderAvailableBooks(data.data || []);
-            } catch (e) {
-                console.error(e);
-                if (availableBooksList) {
-                    availableBooksList.innerHTML = '<div class="p-4 text-sm text-red-600 col-span-3">Failed to load available books.</div>';
-                }
+                // Determine if this was a login or logout based on the action
+                const isLogin = data.action === 'logged in';
+                const actionText = isLogin ? 'logged in' : 'logged out';
+                const message = `${userType === 'student' ? 'Student' : 'Teacher'} ${actionText} successfully!`;
+                showNotification(message, "success");
+
+                // Show welcome/goodbye message with user's name if available
+                const userName = data.name || 'User';
+                const emoji = userType === 'student' ? '🎓' : '👨‍🏫';
+                const welcomeText = isLogin ? `Welcome, ${userName}! ${emoji}` : `Goodbye, ${userName}! ${emoji}`;
+                showNotification(welcomeText, 'success');
+
+                // Clear input field
+                const qrInput = document.getElementById('qr-input');
+                if (qrInput) qrInput.value = '';
+
+                // Refresh the attendance table
+                await refreshAttendanceTable();
+            } else {
+                // Show more specific error message from server if available
+                const errorMsg = data.message || data.error || 'Login failed. Please try again.';
+                showNotification(errorMsg, 'error');
             }
-        };
-    
+        } catch (error) {
+            console.error("Login error:", error);
+            // More specific error handling
+            let errorMsg = 'Login failed. Please try again.';
+            if (error.message?.includes('NetworkError')) {
+                errorMsg = 'Network error. Please check your connection.';
+            } else if (error.message?.includes('timeout')) {
+                errorMsg = 'Request timed out. Please try again.';
+            }
+            showNotification(errorMsg, 'error');
+        } finally {
+            hideLoadingOverlay();
+        }
+    });
+
+    // Cancel modal
+    document.getElementById('modal-cancel').addEventListener('click', function() {
+        document.getElementById('activity-modal').classList.add('hidden');
+    });
+});
+
 // Setup scanner mode toggle
 function setupScannerModes() {
     const webcamBtn = document.getElementById('webcam-mode-btn');
@@ -199,7 +231,6 @@ function setupScannerModes() {
     const webcamContainer = document.getElementById('webcam-container');
     const physicalContainer = document.getElementById('physical-container');
     const modeDescription = document.getElementById('mode-description');
-    const scannerContainer = document.getElementById('qr-reader');
 
     console.log('[MODE] Setting up scanner mode toggles');
 
@@ -212,6 +243,11 @@ function setupScannerModes() {
 
         console.log('[MODE] Switching to webcam mode');
 
+        // Get required elements
+        const scannerContainer = document.getElementById('qr-reader');
+        const scannerLoading = document.getElementById('scanner-loading');
+        const scannerError = document.getElementById('scanner-error');
+
         // Update UI
         webcamBtn.classList.add('bg-blue-600', 'text-white');
         webcamBtn.classList.remove('bg-gray-300', 'text-gray-700');
@@ -221,7 +257,7 @@ function setupScannerModes() {
         // Show loading state
         if (scannerLoading) scannerLoading.style.display = 'block';
         if (scannerError) scannerError.classList.add('hidden');
-        if (scannerContainer) scannerContainer.style.display = 'none';
+        // Don't hide the scanner container - let HTML5-QR-Code library handle it
 
         webcamContainer.classList.remove('hidden');
         physicalContainer.classList.add('hidden');
@@ -241,6 +277,11 @@ function setupScannerModes() {
         console.log('[MODE] Physical mode button clicked');
         console.log('[MODE] Switching to physical mode');
 
+        // Get required elements
+        const scannerContainer = document.getElementById('qr-reader');
+        const scannerLoading = document.getElementById('scanner-loading');
+        const scannerError = document.getElementById('scanner-error');
+
         // Stop webcam if running
         if (isScanning) {
             stopWebcamScanner().catch(console.error);
@@ -253,7 +294,7 @@ function setupScannerModes() {
         webcamBtn.classList.remove('bg-blue-600', 'text-white');
 
         // Hide webcam elements
-        if (scannerContainer) scannerContainer.style.display = 'none';
+        // Don't hide scanner container - let HTML5-QR-Code library handle it
         if (scannerLoading) scannerLoading.style.display = 'none';
         if (scannerError) scannerError.classList.add('hidden');
 
@@ -274,12 +315,6 @@ function setupScannerModes() {
     console.log('[MODE] Event listeners added successfully');
 }
 
-// Initialize webcam scanner
-function initializeWebcamScanner() {
-    html5QrCode = new Html5Qrcode("qr-reader");
-    startWebcamScanner();
-}
-
 // Start webcam scanning
 async function startWebcamScanner() {
     if (isScanning) {
@@ -294,15 +329,16 @@ async function startWebcamScanner() {
     const scannerError = document.getElementById('scanner-error');
     
     if (!scannerContainer) {
-        throw new Error('Scanner container not found');
+        console.error('[SCANNER] QR reader container not found');
+        return;
     }
-
-    console.log('[SCANNER] Elements found, showing loading');
 
     // Show loading state
     if (scannerLoading) scannerLoading.style.display = 'block';
-    if (scannerError) scannerError.classList.add('hidden');
-    scannerContainer.style.display = 'none';
+    if (scannerError) {
+        scannerError.classList.add('hidden');
+        scannerError.innerHTML = ''; // Clear previous errors
+    }
     
     // Ensure webcam container is visible
     const webcamContainer = document.getElementById('webcam-container');
@@ -310,31 +346,33 @@ async function startWebcamScanner() {
     if (webcamContainer) webcamContainer.classList.remove('hidden');
     if (physicalContainer) physicalContainer.classList.add('hidden');
     
-    // Show loading state
-    scannerContainer.innerHTML = `
-        <div class="flex items-center justify-center h-64 bg-gray-100 rounded-lg">
-            <div class="text-center">
-                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-                <p class="mt-2 text-sm text-gray-600">Accessing camera...</p>
-            </div>
-        </div>
-    `;
-    
-    // Try to get list of cameras first
-    Html5Qrcode.getCameras().then(devices => {
+    try {
+        // Initialize the scanner if not already done
+        if (!html5QrCode) {
+            html5QrCode = new Html5Qrcode("qr-reader");
+        }
+
+        // Try to get list of cameras first
+        const devices = await Html5Qrcode.getCameras();
         if (!devices || devices.length === 0) {
-            throw new Error('No cameras found');
+            throw new Error('No cameras found. Please ensure your camera is connected and accessible.');
         }
         
+        console.log('[SCANNER] Available cameras:', devices);
+        
         // Try to use the environment (back) camera first, fallback to any available camera
-        const facingMode = devices.some(device => device.label.toLowerCase().includes('back')) 
-            ? { facingMode: "environment" } 
-            : { facingMode: "user" };
+        const backCamera = devices.find(device => 
+            device.label.toLowerCase().includes('back') || 
+            device.label.toLowerCase().includes('rear')
+        );
         
-        console.log('[SCANNER] Starting camera with config:', { facingMode });
+        const cameraId = backCamera ? backCamera.id : devices[0].id;
         
-        return html5QrCode.start(
-            facingMode,
+        console.log('[SCANNER] Starting camera with ID:', cameraId);
+        
+        // Start the scanner
+        await html5QrCode.start(
+            cameraId,
             { 
                 fps: 10, 
                 qrbox: { width: 250, height: 250 },
@@ -343,49 +381,60 @@ async function startWebcamScanner() {
             (decodedText) => onScanSuccess(decodedText),
             (errorMessage) => onScanError(errorMessage)
         );
-    }).then(() => {
+        
         isScanning = true;
         console.log("[SCANNER] Webcam scanner started successfully");
-
-        // Clear loading state
+        
+        // Hide loading state
         if (scannerLoading) scannerLoading.style.display = 'none';
-        if (scannerContainer) {
-            scannerContainer.innerHTML = '';
-            scannerContainer.style.display = 'block';
-        }
-    }).catch(err => {
+        if (scannerError) scannerError.classList.add('hidden');
+        
+        // The HTML5-QR-Code library handles video display automatically
+        // No need to manually show/hide video elements
+        
+    } catch (err) {
         console.error("[SCANNER] Failed to start scanner:", err);
-
-        // Show error in scanner container
-        if (scannerContainer) {
-            scannerContainer.innerHTML = `
-                <div class="p-4 text-center">
-                    <div class="text-red-600 font-medium mb-2">Camera Error</div>
-                    <p class="text-sm text-gray-600 mb-3">${err.message || 'Failed to access camera'}</p>
-                    <button onclick="startWebcamScanner()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
-                        Try Again
-                    </button>
-                </div>
+        isScanning = false;
+        
+        // Show error message
+        if (scannerError) {
+            scannerError.innerHTML = `
+                <div class="text-red-600 font-medium">Camera Error</div>
+                <p class="text-sm text-gray-600 my-2">${err.message || 'Failed to access camera'}</p>
+                <button onclick="startWebcamScanner()" class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
+                    Try Again
+                </button>
             `;
-            scannerContainer.style.display = 'block';
+            scannerError.classList.remove('hidden');
         }
+        
         if (scannerLoading) scannerLoading.style.display = 'none';
-
         showNotification("Failed to start camera. Please check permissions and try again.", "error");
-    });
+    }
 }
 
 // Stop webcam scanning
 async function stopWebcamScanner() {
-    if (!isScanning || !html5QrCode) return;
+    if (!isScanning || !html5QrCode) return true;
+    
+    console.log('[SCANNER] Stopping webcam scanner...');
     
     try {
         await html5QrCode.stop();
         isScanning = false;
+        
+        // Clean up scanner container - the HTML5-QR-Code library handles video cleanup
+        const scannerContainer = document.getElementById('qr-reader');
+        if (scannerContainer) {
+            // Clear the container completely as the library manages its own elements
+            scannerContainer.innerHTML = '<p class="text-gray-500 text-sm p-4">Scanner stopped</p>';
+        }
+        
         console.log('[SCANNER] Webcam scanner stopped');
         return true;
     } catch (err) {
         console.error('[SCANNER] Failed to stop scanner:', err);
+        isScanning = false;
         return false;
     }
 }
@@ -555,8 +604,12 @@ async function checkActiveSession(userType, identifier) {
             headers: {
                 'Accept': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+                'X-Requested-With': 'XMLHttpRequest',
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+            },
+            cache: 'no-store'
         });
         
         console.log("[CHECK] Response status:", response.status);
@@ -569,31 +622,45 @@ async function checkActiveSession(userType, identifier) {
         
         const data = await response.json();
         console.log("[CHECK] Response data:", data);
-        return data.hasActiveSession;
+        
+        // Handle both response formats: {hasActiveSession: true} or {data: {hasActiveSession: true}}
+        return data.hasActiveSession || (data.data && data.data.hasActiveSession) || false;
     } catch (error) {
         console.error("[CHECK] Error checking session:", error);
-        throw error;
+        showNotification("Failed to check session: " + error.message, "error");
+        return false; // Default to false on error to prevent blocking
     }
 }
 
 // Handle logout
 async function handleLogout(userType, identifier, activity = 'Logout') {
-    showLoadingOverlay("Logging out...");
+    showLoadingOverlay("Processing...");
     
     try {
-        let requestBody;
-        if (userType === 'student') {
-            requestBody = {
-                student_id: identifier,
-                activity: activity
-            };
-        } else {
-            requestBody = {
-                user_type: userType,
-                identifier: identifier,
-                activity: activity
-            };
+        // First verify the user has an active session
+        const hasActiveSession = await checkActiveSession(userType, identifier);
+        if (!hasActiveSession) {
+            showNotification('No active session found', 'info');
+            return false;
         }
+        
+        const isStudent = userType === 'student';
+        const requestBody = isStudent
+            ? { 
+                student_id: identifier, 
+                activity: activity,
+                action: 'logout',
+                _token: document.querySelector('meta[name="csrf-token"]').content
+            }
+            : { 
+                user_type: userType, 
+                identifier: identifier, 
+                activity: activity,
+                action: 'logout',
+                _token: document.querySelector('meta[name="csrf-token"]').content
+            };
+        
+        console.log('[LOGOUT] Sending logout request:', requestBody);
         
         const response = await fetch('/admin/attendance/log', {
             method: 'POST',
@@ -607,20 +674,29 @@ async function handleLogout(userType, identifier, activity = 'Logout') {
         });
         
         const data = await response.json();
+        console.log('[LOGOUT] Response:', { status: response.status, ok: response.ok, data });
         
-        if (response.ok && (data.type === 'logout' || data.message)) {
-            const message = `${userType === 'student' ? 'Student' : 'Teacher'} logged out successfully!`;
-            showNotification(message, "success");
-            await refreshAttendanceTable();
-            // Reset the input field for next scan
+        if (response.ok) {
+            const userName = data.user?.name || (isStudent ? 'Student' : 'User');
+            const emoji = isStudent ? '🎓' : '👨‍🏫';
+            
+            showNotification(`Logout Successful, ${userName}! ${emoji}`, 'success');
+            
+            // Clear input field and refresh table
             const qrInput = document.getElementById('qr-input');
             if (qrInput) qrInput.value = '';
+            
+            await refreshAttendanceTable();
+            return true;
         } else {
-            showNotification(data.message || "Logout failed", "error");
+            const errorMsg = data.message || 'Logout failed. Please try again.';
+            throw new Error(errorMsg);
         }
     } catch (error) {
         console.error("Logout error:", error);
-        showNotification("Logout failed. Please try again.", "error");
+        const errorMsg = error.message || 'Logout failed. Please try again.';
+        showNotification(errorMsg, 'error');
+        return false;
     } finally {
         hideLoadingOverlay();
     }
@@ -758,69 +834,6 @@ async function showActivityModal(userType, identifier) {
     }
 }
 
-// Handle activity form submission
-document.getElementById('activity-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const userType = document.getElementById('modal-user-type').value;
-    const identifier = document.getElementById('modal-identifier').value;
-    const activity = document.getElementById('activity').value;
-    
-    showLoadingOverlay("Logging attendance...");
-    
-    try {
-        let requestBody;
-        if (userType === 'student') {
-            requestBody = {
-                student_id: identifier,
-                activity: activity
-            };
-        } else {
-            requestBody = {
-                user_type: userType,
-                identifier: identifier,
-                activity: activity
-            };
-        }
-        
-        const response = await fetch('/admin/attendance/log', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify(requestBody)
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok && (data.type === 'login' || data.message)) {
-            const modal = document.getElementById('activity-modal');
-            if (modal) modal.classList.add('hidden');
-            const message = `${userType === 'student' ? 'Student' : 'Teacher'} logged in successfully!`;
-            showNotification(message, "success");
-            await refreshAttendanceTable();
-            // Reset the input field for next scan
-            const qrInput = document.getElementById('qr-input');
-            if (qrInput) qrInput.value = '';
-        } else {
-            showNotification(data.message || "Login failed", "error");
-        }
-    } catch (error) {
-        console.error("Login error:", error);
-        showNotification("Login failed. Please try again.", "error");
-    } finally {
-        hideLoadingOverlay();
-    }
-});
-
-// Cancel modal
-document.getElementById('modal-cancel').addEventListener('click', function() {
-    document.getElementById('activity-modal').classList.add('hidden');
-});
-
 // Refresh attendance tables
 async function refreshAttendanceTable() {
     const startTime = performance.now();
@@ -922,16 +935,13 @@ async function refreshAttendanceTable() {
     }
 }
 
-// Format date time string
+// Format date time string to show only time (e.g., '09:05 AM')
 function formatDateTime(dateString) {
     if (!dateString) return 'N/A';
     try {
         const date = new Date(dateString);
         if (isNaN(date.getTime())) return 'N/A';
-        return date.toLocaleString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
+        return date.toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit',
             hour12: true
@@ -965,7 +975,7 @@ function updateStudentTable(attendance) {
     if (attendanceData.length === 0) {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
+            <td colspan="8" class="px-6 py-4 text-center text-sm text-gray-500">
                 No student attendance records found
             </td>
         `;
@@ -991,20 +1001,20 @@ function updateStudentTable(attendance) {
                 const studentCourse = studentInfo.course || studentInfo.student_course || studentInfo.course_name || '';
                 const studentId = record.student_id || record.id || '';
                 
-                // Extract timestamps with fallbacks
-                const timeInRaw = record.time_in || record.login || record.created_at || record.date;
-                const timeOutRaw = record.time_out || record.logout || record.updated_at;
+    // Extract timestamps with fallbacks
+    const timeInRaw = record.login || record.time_in || record.created_at || record.date;
+    const timeOutRaw = record.logout || record.time_out;
                 
                 // Format times with validation
                 const timeIn = formatDateTime(timeInRaw);
-                const timeOut = timeOutRaw ? 
-                    formatDateTime(timeOutRaw) : 
-                    '<span class="text-yellow-600">Still logged in</span>';
+                const timeOut = timeOutRaw ?
+                    formatDateTime(timeOutRaw) :
+                    '';
                 
                 // Determine status with fallback logic
                 let status = record.status;
                 if (!status) {
-                    status = (timeOutRaw || record.time_out || record.logout) ? 'out' : 'in';
+                    status = (timeOutRaw || record.logout || record.time_out) ? 'out' : 'in';
                 }
                 const statusText = status === 'out' ? 'Signed Out' : 'Signed In';
                 
@@ -1022,17 +1032,39 @@ function updateStudentTable(attendance) {
                 console.log('Processed times:', { timeIn, timeOut, status, statusText });
                 console.groupEnd();
                 
-                // Build the row HTML
-                // Build the row HTML
+                // Build the row HTML with proper fallbacks
+                const profilePic = record.profile_picture || 
+                                 studentInfo.profile_picture || 
+                                 `https://ui-avatars.com/api/?name=${encodeURIComponent(studentName)}&background=random&size=100`;
+                
                 row.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" title="Student ID: ${studentId}">
-                        ${studentId || 'N/A'}
+                        ${studentId || '<span class="text-gray-400">N/A</span>'}
                     </td>
                     <td class="px-6 py-4">
-                        <div class="text-sm font-medium text-gray-900">${escapeHtml(studentName)}</div>
-                        ${studentSection ? `<div class="text-xs text-gray-500">${escapeHtml(studentSection)}</div>` : ''}
-                        ${studentCollege ? `<div class="text-xs text-gray-500">${escapeHtml(studentCollege)}</div>` : ''}
-                        ${studentCourse ? `<div class="text-xs text-gray-400">${escapeHtml(studentCourse)}</div>` : ''}
+                        <div class="flex items-center">
+                            <img class="h-10 w-10 rounded-full object-cover mr-3" 
+                                 src="${profilePic}" 
+                                 alt="${escapeHtml(studentName)}" 
+                                 onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(studentName || 'User')}&background=random&size=100'">
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">${escapeHtml(studentName || 'N/A')}</div>
+                                ${studentSection ? `<div class="text-xs text-gray-500">${escapeHtml(studentSection)}</div>` : ''}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        ${studentCollege ? `
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                            ${escapeHtml(studentCollege)}
+                        </span>
+                        ` : '<span class="text-gray-400">N/A</span>'}
+                        ${studentCourse ? `
+                        <div class="mt-1 text-xs text-gray-500">${escapeHtml(studentCourse)}</div>
+                        ` : ''}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${record.activity ? escapeHtml(record.activity) : '<span class="text-gray-400">N/A</span>'}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600" title="${new Date(timeInRaw || '').toISOString() || ''}">
                         ${timeIn}
@@ -1041,7 +1073,7 @@ function updateStudentTable(attendance) {
                         ${timeOut}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2.5 py-0.5 inline-flex items-center text-xs leading-5 font-semibold rounded-full 
+                        <span class="px-2.5 py-0.5 inline-flex items-center text-xs leading-5 font-semibold rounded-full
                             ${status === 'out' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}">
                             ${status === 'out' ? (
                                 '<svg class="-ml-0.5 mr-1.5 h-2 w-2 text-green-600" fill="currentColor" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" /></svg>'
@@ -1079,7 +1111,7 @@ function updateStudentTable(attendance) {
     });
     document.dispatchEvent(event);
     
-    console.log(`[ATTENDANCE] Rendered ${attendanceData.length} teacher records`);
+    console.log(`[ATTENDANCE] Rendered ${attendanceData.length} student records`);
     console.groupEnd();
 }
 
@@ -1093,10 +1125,209 @@ function escapeHtml(unsafe) {
         .replace(/'/g, "&#039;");
 }
 
+// Update teacher table (assuming similar structure; implement as needed)
+function updateTeacherTable(attendance) {
+    const tbody = document.getElementById('teacher-attendance-table-body');
+    if (!tbody) {
+        console.error("[ATTENDANCE] Teacher table body not found");
+        return;
+    }
+    
+    // Similar logic to student table; abbreviated for brevity
+    const attendanceData = Array.isArray(attendance) ? attendance : [];
+    
+    console.group('[ATTENDANCE] Updating teacher table');
+    console.debug('Raw teacher data:', attendanceData);
+    
+    const fragment = document.createDocumentFragment();
+    
+    if (attendanceData.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td colspan="9" class="px-6 py-4 text-center text-sm text-gray-500">
+                No teacher attendance records found
+            </td>
+        `;
+        fragment.appendChild(row);
+    } else {
+        attendanceData.forEach((record, index) => {
+            try {
+                if (!record) return;
+                
+                console.groupCollapsed(`Teacher Record #${index + 1}`);
+                console.debug('Raw record:', record);
+                
+                const teacherInfo = record.teacher || record;
+                console.debug('Teacher info:', teacherInfo);
+                
+                const row = document.createElement('tr');
+                row.className = 'bg-white border-b hover:bg-gray-50 transition-colors';
+                row.id = `teacher-row-${record.teacher_id || record.id || index}`;
+                
+                const teacherName = teacherInfo.name || teacherInfo.teacher_name || 'N/A';
+                const teacherType = teacherInfo.type || teacherInfo.teacher_type || 'Staff';
+                
+                // Debug: Log the full record to see all available fields
+                console.log('Full teacher record:', JSON.parse(JSON.stringify(record)));
+                console.log('Teacher info object:', JSON.parse(JSON.stringify(teacherInfo)));
+                
+                // Try multiple possible department field names with better debugging
+                const teacherDepartment = (() => {
+                    // Check teacherInfo first
+                    const dept = teacherInfo.department_name || 
+                                teacherInfo.department || 
+                                teacherInfo.teacher_department || 
+                                teacherInfo.dept || 
+                                teacherInfo.departmentName ||
+                                (teacherInfo.department_info && teacherInfo.department_info.name) ||
+                                
+                                // Then check record directly
+                                record.department_name ||
+                                record.department || 
+                                record.dept || 
+                                record.departmentName ||
+                                (record.department_info && record.department_info.name) ||
+                                
+                                // Check for nested user object
+                                (teacherInfo.user && (
+                                    teacherInfo.user.department_name ||
+                                    teacherInfo.user.department ||
+                                    teacherInfo.user.dept
+                                )) ||
+                                
+                                // Check for any other possible variations
+                                (() => {
+                                    // Look for any field that might contain 'dept' or 'department' in the name
+                                    const allKeys = [...Object.keys(teacherInfo), ...Object.keys(record)];
+                                    const deptKey = allKeys.find(key => 
+                                        key.toLowerCase().includes('dept') || 
+                                        key.toLowerCase().includes('department')
+                                    );
+                                    
+                                    if (deptKey) {
+                                        return teacherInfo[deptKey] || record[deptKey];
+                                    }
+                                    return '';
+                                })();
+                    
+                    console.log('Found department:', dept);
+                    return dept || '';
+                })();
+                
+                const teacherId = record.teacher_id || record.id || '';
+                
+                // Log all available fields for debugging
+                const logAllFields = (obj, prefix = '') => {
+                    const result = {};
+                    for (const key in obj) {
+                        if (typeof obj[key] === 'object' && obj[key] !== null) {
+                            result[`${prefix}${key}`] = 'Object';
+                            Object.assign(result, logAllFields(obj[key], `${prefix}${key}.`));
+                        } else {
+                            result[`${prefix}${key}`] = obj[key];
+                        }
+                    }
+                    return result;
+                };
+
+                console.group('Teacher Data Debug');
+                console.log('Teacher Info Fields:', logAllFields(teacherInfo));
+                console.log('Record Fields:', logAllFields(record));
+                console.log('Extracted Department:', teacherDepartment);
+                console.groupEnd();
+                
+    const timeInRaw = record.login || record.time_in || record.created_at || record.date;
+    const timeOutRaw = record.logout || record.time_out;
+                
+                const timeIn = formatDateTime(timeInRaw);
+                const timeOut = timeOutRaw ?
+                    formatDateTime(timeOutRaw) :
+                    '';
+                
+                let status = record.status;
+                if (!status) {
+                    status = (timeOutRaw || record.logout || record.time_out) ? 'out' : 'in';
+                }
+                const statusText = status === 'out' ? 'Signed Out' : 'Signed In';
+                
+                // Build the row HTML with proper fallbacks
+                const profilePic = record.profile_picture || 
+                                 teacherInfo.profile_picture || 
+                                 `https://ui-avatars.com/api/?name=${encodeURIComponent(teacherName)}&background=random&size=100`;
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        ${teacherType ? `
+                        <span class="px-2 py-1 inline-flex items-center text-xs font-medium rounded bg-blue-100 text-blue-700">
+                            <svg class="mr-1.5 h-2 w-2 text-blue-400" fill="currentColor" viewBox="0 0 8 8">
+                                <circle cx="4" cy="4" r="3" />
+                            </svg>
+                            ${escapeHtml(teacherType)}
+                        </span>
+                        ` : '<span class="text-gray-400">N/A</span>'}
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center">
+                            <img class="h-10 w-10 rounded-full object-cover mr-3" 
+                                 src="${profilePic}" 
+                                 alt="${escapeHtml(teacherName)}" 
+                                 onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(teacherName || 'User')}&background=random&size=100'">
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">${escapeHtml(teacherName || 'N/A')}</div>
+                                ${teacherDepartment ? `<div class="text-xs text-gray-500">${escapeHtml(teacherDepartment)}</div>` : 
+                                    `<div class="text-xs text-gray-400">No department</div>`}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        ${teacherDepartment ? `
+                        <span class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                            <svg class="mr-1.5 h-2 w-2 text-purple-400" fill="currentColor" viewBox="0 0 8 8">
+                                <circle cx="4" cy="4" r="3" />
+                            </svg>
+                            ${escapeHtml(teacherDepartment)}
+                        </span>
+                        ` : '<span class="px-2 py-1 text-xs text-gray-500">No department</span>'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        ${record.activity ? escapeHtml(record.activity) : '<span class="text-gray-400">N/A</span>'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600" title="${new Date(timeInRaw || '').toISOString() || ''}">
+                        ${timeIn}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600" title="${timeOutRaw ? new Date(timeOutRaw).toISOString() : 'Still logged in'}">
+                        ${timeOut}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2.5 py-0.5 inline-flex items-center text-xs leading-5 font-semibold rounded-full
+                            ${status === 'out' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}">
+                            ${status === 'out' ? (
+                                '<svg class="-ml-0.5 mr-1.5 h-2 w-2 text-green-600" fill="currentColor" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" /></svg>'
+                            ) : (
+                                '<svg class="-ml-0.5 mr-1.5 h-2 w-2 text-blue-600" fill="currentColor" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" /></svg>'
+                            )}
+                            ${statusText}
+                        </span>
+                    </td>
+                `;
+                fragment.appendChild(row);
+            } catch (error) {
+                console.error(`[ATTENDANCE] Error processing teacher record at index ${index}:`, error, record);
+            }
+        });
+    }
+    
+    tbody.innerHTML = '';
+    tbody.appendChild(fragment);
+    
+    console.log(`[ATTENDANCE] Rendered ${attendanceData.length} teacher records`);
+    console.groupEnd();
+}
+
 // Hide loading overlay
 function hideLoadingOverlay() {
     const overlay = document.getElementById('loading-overlay');
-    if (overlay) 
+    if (overlay) {
         overlay.style.opacity = '0';
         setTimeout(() => overlay.classList.add('hidden'), 200);
     }
@@ -1135,19 +1366,19 @@ function updateSingleStudentRecord(record) {
     const studentCourse = studentInfo.course || studentInfo.student_course || studentInfo.course_name || '';
     
     // Extract timestamps with fallbacks
-    const timeInRaw = record.time_in || record.login || record.created_at || record.date;
-    const timeOutRaw = record.time_out || record.logout || record.updated_at;
+    const timeInRaw = record.login || record.time_in || record.created_at || record.date;
+    const timeOutRaw = record.logout || record.time_out;
     
     // Format times with validation
     const timeIn = formatDateTime(timeInRaw);
-    const timeOut = timeOutRaw ? 
-        formatDateTime(timeOutRaw) : 
-        '<span class="text-yellow-600">Still logged in</span>';
+    const timeOut = timeOutRaw ?
+        formatDateTime(timeOutRaw) :
+        '';
     
     // Determine status with fallback logic
     let status = record.status;
     if (!status) {
-        status = (timeOutRaw || record.time_out || record.logout) ? 'out' : 'in';
+        status = (timeOutRaw || record.logout || record.time_out) ? 'out' : 'in';
     }
     const statusText = status === 'out' ? 'Signed Out' : 'Signed In';
     
@@ -1210,46 +1441,59 @@ function updateSingleTeacherRecord(record) {
         console.warn('[ATTENDANCE] No record provided to updateSingleTeacherRecord');
         return;
     }
-    
+
     const tbody = document.getElementById('teacher-attendance-table-body');
     if (!tbody) {
         console.error('[ATTENDANCE] Teacher table body not found');
         return;
     }
-    
+
     const teacherId = record.teacher_id || record.teacher_visitor_id || record.id;
     if (!teacherId) {
         console.error('[ATTENDANCE] No teacher ID found in record:', record);
         return;
     }
-    
+
     const rowId = `teacher-row-${teacherId}`;
-    let row = document.getElementById(rowId);
-    
+
     // Format the data with proper fallbacks
     const teacherInfo = record.teacher || record;
     const teacherName = teacherInfo.name || teacherInfo.teacher_name || 'N/A';
     const teacherType = teacherInfo.type || teacherInfo.teacher_type || 'Staff';
-    const teacherDepartment = teacherInfo.department || teacherInfo.teacher_department || '';
-    
-    // Extract timestamps with fallbacks
-    const timeInRaw = record.time_in || record.login || record.created_at || record.date;
-    const timeOutRaw = record.time_out || record.logout || record.updated_at;
-    
+
+    // Try multiple possible department field names
+    const teacherDepartment = teacherInfo.department ||
+                            teacherInfo.teacher_department ||
+                            teacherInfo.dept ||
+                            teacherInfo.department_name ||
+                            record.department ||
+                            record.dept ||
+                            record.department_name ||
+                            '';
+
+    const timeInRaw = record.login || record.time_in || record.created_at || record.date;
+    const timeOutRaw = record.logout || record.time_out;
+
     // Format times with validation
     const timeIn = formatDateTime(timeInRaw);
-    const timeOut = timeOutRaw ? 
-        formatDateTime(timeOutRaw) : 
-        '<span class="text-yellow-600">Still logged in</span>';
-    
+    const timeOut = timeOutRaw ?
+        formatDateTime(timeOutRaw) :
+        '';
+
     // Determine status with fallback logic
     let status = record.status;
     if (!status) {
-        status = (timeOutRaw || record.time_out || record.logout) ? 'out' : 'in';
+        status = (timeOutRaw || record.logout || record.time_out) ? 'out' : 'in';
     }
     const statusText = status === 'out' ? 'Signed Out' : 'Signed In';
-    
+
+    // Build profile pic with fallback
+    const profilePic = record.profile_picture ||
+                     teacherInfo.profile_picture ||
+                     `https://ui-avatars.com/api/?name=${encodeURIComponent(teacherName)}&background=random&size=100`;
+
     // Create new row if it doesn't exist
+    let row = document.getElementById(rowId);
     if (!row) {
         row = document.createElement('tr');
         row.id = rowId;
@@ -1260,17 +1504,45 @@ function updateSingleTeacherRecord(record) {
             tbody.appendChild(row);
         }
     }
-    
+
     // Update the row content with proper escaping and tooltips
     row.className = 'bg-white border-b hover:bg-gray-50 transition-colors';
     row.innerHTML = `
-        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" title="Teacher ID: ${teacherId}">
-            ${teacherId || 'N/A'}
+        <td class="px-6 py-4 whitespace-nowrap text-sm">
+            ${teacherType ? `
+            <span class="px-2 py-1 inline-flex items-center text-xs font-medium rounded bg-blue-100 text-blue-700">
+                <svg class="mr-1.5 h-2 w-2 text-blue-400" fill="currentColor" viewBox="0 0 8 8">
+                    <circle cx="4" cy="4" r="3" />
+                </svg>
+                ${escapeHtml(teacherType)}
+            </span>
+            ` : '<span class="text-gray-400">N/A</span>'}
         </td>
         <td class="px-6 py-4">
-            <div class="text-sm font-medium text-gray-900">${escapeHtml(teacherName)}</div>
-            <div class="text-xs text-gray-500">${escapeHtml(teacherType)}</div>
-            ${teacherDepartment ? `<div class="text-xs text-gray-400">${escapeHtml(teacherDepartment)}</div>` : ''}
+            <div class="flex items-center">
+                <img class="h-10 w-10 rounded-full object-cover mr-3"
+                     src="${profilePic}"
+                     alt="${escapeHtml(teacherName)}"
+                     onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(teacherName || 'User')}&background=random&size=100'">
+                <div>
+                    <div class="text-sm font-medium text-gray-900">${escapeHtml(teacherName || 'N/A')}</div>
+                    ${teacherDepartment ? `<div class="text-xs text-gray-500">${escapeHtml(teacherDepartment)}</div>` :
+                        `<div class="text-xs text-gray-400">No department</div>`}
+                </div>
+            </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm">
+            ${teacherDepartment ? `
+            <span class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                <svg class="mr-1.5 h-2 w-2 text-purple-400" fill="currentColor" viewBox="0 0 8 8">
+                    <circle cx="4" cy="4" r="3" />
+                </svg>
+                ${escapeHtml(teacherDepartment)}
+            </span>
+            ` : '<span class="px-2 py-1 text-xs text-gray-500">No department</span>'}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm">
+            ${record.activity ? escapeHtml(record.activity) : '<span class="text-gray-400">N/A</span>'}
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600" title="${new Date(timeInRaw || '').toISOString() || ''}">
             ${timeIn}
@@ -1279,7 +1551,7 @@ function updateSingleTeacherRecord(record) {
             ${timeOut}
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
-            <span class="px-2.5 py-0.5 inline-flex items-center text-xs leading-5 font-semibold rounded-full 
+            <span class="px-2.5 py-0.5 inline-flex items-center text-xs leading-5 font-semibold rounded-full
                 ${status === 'out' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}">
                 ${status === 'out' ? (
                     '<svg class="-ml-0.5 mr-1.5 h-2 w-2 text-green-600" fill="currentColor" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" /></svg>'
@@ -1290,37 +1562,97 @@ function updateSingleTeacherRecord(record) {
             </span>
         </td>
     `;
-    
+
     // If this was the first row, remove the "no records" message if it exists
-    const noRecordsRow = tbody.querySelector('tr td[colspan="5"]');
+    const noRecordsRow = tbody.querySelector('tr td[colspan="9"]');
     if (noRecordsRow && noRecordsRow.textContent.includes('No teacher attendance records found')) {
         noRecordsRow.closest('tr').remove();
     }
 }
 
-// Show notification
+// Show notification with improved styling and auto-dismiss
 function showNotification(message, type = "info") {
+    // Don't show empty messages
+    if (!message) return;
+    
+    // Close any existing notifications of the same type to avoid duplicates
+    document.querySelectorAll(`.notification-${type}`).forEach(el => {
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 300);
+    });
     // Create notification element
     const notification = document.createElement('div');
-    notification.className = `fixed top-4 right-4 px-6 py-4 rounded-lg shadow-lg text-white z-50 animate-fadeInUp ${
-        type === 'success' ? 'bg-green-500' : 
-        type === 'error' ? 'bg-red-500' : 
-        'bg-blue-500'
-    }`;
-    notification.textContent = message;
+    const icons = {
+        success: '✓',
+        error: '✕',
+        warning: '!',
+        info: 'i'
+    };
+
+    // Add a class for the notification type
+    const notificationClasses = [
+        'fixed', 'top-4', 'right-4', 'px-6', 'py-4', 'rounded-lg', 'shadow-2xl',
+        'text-white', 'font-medium', 'flex', 'items-center', 'space-x-3', 'z-50',
+        'transform', 'transition-all', 'duration-300', 'ease-in-out',
+        'notification', `notification-${type}`, // Add notification and type-specific class
+        type === 'success' ? 'bg-green-500' :
+        type === 'error' ? 'bg-red-500' :
+        type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+    ];
+
+    notification.className = notificationClasses.join(' ');
+    notification.innerHTML = `
+        <span class="text-lg">${icons[type]}</span>
+        <span>${message}</span>
+    `;
     
     document.body.appendChild(notification);
+    // Auto-remove after appropriate duration
+    const duration = type === 'error' ? 8000 : 5000; // Show errors longer
     
-    setTimeout(() => {
+    // Add a progress bar
+    const progressBar = document.createElement('div');
+    progressBar.className = 'absolute bottom-0 left-0 h-1 bg-white bg-opacity-50 w-full origin-left';
+    notification.appendChild(progressBar);
+    
+    // Animate progress bar
+    progressBar.style.transition = `transform ${duration}ms linear`;
+    setTimeout(() => progressBar.style.transform = 'scaleX(0)', 50);
+    
+    // Auto-remove after duration
+    const removeNotification = () => {
         notification.style.opacity = '0';
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 300);
+    };
+    
+    const timeoutId = setTimeout(removeNotification, duration);
+    
+    // Pause on hover
+    notification.addEventListener('mouseenter', () => {
+        clearTimeout(timeoutId);
+        progressBar.style.transition = 'none';
+        progressBar.style.transform = 'scaleX(1)';
+    });
+    
+    notification.addEventListener('mouseleave', () => {
+        const remainingWidth = progressBar.getBoundingClientRect().width / notification.getBoundingClientRect().width;
+        const remainingTime = remainingWidth * duration;
+        
+        progressBar.style.transition = `transform ${remainingTime}ms linear`;
+        progressBar.style.transform = 'scaleX(0)';
+        
+        setTimeout(removeNotification, remainingTime);
+    });
 }
 
 // Handle scan errors (suppress frequent errors)
 function onScanError(error) {
     // Suppress console spam from scanning errors
-    // Only log if it's not a routine "No QR code found" error
     if (error && !error.includes('NotFoundException')) {
         console.warn("Scan error:", error);
     }
@@ -1337,4 +1669,332 @@ function toggleFullScreen() {
     } else {
         document.exitFullscreen();
     }
+}
+
+// Show loading overlay
+function showLoadingOverlay(message = 'Loading...') {
+    let overlay = document.getElementById('loading-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'loading-overlay';
+        overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden';
+        overlay.innerHTML = `
+            <div class="bg-white p-6 rounded-lg shadow-xl">
+                <div class="flex items-center gap-3">
+                    <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                    <p class="text-gray-700">${message}</p>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+    }
+    overlay.classList.remove('hidden');
+    overlay.style.opacity = '1';
+}
+
+// Book Selection Modal Functions
+let borrowUiInitialized = false;
+
+// Show book selection modal
+function showBookSelectionModal(userType, identifier, activity) {
+    const modal = document.getElementById('book-selection-modal');
+    const manualUserType = document.getElementById('manual-user-type');
+    const manualIdentifier = document.getElementById('manual-identifier');
+
+    // Set the user info for manual borrow form
+    manualUserType.value = userType;
+    manualIdentifier.value = identifier;
+
+    // Store the activity for later use
+    modal.dataset.activity = activity;
+
+    // Hide the activity modal
+    document.getElementById('activity-modal').classList.add('hidden');
+
+    // Show the modal
+    modal.classList.remove('hidden');
+
+    // Initialize borrow UI if not already done
+    if (!borrowUiInitialized) {
+        initializeBorrowUI();
+        borrowUiInitialized = true;
+    }
+
+    // Load available books
+    loadAvailableBooks();
+}
+
+// Initialize borrow UI
+function initializeBorrowUI() {
+    const availableBooksSearch = document.getElementById('available-books-search');
+    const availableBooksCollege = document.getElementById('available-books-college');
+    const refreshAvailableBooksBtn = document.getElementById('refresh-available-books');
+    const manualBorrowForm = document.getElementById('manual-borrow-form');
+    const bookSelectionCancel = document.getElementById('book-selection-cancel');
+    
+    // Search functionality
+    if (availableBooksSearch) {
+        const debouncedSearch = debounce(() => {
+            loadAvailableBooks(availableBooksSearch.value.trim());
+        }, 300);
+        availableBooksSearch.addEventListener('input', debouncedSearch);
+    }
+    
+    // Refresh button
+    if (refreshAvailableBooksBtn) {
+        refreshAvailableBooksBtn.addEventListener('click', () => {
+            const search = availableBooksSearch?.value.trim() || '';
+            const college = availableBooksCollege?.value || '';
+            loadAvailableBooks(search, college);
+        });
+    }
+    
+    // College filter
+    if (availableBooksCollege) {
+        availableBooksCollege.addEventListener('change', () => {
+            const search = availableBooksSearch?.value.trim() || '';
+            const college = availableBooksCollege.value || '';
+            loadAvailableBooks(search, college);
+        });
+    }
+    
+    // Manual borrow form
+    if (manualBorrowForm) {
+        manualBorrowForm.addEventListener('submit', handleManualBorrow);
+    }
+    
+    // Cancel button
+    if (bookSelectionCancel) {
+        bookSelectionCancel.addEventListener('click', () => {
+            document.getElementById('book-selection-modal').classList.add('hidden');
+            document.getElementById('activity-modal').classList.add('hidden');
+        });
+    }
+    
+    // Load colleges for filter
+    loadColleges();
+}
+
+// Load colleges for filter
+async function loadColleges() {
+    try {
+        const response = await fetch('/admin/attendance/books/colleges');
+        const colleges = await response.json();
+        
+        const collegeSelect = document.getElementById('available-books-college');
+        if (collegeSelect && colleges) {
+            collegeSelect.innerHTML = '<option value="">All Colleges</option>';
+            colleges.forEach(college => {
+                const option = document.createElement('option');
+                option.value = college;
+                option.textContent = college;
+                collegeSelect.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading colleges:', error);
+    }
+}
+
+// Load available books
+async function loadAvailableBooks(search = '', college = '') {
+    const container = document.getElementById('available-books-container');
+    const list = document.getElementById('available-books-list');
+    
+    if (!container || !list) return;
+    
+    // Show loading state
+    container.innerHTML = '<div class="p-4 text-sm text-gray-500">Loading available books...</div>';
+    
+    try {
+        const params = new URLSearchParams();
+        if (search) params.append('search', search);
+        if (college) params.append('college', college);
+        
+        const response = await fetch(`/admin/attendance/available-books?${params.toString()}`);
+        const data = await response.json();
+        const books = data.data || data;
+        
+        if (!books || books.length === 0) {
+            container.innerHTML = '<div class="p-4 text-sm text-gray-500">No available books found.</div>';
+            return;
+        }
+        
+        // Clear loading state and render books
+        container.innerHTML = '';
+        list.innerHTML = '';
+        
+        books.forEach(book => {
+            const bookCard = createBookCard(book);
+            list.appendChild(bookCard);
+        });
+        
+        container.appendChild(list);
+        
+    } catch (error) {
+        console.error('Error loading books:', error);
+        container.innerHTML = '<div class="p-4 text-sm text-red-500">Error loading books. Please try again.</div>';
+    }
+}
+
+// Create book card element
+function createBookCard(book) {
+    const card = document.createElement('div');
+    card.className = 'bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer';
+
+    const imageUrl = book.image1 ? `/storage/${book.image1}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(book.name)}&background=random&size=200`;
+
+    card.innerHTML = `
+        <div class="aspect-w-3 aspect-h-4 mb-3">
+            <img src="${imageUrl}" alt="${escapeHtml(book.name)}" class="w-full h-48 object-cover rounded-lg" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(book.name)}&background=random&size=200'">
+        </div>
+        <div class="space-y-2">
+            <h3 class="font-semibold text-gray-900 text-sm line-clamp-2">${escapeHtml(book.name)}</h3>
+            <p class="text-sm text-gray-600 truncate">${escapeHtml(book.author || 'Unknown author')}</p>
+            <p class="text-xs text-gray-500">Code: ${escapeHtml(book.book_code)}</p>
+            <p class="text-xs text-gray-500">Section: ${escapeHtml(book.section || 'N/A')}</p>
+            <button class="w-full mt-3 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors borrow-book-btn" data-book-code="${escapeHtml(book.book_code)}" data-book-name="${escapeHtml(book.name)}">
+                Borrow Book
+            </button>
+        </div>
+    `;
+    
+    // Add click handler for borrow button
+    const borrowBtn = card.querySelector('.borrow-book-btn');
+    borrowBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        handleBorrowBook(book.book_code, book.name);
+    });
+    
+    // Add click handler for auto-fill manual form
+    card.addEventListener('click', () => {
+        const manualBookId = document.getElementById('manual-book-id');
+        if (manualBookId) {
+            manualBookId.value = book.book_code;
+            manualBookId.focus();
+        }
+    });
+    
+    return card;
+}
+
+// Handle borrow book request
+async function handleBorrowBook(bookCode, bookName) {
+    const modal = document.getElementById('book-selection-modal');
+    const userType = document.getElementById('manual-user-type').value;
+    const identifier = document.getElementById('manual-identifier').value;
+    const activity = modal.dataset.activity;
+
+    // Close modal immediately
+    modal.classList.add('hidden');
+
+    showLoadingOverlay(`Requesting to borrow "${bookName}"...`);
+
+    try {
+        const response = await fetch('/admin/borrow/request', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                student_id: identifier,
+                user_type: userType,
+                book_id: bookCode,
+                activity: activity
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            showNotification(`Borrow request for "${bookName}" submitted successfully!`, 'success');
+
+            // Clear QR input and refresh table
+            const qrInput = document.getElementById('qr-input');
+            if (qrInput) qrInput.value = '';
+            await refreshAttendanceTable();
+
+        } else {
+            const errorMsg = data.message || data.error || 'Failed to submit borrow request.';
+            showNotification(errorMsg, 'error');
+        }
+    } catch (error) {
+        console.error('Error submitting borrow request:', error);
+        showNotification('Network error. Please try again.', 'error');
+    } finally {
+        hideLoadingOverlay();
+    }
+}
+
+// Handle manual borrow form submission
+async function handleManualBorrow(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const bookCode = formData.get('book_id');
+    
+    if (!bookCode) {
+        showNotification('Please enter a book code.', 'error');
+        return;
+    }
+    
+    await handleBorrowBook(bookCode, `Book ${bookCode}`);
+}
+
+// Log attendance with activity (after successful borrow request)
+async function logAttendanceWithActivity(userType, identifier, activity) {
+    try {
+        let requestBody;
+        if (userType === 'student') {
+            requestBody = {
+                student_id: identifier,
+                activity: activity
+            };
+        } else {
+            requestBody = {
+                user_type: userType,
+                identifier: identifier,
+                activity: activity
+            };
+        }
+        
+        const response = await fetch('/admin/attendance/log', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(requestBody)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data && (data.success || data.action === 'logged in')) {
+            const userName = data.name || 'User';
+            const emoji = userType === 'student' ? '🎓' : '👨‍🏫';
+            const welcomeText = `Welcome, ${userName}! ${emoji} Your borrow request has been submitted.`;
+            showNotification(welcomeText, 'success');
+        }
+    } catch (error) {
+        console.error('Error logging attendance:', error);
+        // Don't show error for attendance logging as borrow request was successful
+    }
+}
+
+// Debounce utility function
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
 }
