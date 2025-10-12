@@ -78,17 +78,18 @@
                 <div>
                     <label for="MI" class="block text-sm font-medium text-gray-700 mb-1">Middle Initial</label>
                     <input type="text" id="MI" name="MI" value="{{ old('MI') }}"
-                        class="form-input w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition @error('MI') border-red-500 @enderror">
+                         class="form-input w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition @error('lname') border-red-500 @enderror">
                     @error('MI')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
+    
 
                 {{-- Email --}}
-                <div class="md:col-span-2">
+                <div >
                     <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
                     <input type="email" id="email" name="email" value="{{ old('email') }}" required
-                        class="form-input w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition @error('email') border-red-500 @enderror">
+                      class="form-input w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition @error('fname') border-red-500 @enderror">
                     @error('email')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror

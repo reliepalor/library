@@ -299,8 +299,8 @@ class StudentController extends \App\Http\Controllers\Controller
         // Send email
         Mail::to($student->email)->send(new StudentQrMail($student, $qrCodeBase64));
 
-        // Redirect back with success message
-        return redirect()->back()->with('success', "QR Code resent to {$student->fname} {$student->lname}'s email!");
+        // Redirect to index to avoid GET on POST-only route after PRG
+        return redirect()->route('admin.students.index')->with('success', "QR Code resent to {$student->fname} {$student->lname}'s email!");
     }
 
     /**

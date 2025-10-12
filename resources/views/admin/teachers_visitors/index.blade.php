@@ -6,7 +6,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>Admin | Teachers / Visitors</title>
-        <link rel="icon" type="image/x-icon" href="/favicon/Library.png">
+        <link rel="icon" type="image/png" href="/favicon/library.png">
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
         <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -133,26 +133,7 @@
                                 </div>
                             </div>
 
-                            <!-- Charts -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <!-- Pie Chart: Distribution per Department -->
-                                <div class="bg-white rounded-xl shadow-sm p-6 border">
-                                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Teachers/Visitors per Department</h3>
-                                    <div class="flex justify-center">
-                                        <div style="width: 100%; max-width: 600px; height: 222px;">
-                                            <canvas id="departmentPieChart"></canvas>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Bar Chart: Role Breakdown -->
-                                <div class="bg-white rounded-xl shadow-sm p-4 border h-[320px]">
-                                    <h3 class="text-base font-semibold text-gray-800 mb-3">Teachers/Visitors by Role</h3>
-                                    <div class="h-[250px]">
-                                        <canvas id="roleBarChart"></canvas>
-                                    </div>
-                                </div>
-                            </div>
+                         
 
                             <!-- Table Card -->
                             <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
@@ -223,7 +204,12 @@
                                     <table class="w-full table-auto text-sm text-left text-gray-700">
                                         <thead class="bg-gray-50 text-gray-500 uppercase text-xs font-semibold border-b">
                                             <tr>
-                                                <th class="px-2 py-3"><input type="checkbox" id="select-all"></th>
+                                                <th class="px-2 py-3">
+                                                    <label for="select-all" class="inline-flex items-center gap-2">
+                                                        <input type="checkbox" id="select-all" class="h-4 w-4">
+                                                        <span>Select All</span>
+                                                    </label>
+                                                </th>
                                                 <th class="px-6 py-3">Role</th>
                                                 <th class="px-6 py-3">Last Name</th>
                                                 <th class="px-6 py-3">First Name</th>
@@ -286,7 +272,7 @@
                                                 </td>
                                                 <td class="px-4 py-4">
                                                     @if($teacherVisitor->qr_code_path)
-                                                        <img src="{{ asset('storage/' . $teacherVisitor->qr_code_path) }}" alt="QR Code" class="w-16 h-16 object-contain border rounded" />
+                                                        <img src="{{ asset('storage/' . $teacherVisitor->qr_code_path) }}" alt="QR Code" class="qr-thumb w-16 h-16 object-contain border rounded" data-name="{{ $teacherVisitor->first_name }} {{ $teacherVisitor->last_name }}" />
                                                     @else
                                                         <span class="text-xs text-gray-400">No QR</span>
                                                     @endif
@@ -301,15 +287,18 @@
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 3.487a2.7 2.7 0 0 1 3.818 3.818L7.227 20.758a4.5 4.5 0 0 1-1.897 1.13l-3.278.984.984-3.278a4.5 4.5 0 0 1 1.13-1.897L16.862 3.487z"/>
                                                         </svg>
                                                     </a>
-                                                    <!-- Resend QR Button -->
-                                                    <a href="{{ route('admin.teachers_visitors.resend-qr', $teacherVisitor->id) }}"
-                                                       class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200 transition"
-                                                       title="Resend QR">
-                                                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" />
-                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5h.75v.75h-.75v-.75ZM13.5 19.5h.75v.75h-.75v-.75ZM19.5 13.5h.75v.75h-.75v-.75ZM19.5 19.5h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z" />
-                                                        </svg>
-                                                    </a>
+                                                    <!-- Resend QR Button (POST) -->
+                                                    <form action="{{ route('admin.teachers_visitors.resend-qr', $teacherVisitor->id) }}" method="POST" class="inline">
+                                                        @csrf
+                                                        <button type="submit"
+                                                            class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200 transition"
+                                                            aria-label="Resend QR to {{ $teacherVisitor->email }}">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" />
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5h.75v.75h-.75v-.75ZM13.5 19.5h.75v.75h-.75v-.75ZM19.5 13.5h.75v.75h-.75v-.75ZM19.5 19.5h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z" />
+                                                            </svg>
+                                                        </button>
+                                                    </form>
                                                     <!-- Archive Button -->
                                                     <form action="{{ route('admin.teachers_visitors.archive', $teacherVisitor->id) }}" method="POST" class="inline">
                                                         @csrf
@@ -330,7 +319,7 @@
                                 </div>
 
                                 @if($teachersVisitors->isEmpty())
-                                <div class="p-8 text-center text-gray-500">
+                                    <div class="p-8 text-center text-gray-500 h-[22vh] flex justify-center items-center">
                                     No teachers/visitors found. Add your first teacher/visitor!
                                 </div>
                                 @endif
@@ -443,8 +432,10 @@
         <!-- Chart.js Scripts -->
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                const ctxDepartment = document.getElementById('departmentPieChart').getContext('2d');
-                new Chart(ctxDepartment, {
+                const depEl = document.getElementById('departmentPieChart');
+                if (depEl && window.Chart) {
+                    const ctxDepartment = depEl.getContext('2d');
+                    new Chart(ctxDepartment, {
                     type: 'pie',
                     data: {
                         labels: {!! json_encode(array_column($departmentCounts, 'label')) !!},
@@ -490,10 +481,13 @@
                         }
                     }
                 });
+                }
 
                 // Bar Chart - Role Breakdown
-                const ctxRole = document.getElementById('roleBarChart').getContext('2d');
-                new Chart(ctxRole, {
+                const roleEl = document.getElementById('roleBarChart');
+                if (roleEl && window.Chart) {
+                    const ctxRole = roleEl.getContext('2d');
+                    new Chart(ctxRole, {
                     type: 'bar',
                     data: {
                         labels: ['Teacher', 'Visitor'],
@@ -518,24 +512,55 @@
                         }
                     }
                 });
+                }
 
-                // Department filter logic
-                document.querySelectorAll('.department-filter').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const department = this.getAttribute('data-department');
-                        document.querySelectorAll('#teacher-visitor-table-body tr').forEach(row => {
-                            if (department === 'All' || row.getAttribute('data-department') === department) {
-                                row.style.display = '';
-                            } else {
-                                row.style.display = 'none';
-                            }
+                // Department filter logic with dropdown menu
+                const filterBtn = document.getElementById('departmentFilterButton');
+                const filterMenu = document.getElementById('departmentFilterMenu');
+                const selectedDeptEl = document.getElementById('selectedDepartment');
+
+                function applyDepartmentFilter(value) {
+                    document.querySelectorAll('#teacher-visitor-table-body tr').forEach(row => {
+                        const rowDept = row.getAttribute('data-department');
+                        if (value === 'All' || rowDept === value) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                }
+
+                if (filterBtn && filterMenu && selectedDeptEl) {
+                    filterBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        filterMenu.classList.toggle('hidden');
+                        filterMenu.style.opacity = filterMenu.classList.contains('hidden') ? 0 : 1;
+                    });
+                    document.querySelectorAll('.department-filter-option').forEach(opt => {
+                        opt.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            const dept = this.getAttribute('data-department') || 'All';
+                            selectedDeptEl.textContent = dept;
+                            applyDepartmentFilter(dept);
+                            filterMenu.classList.add('hidden');
+                            filterMenu.style.opacity = 0;
                         });
                     });
-                });
-                // Select all logic
+                    document.addEventListener('click', function() {
+                        filterMenu.classList.add('hidden');
+                        filterMenu.style.opacity = 0;
+                    });
+                }
+                // Select all logic (only visible rows)
                 document.getElementById('select-all').addEventListener('change', function() {
                     document.querySelectorAll('.select-teacher-visitor').forEach(cb => {
-                        cb.checked = this.checked;
+                        const row = cb.closest('tr');
+                        if (!row) return;
+                        const hiddenByClass = row.classList.contains('hidden');
+                        const hiddenByStyle = row.style.display === 'none';
+                        if (!hiddenByClass && !hiddenByStyle) {
+                            cb.checked = this.checked;
+                        }
                     });
                 });
                 // Modal logic
@@ -556,23 +581,51 @@
                         return;
                     }
                     // Prepare data for print
-                    const teachersVisitors = selected.map(cb => ({
-                        name: cb.getAttribute('data-name'),
-                        role: cb.getAttribute('data-role'),
-                        qr: cb.getAttribute('data-qr'),
+                    let teachersVisitors = selected.map(cb => ({
+                        name: cb.getAttribute('data-name') || '',
+                        role: cb.getAttribute('data-role') || '',
+                        qr: cb.getAttribute('data-qr') || '',
                     }));
-                    // Fill grid
+
+                    const beforeCount = teachersVisitors.length;
+                    teachersVisitors = teachersVisitors.filter(tv => !!tv.qr);
+                    if (teachersVisitors.length === 0) {
+                        alert('Selected teachers/visitors have no QR codes to print.');
+                        return;
+                    }
+                    if (teachersVisitors.length < beforeCount) {
+                        alert('Some selected teachers/visitors were skipped because they have no QR code.');
+                    }
+
+                    // Fill grid safely
                     grid.innerHTML = '';
                     teachersVisitors.forEach(tv => {
-                        grid.innerHTML += `<div class='qr-block bg-white rounded-lg shadow p-4 flex flex-col items-center border'>
-                            <img src='${tv.qr}' alt='QR Code' class='w-32 h-32 mb-2 bg-white border rounded'>
-                            <div class='name font-semibold text-base mb-1 text-center'>${tv.name}</div>
-                            <div class='role text-gray-700 text-sm mb-1 text-center'>${tv.role.charAt(0).toUpperCase() + tv.role.slice(1)}</div>
-                        </div>`;
+                        const wrap = document.createElement('div');
+                        wrap.className = 'qr-block bg-white rounded-lg shadow p-4 flex flex-col items-center border';
+
+                        const img = document.createElement('img');
+                        img.className = 'w-32 h-32 mb-2 bg-white border rounded';
+                        img.src = tv.qr;
+                        img.alt = 'QR Code';
+
+                        const nameEl = document.createElement('div');
+                        nameEl.className = 'name font-semibold text-base mb-1 text-center';
+                        nameEl.textContent = tv.name;
+
+                        const roleEl = document.createElement('div');
+                        roleEl.className = 'role text-gray-700 text-sm mb-1 text-center';
+                        roleEl.textContent = tv.role ? tv.role.charAt(0).toUpperCase() + tv.role.slice(1) : '';
+
+                        wrap.appendChild(img);
+                        wrap.appendChild(nameEl);
+                        wrap.appendChild(roleEl);
+                        grid.appendChild(wrap);
                     });
                     // Fill empty blocks if less than 6
-                    for(let i=teachersVisitors.length; i<6; i++) {
-                        grid.innerHTML += `<div class='qr-block'></div>`;
+                    for (let i = teachersVisitors.length; i < 6; i++) {
+                        const placeholder = document.createElement('div');
+                        placeholder.className = 'qr-block';
+                        grid.appendChild(placeholder);
                     }
                     modal.classList.remove('hidden');
                     modal.classList.add('flex');
@@ -611,21 +664,20 @@
                 const qrCodeModalImg = document.getElementById('qr-code-modal-img');
                 const closeQrModalBtn = document.getElementById('close-qr-modal');
 
-                document.querySelectorAll('td.px-4.py-4 img').forEach(img => {
+                document.querySelectorAll('.qr-thumb').forEach(img => {
                     img.style.cursor = 'pointer';
                     img.addEventListener('click', function() {
-                        const row = this.closest('tr');
-                        const lastName = row.children[1].textContent.trim();
-                        const firstName = row.children[2].textContent.trim();
-                        const middleName = row.children[3].textContent.trim();
-                        const fullName = `${lastName}, ${firstName}${middleName ? ' ' + middleName + '.' : ''}`;
-                        document.getElementById('qr-modal-name').textContent = fullName;
                         qrCodeModalImg.src = this.src;
+                        const displayName = this.getAttribute('data-name') || '';
+                        document.getElementById('qr-modal-name').textContent = displayName;
                         qrCodeModal.classList.remove('opacity-0', 'pointer-events-none');
                         qrCodeModal.classList.add('opacity-100');
                         setTimeout(() => {
-                            qrCodeModal.querySelector('div').classList.remove('scale-95');
-                            qrCodeModal.querySelector('div').classList.add('scale-100');
+                            const inner = qrCodeModal.querySelector('div');
+                            if (inner) {
+                                inner.classList.remove('scale-95');
+                                inner.classList.add('scale-100');
+                            }
                         }, 10);
                     });
                 });

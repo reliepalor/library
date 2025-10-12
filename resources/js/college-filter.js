@@ -33,6 +33,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 item.classList.add('hidden');
             }
         });
+        // Uncheck select all when filtering changes
+        const selectAllCheckbox = document.getElementById('select-all');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = false;
+        }
     }
 
     // Toggle dropdown

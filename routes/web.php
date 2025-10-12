@@ -100,19 +100,19 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     /*---------------------------ROUTE FOR ADMIN ---STUDENTS------------------------------*/
     Route::get('students/{id}/qr', [AdminStudentController::class, 'generateStudentQr'])->name('students.qr');
-    Route::get('admin/students/{id}/resend-qr', [AdminStudentController::class, 'resendQrCode'])->name('admin.students.resend-qr');
+    Route::post('admin/students/{id}/resend-qr', [AdminStudentController::class, 'resendQrCode'])->name('admin.students.resend-qr');
     Route::get('/admin/students/index', [AdminStudentController::class, 'index'])->name('admin.students.index');
     Route::get('/admin/students/create', [AdminStudentController::class, 'create'])->name('admin.students.create');
     Route::post('admin/students', [AdminStudentController::class, 'store'])->name('admin.students.store');
     Route::get('admin/students/{id}/edit', [AdminStudentController::class, 'edit'])->name('admin.students.edit');
     Route::put('admin/students/{id}', [AdminStudentController::class, 'update'])->name('admin.students.update');
     Route::post('/admin/students/{id}/archive', [AdminStudentController::class, 'archive'])->name('admin.students.archive');
-    Route::post('/admin/students/{id}/unarchive', [AdminStudentController::class, 'unarchive'])->name('admin.students.unarchive');
+    Route::patch('/admin/students/{id}/unarchive', [AdminStudentController::class, 'unarchive'])->name('admin.students.unarchive');
     Route::get('/admin/students/archived', [AdminStudentController::class, 'archived'])->name('admin.students.archived');
 
     /*---------------------------ROUTE FOR ADMIN ---TEACHERS/VISITORS------------------------------*/
     Route::get('teachers_visitors/{id}/qr', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'generateTeacherVisitorQr'])->name('teachers_visitors.qr');
-    Route::get('admin/teachers_visitors/{id}/resend-qr', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'resendQrCode'])->name('admin.teachers_visitors.resend-qr');
+    Route::post('admin/teachers_visitors/{id}/resend-qr', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'resendQrCode'])->name('admin.teachers_visitors.resend-qr');
     Route::get('/admin/teachers_visitors/index', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'index'])->name('admin.teachers_visitors.index');
     Route::get('/admin/teachers_visitors/create', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'create'])->name('admin.teachers_visitors.create');
     Route::post('admin/teachers_visitors', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'store'])->name('admin.teachers_visitors.store');

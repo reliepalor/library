@@ -79,7 +79,7 @@
                             <table class="w-full">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Borrower</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Book</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requested At</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -90,15 +90,24 @@
                                         <tr class="hover:bg-gray-50 transition-colors duration-150">
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <div class="text-sm font-medium text-gray-900">
-                                                    @if($request->student)
+                                                    @if($request->user_type === 'student' && $request->student)
                                                         {{ $request->student->fname }} {{ $request->student->lname }}
+                                                    @elseif($request->user_type !== 'student')
+                                                        @php($tv = \App\Models\TeacherVisitor::find($request->student_id))
+                                                        @if($tv)
+                                                            {{ $tv->fname }} {{ $tv->lname }}
+                                                        @else
+                                                            <span class="text-red-500">Borrower not found</span>
+                                                        @endif
                                                     @else
-                                                        <span class="text-red-500">Student not found</span>
+                                                        <span class="text-red-500">Borrower not found</span>
                                                     @endif
                                                 </div>
                                                 <div class="text-sm text-gray-500">
-                                                    @if($request->student)
+                                                    @if($request->user_type === 'student' && $request->student)
                                                         {{ $request->student->student_id }}
+                                                    @elseif(isset($tv) && $tv)
+                                                        {{ $tv->email }}
                                                     @else
                                                         <span class="text-red-500">ID: {{ $request->student_id }}</span>
                                                     @endif
@@ -150,11 +159,19 @@
                                     @forelse($borrowedBooks as $book)
                                         <tr class="hover:bg-gray-50 transition-colors duration-150">
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                @if($book->student)
+                                                @if($book->user_type === 'student' && $book->student)
                                                     {{ $book->student->fname }} {{ $book->student->lname }}
                                                     <div class="text-xs text-gray-400">{{ $book->student->student_id }}</div>
+                                                @elseif($book->user_type !== 'student')
+                                                    @php($tvb = \App\Models\TeacherVisitor::find($book->student_id))
+                                                    @if($tvb)
+                                                        {{ $tvb->fname }} {{ $tvb->lname }}
+                                                        <div class="text-xs text-gray-400">{{ $tvb->email }}</div>
+                                                    @else
+                                                        <span class="text-red-500">Unknown Borrower</span>
+                                                    @endif
                                                 @else
-                                                    <span class="text-red-500">Unknown Student</span>
+                                                    <span class="text-red-500">Unknown Borrower</span>
                                                 @endif
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

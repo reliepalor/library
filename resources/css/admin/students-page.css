@@ -1,0 +1,54 @@
+/* Admin Students Page Styles */
+
+/* Alpine cloak */
+[x-cloak] { display: none !important; }
+
+/* Smooth transitions for the sidebar */
+.main-content {
+  transition: margin-left 0.5s ease-in-out;
+}
+.sidebar-collapsed {
+  margin-left: 4rem;
+}
+.sidebar-expanded {
+  margin-left: 15rem;
+}
+@media (max-width: 768px) {
+  .sidebar-collapsed,
+  .sidebar-expanded {
+    margin-left: 0;
+  }
+}
+
+/* Custom nav link styling for the sidebar */
+.nav-link {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  color: #4b5563;
+  transition: all 0.3s ease;
+}
+.nav-link:hover {
+  background-color: #f3f4f6;
+}
+.nav-link.active {
+  background-color: #e5e7eb;
+  color: #111827;
+  border-left: 3px solid #3b82f6;
+}
+
+/* Ensure smooth transition for content area */
+.content-area { transition: margin-left 0.3s ease; }
+
+/* Animations */
+@keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+.animate-fadeIn { animation: fadeIn 0.3s; }
+
+/* Print styles */
+@media print {
+  body * { visibility: hidden !important; }
+  #batch-print-modal, #batch-print-modal * { visibility: visible !important; }
+  #batch-print-modal { position: static !important; background: #fff !important; box-shadow: none !important; }
+  #close-batch-print, #modal-print-btn { display: none !important; }
+  .print-container, .content-area, .sidebar, nav, header, footer { display: none !important; }
+}

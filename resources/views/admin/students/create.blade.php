@@ -132,7 +132,6 @@
                             <option value="2nd Year" {{ old('year') == '2nd Year' ? 'selected' : '' }}>2nd Year</option>
                             <option value="3rd Year" {{ old('year') == '3rd Year' ? 'selected' : '' }}>3rd Year</option>
                             <option value="4th Year" {{ old('year') == '4th Year' ? 'selected' : '' }}>4th Year</option>
-                            <option value="5th Year" {{ old('year') == '5th Year' ? 'selected' : '' }}>5th Year</option>
                         </select>
                         @error('year')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
