@@ -25,12 +25,13 @@
         @media (max-width: 768px) {
             .sidebar-collapsed, .sidebar-expanded { margin-left: 0; }
         }
-        .college-CICS { background-color: #c77dff; }
-        .college-CTED { background-color: #90e0ef; }
-        .college-CCJE { background-color: #ff4d6d; }
-        .college-CHM { background-color: #ffc8dd; }
-        .college-CBEA { background-color: #fae588; }
-        .college-CA { background-color: #80ed99; }
+        .college-CICS { background-color: #e9d5ff; color: #454545; }  /* purple-200 */
+        .college-CTED { background-color: #bfdbfe; color: #454545; }  /* blue-200 */
+        .college-CCJE { background-color: #fecaca; color: #454545; }  /* red-200 */
+        .college-CHM { background-color: #fbcfe8; color: #454545; }   /* pink-200 */
+        .college-CBEA { background-color: #fef9c3; color: #454545; }  /* yellow-200 */
+        .college-CA { background-color: #bbf7d0; color: #454545; }    /* green-200 */
+
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -177,46 +178,14 @@
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                                     </tr>
                                 </thead>
-                                <tbody class="bg-white divide-y divide-gray-200" id="student-attendance-table-body">
-                                    @forelse($studentAttendance as $attendance)
-                                        <tr data-attendance-id="{{ $attendance['id'] }}" data-user-type="student">
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $attendance['identifier'] }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex items-center space-x-3">
-                                                <img src="{{ $attendance['profile_picture'] ?? \App\Services\AvatarService::getPlaceholderAvatar($attendance['name'], 100) }}"
-                                                    alt="Profile" class="w-10 h-10 rounded-full object-cover shadow-sm ring-1 ring-blue-100" />
-                                                <span class="font-medium">{{ $attendance['name'] }}</span>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full college-{{ $attendance['college_or_dept'] }}">
-                                                    {{ $attendance['college_or_dept'] }}
-                                                </span>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                @if(str_contains(strtolower($attendance['activity']), 'wait for approval'))
-                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">{{ $attendance['activity'] }}</span>
-                                                @elseif(str_contains(strtolower($attendance['activity']), 'borrow:'))
-                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">{{ $attendance['activity'] }}</span>
-                                                @else
-                                                    {{ $attendance['activity'] }}
-                                                @endif
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $attendance['time_in'] }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $attendance['time_out'] }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                @if($attendance['time_out'] === 'N/A')
-                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Present</span>
-                                                @else
-                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Logged Out</span>
-                                                @endif
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">No student attendance records for today</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
                             </table>
+                            <div class="max-h-[400px] overflow-y-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <tbody class="bg-white divide-y divide-gray-200" id="student-attendance-table-body" data-loaded="0" data-total="{{ count($studentAttendance) }}">
+                                        <!-- Initial 10 records will be loaded by JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
 
@@ -336,7 +305,7 @@
                                 <div class="mb-4">
                                     <label for="activity" class="block mb-1 font-medium text-gray-700">Activity</label>
                                     <select name="activity" id="activity" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="Study">Study</option>
+                                        <option value="Stay to Study">Stay to Study</option>
                                         <option value="Borrow">Borrow Books</option>
                                         <option value="Stay&Borrow">Stay and Borrow Books</option>
                                         <option value="Other">Other Activities</option>
@@ -411,6 +380,10 @@
         </div>
     </div>
 
+    <script>
+        // Pass student attendance data to JavaScript
+        window.studentAttendanceData = @json($studentAttendance);
+    </script>
     <script src="{{ asset('js/unified-scan-attendance.js') }}"></script>
 </body>
 </html>

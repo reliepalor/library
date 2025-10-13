@@ -15,6 +15,7 @@ class BorrowedBook extends Model
         'returned_at',
         'attendance_id',
         'email_sent_at',
+        'original_activity',
     ];
 
     public function book()

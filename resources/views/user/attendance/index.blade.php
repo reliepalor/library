@@ -21,60 +21,66 @@
     <style>
         /* Modern College Badge Styles */
         .college-CICS { 
-            background-color: #c77dff;
-            padding: 0.375rem 0.75rem;
+            background-color: #e9d5ff;
+            color: #454545;
+          padding: 0.300rem 0.45rem;
+            font-size: 0.72rem;
             border-radius: 50px;
-            font-size: 0.75rem;
             font-weight: 600;
             display: inline-flex;
             align-items: center;
             transition: all 0.2s ease;
         }
         .college-CTED { 
-            background-color: #90e0ef;
-            padding: 0.375rem 0.75rem;
+            background-color: #bfdbfe;
+            color: #454545;
+          padding: 0.300rem 0.45rem;
+            font-size: 0.72rem;
             border-radius: 50px;
-            font-size: 0.75rem;
             font-weight: 600;
             display: inline-flex;
             align-items: center;
             transition: all 0.2s ease;
         }
         .college-CCJE { 
-            background-color: #ff4d6d; 
-            padding: 0.375rem 0.75rem;
+            background-color: #fecaca; 
+            color: #454545;
+          padding: 0.300rem 0.45rem;
+            font-size: 0.72rem;
             border-radius: 50px;
-            font-size: 0.75rem;
             font-weight: 600;
             display: inline-flex;
             align-items: center;
             transition: all 0.2s ease;
         }
         .college-CHM { 
-            background-color: #ffc8dd; 
-            padding: 0.375rem 0.75rem;
+            background-color: #fbcfe8; 
+            color: #454545;
+          padding: 0.300rem 0.45rem;
+            font-size: 0.72rem;
             border-radius: 50px;
-            font-size: 0.75rem;
             font-weight: 600;
             display: inline-flex;
             align-items: center;
             transition: all 0.2s ease;
         }
         .college-CBEA { 
-            background-color: #fae588;
-            padding: 0.375rem 0.75rem;
+            background-color: #fef9c3;
+            color: #454545;
+            padding: 0.300rem 0.45rem;
+            font-size: 0.72rem;
             border-radius: 50px;
-            font-size: 0.75rem;
             font-weight: 600;
             display: inline-flex;
             align-items: center;
             transition: all 0.2s ease;
         }
         .college-CA { 
-            background-color: #80ed99;
-            padding: 0.375rem 0.75rem;
+            background-color: #bbf7d0;
+            color: #454545;
+          padding: 0.300rem 0.45rem;
+            font-size: 0.72rem;
             border-radius: 50px;
-            font-size: 0.75rem;
             font-weight: 600;
             display: inline-flex;
             align-items: center;
@@ -84,6 +90,7 @@
         /* Activity Badge */
         .activity-badge {
             background: linear-gradient(135deg, #3b82f6, #2563eb);
+
             color: white;
             padding: 0.375rem 0.75rem;
             border-radius: 50px;
@@ -228,7 +235,7 @@
                 </div>
                 <div>
                     <h3 class="text-lg font-medium text-gray-900">Study Area Status</h3>
-                    <p class="text-sm text-gray-500">
+                     <p class="text-sm text-gray-500">
                         <span id="available-slots">-</span> of 30 slots available
                     </p>
                 </div>
@@ -317,6 +324,12 @@
                                         @endphp
                                         @if(str_contains($lower, 'wait for approval'))
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">{{ $activityText }}</span>
+                                        @elseif(str_starts_with($lower, 'stay&borrow:'))
+                                            @php
+                                                $parts = explode(':', $activityText);
+                                                $code = $parts[1] ?? '';
+                                            @endphp
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Stay&Borrow: {{ trim($code) }}</span>
                                         @elseif(str_contains($lower, 'borrow:'))
                                             @php
                                                 $parts = explode(':', $activityText);
@@ -328,7 +341,7 @@
                                         @elseif(str_contains($lower, 'book returned'))
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">{{ $activityText }}</span>
                                         @else
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">{{ $activityText }}</span>
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full text-gray-800">{{ $activityText }}</span>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4">
@@ -418,6 +431,12 @@
                                         @endphp
                                         @if(str_contains($lower, 'wait for approval'))
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">{{ $activityText }}</span>
+                                        @elseif(str_starts_with($lower, 'stay&borrow:'))
+                                            @php
+                                                $parts = explode(':', $activityText);
+                                                $code = $parts[1] ?? '';
+                                            @endphp
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Stay&Borrow: {{ trim($code) }}</span>
                                         @elseif(str_contains($lower, 'borrow:'))
                                             @php
                                                 $parts = explode(':', $activityText);
@@ -428,6 +447,8 @@
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">{{ $activityText }}</span>
                                         @elseif(str_contains($lower, 'book returned'))
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">{{ $activityText }}</span>
+                                        @elseif(str_contains($lower, 'study'))
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Stay to Study</span>
                                         @else
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">{{ $activityText }}</span>
                                         @endif
@@ -515,6 +536,11 @@
                 if (lower.includes('wait for approval')) {
                     return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">${escapeHtml(text)}</span>`;
                 }
+                if (lower.startsWith('stay&borrow:')) {
+                    const parts = String(text).split(':');
+                    const code = (parts[1] || '').trim();
+                    return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Stay&Borrow: ${escapeHtml(code)}</span>`;
+                }
                 if (lower.startsWith('borrow:')) {
                     const parts = String(text).split(':');
                     const code = (parts[1] || '').trim();
@@ -525,6 +551,9 @@
                 }
                 if (lower.includes('book returned')) {
                     return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">${escapeHtml(text)}</span>`;
+                }
+                if (lower.includes('study')) {
+                    return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Stay to Study</span>`;
                 }
                 return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">${escapeHtml(text)}</span>`;
             };

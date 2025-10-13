@@ -120,8 +120,8 @@
                     <select id="role" name="role" required
                         class="form-select w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition @error('role') border-red-500 @enderror">
                         <option value="" disabled {{ old('role') ? '' : 'selected' }}>Choose Role</option>
-                        <option value="teacher" {{ old('role') == 'teacher' ? 'selected' : '' }}>Teacher</option>
-                        <option value="visitor" {{ old('role') == 'visitor' ? 'selected' : '' }}>Visitor</option>
+                        <option value="Teacher" {{ old('role') == 'Teacher' ? 'selected' : '' }}>Teacher</option>
+                        <option value="Visitor" {{ old('role') == 'Visitor' ? 'selected' : '' }}>Visitor</option>
                     </select>
                     @error('role')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>

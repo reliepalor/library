@@ -85,6 +85,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Initial data load
     refreshAttendanceTable();
 
+    // Load initial student attendance records (first 10)
+    loadInitialStudentRecords();
+
     // Set up polling - refresh every 5 seconds
     const POLL_INTERVAL = 5000; // 5 seconds
     let isRefreshing = false;
@@ -134,20 +137,84 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Activity modal event listeners
     document.getElementById('activity-form').addEventListener('submit', async function(e) {
         e.preventDefault();
-        
+
         const userType = document.getElementById('modal-user-type').value;
         const identifier = document.getElementById('modal-identifier').value;
         const activity = document.getElementById('activity').value;
-        
+
         // Check if this is a borrowing activity
         if (activity === 'Borrow' || activity === 'Stay&Borrow') {
-            // Show book selection modal instead of logging attendance directly
-            showBookSelectionModal(userType, identifier, activity);
+            if (activity === 'Stay&Borrow') {
+                // For Stay&Borrow, log attendance first, then show book selection modal
+                showLoadingOverlay("Logging in...");
+
+                try {
+                    let requestBody;
+                    if (userType === 'student') {
+                        requestBody = {
+                            student_id: identifier,
+                            activity: activity
+                        };
+                    } else {
+                        requestBody = {
+                            user_type: userType,
+                            identifier: identifier,
+                            activity: activity
+                        };
+                    }
+
+                    const response = await fetch('/admin/attendance/log', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data && data.success) {
+                        // Successfully logged in, now show book selection modal
+                        showBookSelectionModal(userType, identifier, activity);
+
+                        // Show success message
+                        const userName = data.name || 'User';
+                        const emoji = userType === 'student' ? '🎓' : '👨‍🏫';
+                        const welcomeText = `Welcome, ${userName}! ${emoji}`;
+                        showNotification(welcomeText, 'success');
+
+                        // Clear input field
+                        const qrInput = document.getElementById('qr-input');
+                        if (qrInput) qrInput.value = '';
+
+                        // Refresh the attendance table
+                        await refreshAttendanceTable();
+                    } else {
+                        const errorMsg = data.message || data.error || 'Login failed. Please try again.';
+                        showNotification(errorMsg, 'error');
+                    }
+                } catch (error) {
+                    console.error("Login error:", error);
+                    let errorMsg = 'Login failed. Please try again.';
+                    if (error.message?.includes('NetworkError')) {
+                        errorMsg = 'Network error. Please check your connection.';
+                    }
+                    showNotification(errorMsg, 'error');
+                } finally {
+                    hideLoadingOverlay();
+                }
+            } else {
+                // For Borrow, show book selection modal directly
+                showBookSelectionModal(userType, identifier, activity);
+            }
             return;
         }
-        
+
         showLoadingOverlay("Logging attendance...");
-        
+
         try {
             let requestBody;
             if (userType === 'student') {
@@ -162,7 +229,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     activity: activity
                 };
             }
-            
+
             const response = await fetch('/admin/attendance/log', {
                 method: 'POST',
                 headers: {
@@ -173,9 +240,9 @@ document.addEventListener('DOMContentLoaded', async function() {
                 },
                 body: JSON.stringify(requestBody)
             });
-            
+
             const data = await response.json();
-            
+
             if (response.ok && data && (data.success || data.action === 'logged in' || data.action === 'logged out')) {
                 const modal = document.getElementById('activity-modal');
                 if (modal) modal.classList.add('hidden');
@@ -1080,7 +1147,7 @@ function updateStudentTable(attendance) {
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                         ${studentCollege ? `
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full college-${studentCollege.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()}">
                             ${escapeHtml(studentCollege)}
                         </span>
                         ` : '<span class="text-gray-400">N/A</span>'}
@@ -2009,6 +2076,269 @@ async function logAttendanceWithActivity(userType, identifier, activity) {
         console.error('Error logging attendance:', error);
         // Don't show error for attendance logging as borrow request was successful
     }
+}
+
+// Load initial student attendance records (all records for scrolling)
+function loadInitialStudentRecords() {
+    const tbody = document.getElementById('student-attendance-table-body');
+    if (!tbody) {
+        console.error('[INIT] Student table body not found');
+        return;
+    }
+
+    // Check if data is available
+    if (!window.studentAttendanceData || !Array.isArray(window.studentAttendanceData)) {
+        console.log('[INIT] No student attendance data available');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">
+                    No student attendance records for today
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    const attendanceData = window.studentAttendanceData;
+    console.log(`[INIT] Loading all ${attendanceData.length} student records for scrolling`);
+
+    // Create a document fragment for better performance
+    const fragment = document.createDocumentFragment();
+
+    if (attendanceData.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">
+                No student attendance records for today
+            </td>
+        `;
+        fragment.appendChild(row);
+    } else {
+        // Load all records for scrolling
+        attendanceData.forEach((record, index) => {
+            try {
+                if (!record) return; // Skip invalid records
+
+                const row = document.createElement('tr');
+                row.className = 'bg-white border-b hover:bg-gray-50 transition-colors';
+                row.id = `student-row-${record.student_id || record.id || index}`;
+                row.setAttribute('data-attendance-id', record.id || '');
+                row.setAttribute('data-user-type', 'student');
+
+                // Safely access nested properties with fallbacks
+                const studentInfo = record.student || record; // Handle both nested and flat structure
+                const studentName = studentInfo.name || studentInfo.student_name || 'N/A';
+                const studentSection = studentInfo.section || studentInfo.student_section || studentInfo.section_name || '';
+                const studentCollege = studentInfo.college || studentInfo.student_college || studentInfo.college_name || '';
+                const studentCourse = studentInfo.course || studentInfo.student_course || studentInfo.course_name || '';
+                const studentId = record.student_id || record.id || '';
+
+                // Extract timestamps with fallbacks
+                const timeInRaw = record.login || record.time_in || record.created_at || record.date;
+                const timeOutRaw = record.logout || record.time_out;
+
+                // Format times with validation
+                const timeIn = formatDateTime(timeInRaw);
+                const timeOut = timeOutRaw ?
+                    formatDateTime(timeOutRaw) :
+                    '';
+
+                // Determine status with fallback logic
+                let status = record.status;
+                if (!status) {
+                    status = (timeOutRaw || record.logout || record.time_out) ? 'out' : 'in';
+                }
+                const statusText = status === 'out' ? 'Logged Out' : 'Present';
+
+                // Build the row HTML with proper fallbacks
+                const profilePic = record.profile_picture ||
+                                 studentInfo.profile_picture ||
+                                 `https://ui-avatars.com/api/?name=${encodeURIComponent(studentName)}&background=random&size=100`;
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" title="Student ID: ${studentId}">
+                        ${studentId || '<span class="text-gray-400">N/A</span>'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex items-center space-x-3">
+                        <img src="${profilePic}"
+                            alt="Profile" class="w-10 h-10 rounded-full object-cover shadow-sm ring-1 ring-blue-100" />
+                        <span class="font-medium">${escapeHtml(studentName)}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${studentCollege ? `
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full college-${studentCollege.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()}">
+                            ${escapeHtml(studentCollege)}
+                        </span>
+                        ` : '<span class="text-gray-400">N/A</span>'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${(() => {
+                            const activity = record.activity || '';
+                            if (activity.toLowerCase().includes('wait for approval')) {
+                                return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">${escapeHtml(activity)}</span>`;
+                            } else if (activity.toLowerCase().includes('borrow:')) {
+                                return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">${escapeHtml(activity)}</span>`;
+                            } else {
+                                return escapeHtml(activity);
+                            }
+                        })()}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${timeIn}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${timeOut}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${status === 'out' ?
+                            '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Logged Out</span>' :
+                            '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Present</span>'
+                        }
+                    </td>
+                `;
+                fragment.appendChild(row);
+            } catch (error) {
+                console.error(`[INIT] Error processing student record at index ${index}:`, error, record);
+                // Add error row for debugging
+                const errorRow = document.createElement('tr');
+                errorRow.className = 'bg-red-50';
+                errorRow.innerHTML = `
+                    <td colspan="7" class="px-6 py-4 text-sm text-red-600">
+                        Error displaying record: ${error.message}
+                    </td>
+                `;
+                fragment.appendChild(errorRow);
+            }
+        });
+    }
+
+    // Update the DOM in a single operation
+    tbody.innerHTML = '';
+    tbody.appendChild(fragment);
+
+    // Update loaded count to total (all records loaded)
+    tbody.setAttribute('data-loaded', attendanceData.length);
+
+    console.log(`[INIT] Rendered all ${attendanceData.length} student records for scrolling`);
+}
+
+// Load more student records when scrolling or clicking load more
+function loadMoreStudentRecords() {
+    const tbody = document.getElementById('student-attendance-table-body');
+    if (!tbody) return;
+
+    const currentLoaded = parseInt(tbody.getAttribute('data-loaded') || '0');
+    const totalRecords = parseInt(tbody.getAttribute('data-total') || '0');
+
+    if (currentLoaded >= totalRecords) return;
+
+    const recordsToLoad = Math.min(8, totalRecords - currentLoaded); // Load next 8 or remaining
+    const startIndex = currentLoaded;
+    const endIndex = startIndex + recordsToLoad;
+
+    console.log(`[LOAD MORE] Loading records ${startIndex + 1} to ${endIndex} of ${totalRecords}`);
+
+    if (!window.studentAttendanceData || !Array.isArray(window.studentAttendanceData)) {
+        console.error('[LOAD MORE] No student attendance data available');
+        return;
+    }
+
+    const attendanceData = window.studentAttendanceData.slice(startIndex, endIndex);
+
+    // Create fragment for new rows
+    const fragment = document.createDocumentFragment();
+
+    attendanceData.forEach((record, index) => {
+        try {
+            if (!record) return;
+
+            const row = document.createElement('tr');
+            row.className = 'bg-white border-b hover:bg-gray-50 transition-colors';
+            row.id = `student-row-${record.student_id || record.id || (startIndex + index)}`;
+            row.setAttribute('data-attendance-id', record.id || '');
+            row.setAttribute('data-user-type', 'student');
+
+            const studentInfo = record.student || record;
+            const studentName = studentInfo.name || studentInfo.student_name || 'N/A';
+            const studentSection = studentInfo.section || studentInfo.student_section || studentInfo.section_name || '';
+            const studentCollege = studentInfo.college || studentInfo.student_college || studentInfo.college_name || '';
+            const studentCourse = studentInfo.course || studentInfo.student_course || studentInfo.course_name || '';
+            const studentId = record.student_id || record.id || '';
+
+            const timeInRaw = record.login || record.time_in || record.created_at || record.date;
+            const timeOutRaw = record.logout || record.time_out;
+
+            const timeIn = formatDateTime(timeInRaw);
+            const timeOut = timeOutRaw ? formatDateTime(timeOutRaw) : '';
+
+            let status = record.status;
+            if (!status) {
+                status = (timeOutRaw || record.logout || record.time_out) ? 'out' : 'in';
+            }
+            const statusText = status === 'out' ? 'Logged Out' : 'Present';
+
+            const profilePic = record.profile_picture ||
+                             studentInfo.profile_picture ||
+                             `https://ui-avatars.com/api/?name=${encodeURIComponent(studentName)}&background=random&size=100`;
+
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" title="Student ID: ${studentId}">
+                    ${studentId || '<span class="text-gray-400">N/A</span>'}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex items-center space-x-3">
+                    <img src="${profilePic}"
+                        alt="Profile" class="w-10 h-10 rounded-full object-cover shadow-sm ring-1 ring-blue-100" />
+                    <span class="font-medium">${escapeHtml(studentName)}</span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    ${studentCollege ? `
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full college-${studentCollege.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()}">
+                        ${escapeHtml(studentCollege)}
+                    </span>
+                    ` : '<span class="text-gray-400">N/A</span>'}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    ${(() => {
+                        const activity = record.activity || '';
+                        if (activity.toLowerCase().includes('wait for approval')) {
+                            return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">${escapeHtml(activity)}</span>`;
+                        } else if (activity.toLowerCase().includes('borrow:')) {
+                            return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">${escapeHtml(activity)}</span>`;
+                        } else {
+                            return escapeHtml(activity);
+                        }
+                    })()}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${timeIn}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${timeOut}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    ${status === 'out' ?
+                        '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Logged Out</span>' :
+                        '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Present</span>'
+                    }
+                </td>
+            `;
+            fragment.appendChild(row);
+        } catch (error) {
+            console.error(`[LOAD MORE] Error processing record at index ${index}:`, error);
+        }
+    });
+
+    // Insert new rows before the load more button
+    const loadMoreRow = document.getElementById('load-more-row');
+    if (loadMoreRow) {
+        tbody.insertBefore(fragment, loadMoreRow);
+
+        // Update loaded count
+        const newLoaded = currentLoaded + recordsToLoad;
+        tbody.setAttribute('data-loaded', newLoaded);
+
+        // Update or remove load more button
+        if (newLoaded >= totalRecords) {
+            loadMoreRow.remove();
+        } else {
+            const remaining = totalRecords - newLoaded;
+            loadMoreRow.querySelector('#load-more-btn').textContent = `Load More (${remaining} remaining)`;
+        }
+    }
+
+    console.log(`[LOAD MORE] Added ${recordsToLoad} more records. Total loaded: ${tbody.getAttribute('data-loaded')}`);
 }
 
 // Debounce utility function

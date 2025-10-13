@@ -98,6 +98,7 @@ class BorrowRequestController extends Controller
             'book_id' => $bookCode, // Use the uppercase version
             'status' => 'pending',
             'attendance_id' => $currentAttendance->id,
+            'original_activity' => $request->input('activity', 'Borrow'), // Store the original activity type
         ]);
 
         if ($request->expectsJson()) {
@@ -138,9 +139,13 @@ class BorrowRequestController extends Controller
 
             if (!$attendance) {
                 // Create a new attendance record to reflect approval state clearly
+                // Use the original activity stored in the borrow request
+                $originalActivity = $borrowRequest->original_activity ?? 'Borrow';
+                $activityPrefix = ($originalActivity === 'Stay&Borrow') ? 'Stay&Borrow:' : 'Borrow:';
+
                 $attendanceData = [
                     'user_type' => $userType,
-                    'activity' => 'Borrow:' . $bookCode,
+                    'activity' => $activityPrefix . $bookCode,
                     'login' => now()->setTimezone('Asia/Manila'),
                 ];
                 if ($userType === 'student') {
@@ -152,7 +157,10 @@ class BorrowRequestController extends Controller
                 Log::info("Created new attendance record for {$userType} {$identifier} when approving borrow request (no linked attendance)");
             } else {
                 // Update the existing attendance activity without touching logout
-                $attendance->activity = 'Borrow:' . $bookCode;
+                // Use the original activity stored in the borrow request
+                $originalActivity = $borrowRequest->original_activity ?? 'Borrow';
+                $activityPrefix = ($originalActivity === 'Stay&Borrow') ? 'Stay&Borrow:' : 'Borrow:';
+                $attendance->activity = $activityPrefix . $bookCode;
                 $attendance->save();
             }
 

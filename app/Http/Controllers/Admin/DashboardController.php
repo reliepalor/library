@@ -15,10 +15,8 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // Get total books count
         $totalBooks = Books::count();
 
-        // Get total students count
         $totalStudents = Student::active()->count();
 
         // Get active borrows (books that are currently borrowed)
@@ -27,15 +25,17 @@ class DashboardController extends Controller
         // Get today's attendance count
         $todayAttendance = Attendance::whereDate('created_at', Carbon::today())->count();
 
-        // Get recent borrow requests with student and book details
+        // Get recent borrow requests with student, teacher/visitor and book details
         $recentBorrows = BorrowedBook::with(['student', 'book'])
+            ->whereHas('student') // Ensure we have a student/teacher record
             ->latest()
             ->take(5)
             ->get();
 
-        // Get today's attendance records
-        $todayAttendanceRecords = Attendance::with('student')
+        // Get today's attendance records (students and teachers/visitors)
+        $todayAttendanceRecords = Attendance::with(['student', 'teacherVisitor'])
             ->whereDate('created_at', Carbon::today())
+            ->orderBy('created_at', 'desc')
             ->get();
 
         return view('admin.dashboard', compact(

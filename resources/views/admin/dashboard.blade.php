@@ -182,7 +182,7 @@
                                 <table class="w-full table-fixed">
                                     <thead>
                                         <tr class="bg-gray-50">
-                                            <th class="w-1/3 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
+                                            <th class="w-1/3 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Borrower</th>
                                             <th class="w-1/3 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Book</th>
                                             <th class="w-1/3 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                         </tr>
@@ -192,14 +192,33 @@
                                         <tr>
                                             <td class="px-4 py-3">
                                                 <div class="text-sm font-medium text-gray-900 truncate">
-                                                    @if($borrow->student)
+                                                    @if($borrow->user_type === 'student' && $borrow->student)
                                                         {{ $borrow->student->fname }} {{ $borrow->student->lname }}
+                                                    @elseif($borrow->user_type === 'teacher')
+                                                        @php($tv = \App\Models\TeacherVisitor::find($borrow->student_id))
+                                                        @if($tv)
+                                                            {{ $tv->fname }} {{ $tv->lname }}
+                                                        @else
+                                                            <span class="text-red-500">Teacher/Visitor not found</span>
+                                                        @endif
                                                     @else
-                                                        <span class="text-red-500">No student</span>
+                                                        <span class="text-red-500">Unknown borrower</span>
                                                     @endif
                                                 </div>
                                                 <div class="text-sm text-gray-500 truncate">
-                                                    {{ $borrow->student->student_id ?? 'N/A' }}
+                                                    @if($borrow->user_type === 'student' && $borrow->student)
+                                                        {{ $borrow->student->student_id }}
+                                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 ml-1">Student</span>
+                                                    @elseif($borrow->user_type === 'teacher')
+                                                        @php($tv = \App\Models\TeacherVisitor::find($borrow->student_id))
+                                                        @if($tv)
+                                                            <span class="inline-flex items-center py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 ml-1">{{ $tv->role ?? 'Staff' }}</span>
+                                                        @else
+                                                            N/A
+                                                        @endif
+                                                    @else
+                                                        N/A
+                                                    @endif
                                                 </div>
                                             </td>
                                             <td class="px-4 py-3">
@@ -219,6 +238,10 @@
                                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
                                                         Returned
                                                     </span>
+                                                @elseif($borrow->status === 'rejected')
+                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                                        Rejected
+                                                    </span>
                                                 @endif
                                             </td>
                                         </tr>
@@ -231,15 +254,27 @@
                         <!-- Today's Attendance List -->
                         <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                             <h3 class="text-lg font-semibold text-gray-800 mb-4">Today's Attendance</h3>
-                            <div class="space-y-4">
-                                @forelse($todayAttendanceRecords as $attendance)
+                            <div class="max-h-80 overflow-y-auto space-y-4">
+                                @forelse($todayAttendanceRecords->take(6) as $attendance)
                                     <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                         <div>
                                             <p class="font-medium text-gray-800">{{ $attendance->getAttendeeName() }}</p>
                                             <p class="text-sm text-gray-600">{{ $attendance->created_at->format('h:i A') }}</p>
+                                            <p class="text-xs text-gray-500">
+                                                @if($attendance->isStudent())
+                                                    Student
+                                                @elseif($attendance->isTeacher())
+                                                    {{ $attendance->teacherVisitor ? $attendance->teacherVisitor->role : 'Teacher/Visitor' }}
+                                                @endif
+                                                @if($attendance->logout)
+                                                    • Logged out at {{ $attendance->logout->format('h:i A') }}
+                                                @else
+                                                    • Active
+                                                @endif
+                                            </p>
                                         </div>
-                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                                            Present
+                                        <span class="px-2 py-1 text-xs font-medium rounded-full {{ $attendance->logout ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
+                                            {{ $attendance->logout ? 'Completed' : 'Present' }}
                                         </span>
                                     </div>
                                 @empty
@@ -280,8 +315,8 @@
                                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email Status</th>
                                         </tr>
                                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200" id="overdueBooksList">
-                    </tbody>
+                                        <tbody class="bg-white divide-y divide-gray-200" id="overdueBooksList">
+                                        </tbody>
                                 </table>
                             </div>
                         </div>
@@ -342,19 +377,18 @@ function showToast(message, type = 'success', duration = 3000) {
                             const totalBooks = studentData.total_books;
                             const emailStatus = studentData.email_sent ? 'Sent' : 'Pending';
                             const emailStatusClass = studentData.email_sent ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
-                            const avatarUrl = student.avatar_url || '/images/default-profile.png';
+                            const avatarUrl = studentData.student.avatar_url || '/images/default-profile.png';
 
                             return `
                                 <tr class="hover:bg-gray-50 transition-colors duration-150">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center">
-                                            <div class="flex-shrink-0 h-10 w-10">
-                                                <img src="${avatarUrl}" alt="${studentName}" class="h-10 w-10 rounded-full object-cover" onerror="this.src='/images/default-profile.png'" />
-                                            </div>
-                                            <div class="ml-4">
+                                            
+                                            <div class="">
                                                 <div class="text-sm font-medium text-gray-900">${studentName}</div>
                                                 <div class="text-sm text-gray-500">${studentId}</div>
                                             </div>
+                                            
                                         </div>
                                     </td>
                                     <td class="px-6 py-4">
