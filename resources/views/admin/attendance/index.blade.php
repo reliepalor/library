@@ -55,8 +55,7 @@
                     <div class="mb-6">
                         <div class="flex justify-between items-center mb-3">
                             <div>
-                                <h2 class="text-3xl font-bold text-gray-800">📸 Unified Attendance Scanner</h2>
-                                <p class="text-sm text-gray-600 mt-1">One scanner for <span class="text-blue-600 font-semibold">Students</span> and <span class="text-purple-600 font-semibold">Teachers/Visitors</span></p>
+                                <h2 class="text-3xl font-bold text-gray-800">Unified Attendance Scanner</h2>
                             </div>
                             <div class="flex space-x-2">
                                 <button id="fullscreen-btn" onclick="toggleFullScreen()" class="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-xl text-md shadow-lg">
@@ -66,8 +65,8 @@
                             </div>
                         </div>
                         <div class="flex gap-2">
-                            <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">🎓 Students Supported</span>
-                            <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold">👨‍🏫 Teachers Supported</span>
+                            <span class="px-3 py-1 bg-blue-50 text-blue-800 rounded-full text-xs font-semibold">Students Supported</span>
+                            <span class="px-3 py-1 bg-purple-50 text-purple-800 rounded-full text-xs font-semibold">Teachers Supported</span>
                         </div>
                     </div>
 
@@ -93,12 +92,12 @@
                     </div>
 
                     <div class="my-6 p-6 bg-gradient-to-r from-blue-50 via-purple-50 to-blue-50 border-2 border-blue-300 rounded-xl text-center shadow-sm">
-                        <p class="text-lg font-bold text-gray-800 mb-2">🎓 Scan Student OR 👨‍🏫 Teacher QR Code</p>
+                        <p class="text-lg font-bold text-gray-800 mb-2">Scan Student or Teacher QR Code</p>
                         <p id="mode-description" class="text-sm text-gray-700">System automatically detects user type • Both use same scanner</p>
                     </div>
 
                     <!-- Overall Statistics -->
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
                         <div class="shadcn-card p-4">
                             <div class="flex items-center justify-between">
                                 <div>
@@ -133,6 +132,16 @@
                             </div>
                         </div>
                         <div class="shadcn-card p-4">
+                            <div class="flex flex-col justify-center space-y-2">
+                                <button id="refresh-btn" onclick="refreshAttendanceTable()" class="w-full bg-blue-600 px-4 py-2 text-white rounded-lg font-bold hover:bg-blue-700 duration-100 flex items-center justify-center space-x-2">
+                                    <svg class="w-4 h-4 animate-spin hidden" id="refresh-spinner" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                    </svg>
+                                    <span id="refresh-text">🔄 Refresh</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="shadcn-card p-4">
                             <form action="{{ route('admin.attendance.save-reset') }}" method="POST" class="h-full flex flex-col justify-center">
                                 @csrf
                                 <button type="submit" class="w-full bg-gray-800 px-4 py-2 text-white rounded-lg font-bold hover:bg-gray-700 duration-100">
@@ -147,8 +156,8 @@
                         <div class="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-blue-100">
                             <div class="flex justify-between items-center">
                                 <div>
-                                    <h2 class="text-xl font-bold text-gray-900">👨‍🎓 Students Attendance</h2>
-                                    <p class="text-sm text-gray-600 mt-1">
+                                    <h2 class="text-xl font-bold text-gray-900">Students Attendance</h2>
+                                    <p class="text-sm text-gray-600 mt-1 hidden">
                                         Total: {{ $studentStats['total'] }} | Present: {{ $studentStats['present'] }} | Logged Out: {{ $studentStats['logged_out'] }}
                                     </p>
                                 </div>
@@ -216,8 +225,8 @@
                         <div class="p-6 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-purple-100">
                             <div class="flex justify-between items-center">
                                 <div>
-                                    <h2 class="text-xl font-bold text-gray-900">👨‍🏫 Teachers & Visitors Attendance</h2>
-                                    <p class="text-sm text-gray-600 mt-1">
+                                    <h2 class="text-xl font-bold text-gray-900">Teachers & Visitors Attendance</h2>
+                                    <p class="text-sm text-gray-600 mt-1 hidden">
                                         Total: {{ $teacherStats['total'] }} | Present: {{ $teacherStats['present'] }} | Logged Out: {{ $teacherStats['logged_out'] }}
                                     </p>
                                 </div>

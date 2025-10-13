@@ -16,6 +16,7 @@ use Psr\Log\LoggerInterface;
 use Illuminate\Support\Collection;
 use App\Models\Books;
 use App\Services\AvatarService;
+use App\Helpers\StudyAreaHelper;
 
 class AttendanceController extends Controller
 {
@@ -24,14 +25,11 @@ class AttendanceController extends Controller
         $startOfDay = Carbon::today()->startOfDay();
         $endOfDay = Carbon::today()->endOfDay();
 
-        // Get today's attendance for both students and teachers
         $todayStudentAttendance = $this->getTodayStudentAttendance($startOfDay, $endOfDay);
         $todayTeacherAttendance = $this->getTodayTeacherAttendance($startOfDay, $endOfDay);
 
-        // Get borrow requests with optimized query
         $borrowRequests = $this->getTodayBorrowRequests();
 
-        // Process attendance data with borrow request status
         $studentProcessedData = $this->processStudentAttendanceData($todayStudentAttendance, $borrowRequests);
         $teacherProcessedData = $this->processTeacherAttendanceData($todayTeacherAttendance);
 
@@ -51,9 +49,6 @@ class AttendanceController extends Controller
         return view('admin.attendance.index', $processedData);
     }
 
-    /**
-     * Get today's attendance records with optimized query
-     */
     private function getTodayAttendance($startOfDay, $endOfDay)
     {
         return Attendance::with(['student' => function($query) {
@@ -65,9 +60,7 @@ class AttendanceController extends Controller
             ->get();
     }
 
-    /**
-     * Get today's borrow requests with optimized query
-     */
+ 
     private function getTodayBorrowRequests()
     {
         return \App\Models\BorrowedBook::with('book:id,book_code,name')
@@ -77,18 +70,13 @@ class AttendanceController extends Controller
             ->groupBy('student_id');
     }
 
-    /**
-     * Process attendance data and calculate statistics
-     */
+ 
     private function processAttendanceData($todayAttendance, $borrowRequests)
     {
-        // Calculate statistics
         $stats = $this->calculateAttendanceStats($todayAttendance);
 
-        // Get college-wise statistics
         $collegeStats = $this->calculateCollegeStats($todayAttendance);
 
-        // Format attendance data for display
         $formattedAttendance = $this->formatAttendanceData($todayAttendance, $borrowRequests);
 
         return [
@@ -98,9 +86,7 @@ class AttendanceController extends Controller
         ];
     }
 
-    /**
-     * Calculate attendance statistics
-     */
+   
     private function calculateAttendanceStats($attendance)
     {
         return [
@@ -111,9 +97,7 @@ class AttendanceController extends Controller
         ];
     }
 
-    /**
-     * Calculate college-wise statistics
-     */
+   
     private function calculateCollegeStats($attendance)
     {
         $colleges = ['CICS', 'CTED', 'CCJE', 'CHM', 'CBEA', 'CA'];
@@ -133,9 +117,7 @@ class AttendanceController extends Controller
         return $collegeStats;
     }
 
-    /**
-     * Format attendance data for display with borrow request status
-     */
+    
     private function formatAttendanceData($attendance, $borrowRequests)
     {
         return $attendance->map(function ($attendance) use ($borrowRequests) {
@@ -147,7 +129,7 @@ class AttendanceController extends Controller
                 'student_id' => $attendance->student->student_id ?? 'N/A',
                 'student_name' => ($attendance->student->lname ?? 'N/A') . ', ' . ($attendance->student->fname ?? 'N/A'),
                 'profile_picture' => $attendance->student && $attendance->student->user && $attendance->student->user->profile_picture
-                    ? $attendance->student->user->profile_picture
+                    ? asset('storage/profile_pictures/' . $attendance->student->user->profile_picture)
                     : null,
                 'college' => $attendance->student->college ?? 'N/A',
                 'activity' => $activity,
@@ -157,19 +139,15 @@ class AttendanceController extends Controller
         });
     }
 
-    /**
-     * Get activity text with borrow request status
-     */
+   
     private function getActivityWithBorrowStatus($attendance, $borrowRequests, $studentId)
     {
         $activity = $attendance->activity;
         $studentBorrowRequests = $borrowRequests->get($studentId, collect());
 
-        // Get all borrow requests linked to this attendance record
         $linkedBorrowRequests = $studentBorrowRequests->where('attendance_id', $attendance->id);
 
         if ($linkedBorrowRequests->isNotEmpty()) {
-            // Get the most recent borrow request by creation date
             $mostRecentRequest = $linkedBorrowRequests->sortByDesc('created_at')->first();
 
             switch ($mostRecentRequest->status) {
@@ -235,12 +213,10 @@ class AttendanceController extends Controller
             $dateFrom = $request->date_from ? Carbon::parse($request->date_from) : Carbon::now()->subDays(7);
             $dateTo = $request->date_to ? Carbon::parse($request->date_to) : Carbon::now();
 
-            // Initialize all data collections with empty collections
             $dailyTrends = collect();
             $collegeDistribution = collect();
             $activityDistribution = collect();
 
-            // Get daily trends
             $dailyTrends = AttendanceHistory::select(
                 DB::raw('DATE(date) as date'),
                 DB::raw('COUNT(*) as count')
@@ -249,7 +225,6 @@ class AttendanceController extends Controller
                 ->groupBy('date')
                 ->get();
 
-            // Get college-wise distribution
             $collegeDistribution = AttendanceHistory::select(
                 'students.college',
                 DB::raw('COUNT(*) as count')
@@ -259,7 +234,6 @@ class AttendanceController extends Controller
                 ->groupBy('students.college')
                 ->get();
 
-            // Get activity distribution
             $activityDistribution = AttendanceHistory::select(
                 'activity',
                 DB::raw('COUNT(*) as count')
@@ -268,7 +242,6 @@ class AttendanceController extends Controller
                 ->groupBy('activity')
                 ->get();
 
-            // Initialize summary with default values
             $summary = [
                 'total_attendance' => 0,
                 'average_daily' => 0,
@@ -739,6 +712,11 @@ class AttendanceController extends Controller
                     $attendance->logout = $now;
                     $attendance->save();
 
+                    // If the activity was study-related, increment available study slots
+                    if (StudyAreaHelper::isStudyActivity($attendance->activity)) {
+                        StudyAreaHelper::updateAvailability(null, 'increment', 1);
+                    }
+
                     if (str_contains($attendance->activity, 'Borrow')) {
                         $parts = explode(':', $attendance->activity);
                         if (count($parts) > 1) {
@@ -774,6 +752,11 @@ class AttendanceController extends Controller
                     'user_type' => $userType
                 ]);
             } else {
+                // If the activity is study-related, decrement available study slots
+                if (StudyAreaHelper::isStudyActivity($activity)) {
+                    StudyAreaHelper::updateAvailability(null, 'decrement', 1);
+                }
+
                 // Login - create new attendance record
                 $attendanceData = [
                     'user_type' => $userType,
@@ -851,12 +834,13 @@ class AttendanceController extends Controller
             ->whereNull('logout')
             ->first();
 
-        return response()->json([
-            'hasActiveSession' => (bool) $attendance,
-            'identifier' => $identifier,
-            'user_type' => $userType,
-            'activity' => $attendance ? $attendance->activity : null
-        ]);
+    return response()->json([
+        'hasActiveSession' => (bool) $attendance,
+        'identifier' => $identifier,
+        'user_type' => $userType,
+        'activity' => $attendance ? $attendance->activity : null,
+        'attendance_id' => $attendance ? $attendance->id : null
+    ]);
     }
 
     /**
@@ -880,9 +864,15 @@ class AttendanceController extends Controller
         // Get user's full name
         $userName = $user->fname . ' ' . $user->lname;
 
+        // Get profile picture, fallback to generated avatar if not available
+        $profilePicture = $this->getUserProfilePicture($userType, $user);
+        if (!$profilePicture) {
+            $profilePicture = AvatarService::getPlaceholderAvatar($userName, 100);
+        }
+
         return response()->json([
             'user' => $user,
-            'profile_picture' => $this->getUserProfilePicture($userType, $user),
+            'profile_picture' => $profilePicture,
             'name' => $userName,
             'user_type' => $userType
         ]);
@@ -1024,7 +1014,7 @@ class AttendanceController extends Controller
         if ($userType === 'student') {
             return Student::with('user')->where('student_id', $identifier)->first();
         } else {
-            return \App\Models\TeacherVisitor::where('id', $identifier)->first();
+            return \App\Models\TeacherVisitor::with('user')->where('id', $identifier)->first();
         }
     }
 
@@ -1033,12 +1023,10 @@ class AttendanceController extends Controller
      */
     private function getUserProfilePicture($userType, $user)
     {
-        if ($userType === 'student') {
-            return $user->user && $user->user->profile_picture ? $user->user->profile_picture : null;
-        } else {
-            // Teachers don't have profile pictures in the current setup
-            return null;
+        if ($user->user && $user->user->profile_picture) {
+            return asset('storage/profile_pictures/' . $user->user->profile_picture);
         }
+        return null;
     }
 
     /**
@@ -1138,7 +1126,7 @@ class AttendanceController extends Controller
             $name = ($fname && $lname) ? $lname . ', ' . $fname : ($fname ?: $lname ?: $studentId);
 
             $profilePicture = $student && $student->user && $student->user->profile_picture
-                ? $student->user->profile_picture
+                ? asset('storage/profile_pictures/' . $student->user->profile_picture)
                 : null;
 
             if (!$profilePicture) {
@@ -1176,12 +1164,8 @@ class AttendanceController extends Controller
             $name = ($fname && $lname) ? $lname . ', ' . $fname : ($fname ?: $lname ?: $teacherId);
 
             $profilePicture = $teacher && $teacher->user && $teacher->user->profile_picture
-                ? $teacher->user->profile_picture
-                : null;
-
-            if (!$profilePicture) {
-                $profilePicture = AvatarService::getPlaceholderAvatar($name, 100);
-            }
+                ? asset('storage/profile_pictures/' . $teacher->user->profile_picture)
+                : AvatarService::getPlaceholderAvatar($name, 100);
 
             return [
                 'id' => $attendance->id,

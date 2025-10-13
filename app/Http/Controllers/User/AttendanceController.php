@@ -7,7 +7,9 @@ use Illuminate\Http\Request;
 use App\Models\Attendance;
 use App\Models\Student;
 use Carbon\Carbon;
+use App\Services\AvatarService;
 use App\Mail\AttendanceNotification;
+use App\Helpers\StudyAreaHelper;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 
@@ -20,12 +22,20 @@ class AttendanceController extends Controller
     {
         $today = Carbon::today()->toDateString();
         $attendances = Attendance::with('student.user')
+            ->where('user_type', 'student')
             ->whereDate('login', $today)
             ->orderBy('created_at', 'desc')
             ->orderBy('login', 'desc')
             ->get();
 
-        return view('user.attendance.index', compact('attendances'));
+        $teacherAttendances = Attendance::with('teacherVisitor.user')
+            ->where('user_type', 'teacher')
+            ->whereDate('login', $today)
+            ->orderBy('created_at', 'desc')
+            ->orderBy('login', 'desc')
+            ->get();
+
+        return view('user.attendance.index', compact('attendances', 'teacherAttendances'));
     }
 
     /**
@@ -35,15 +45,28 @@ class AttendanceController extends Controller
     {
         try {
             $today = Carbon::today();
-            $attendances = Attendance::with(['student.user'])
+
+            // Get student attendance from Attendance table
+            $studentAttendances = Attendance::with(['student.user'])
+                ->where('user_type', 'student')
                 ->whereBetween('login', [$today->copy()->startOfDay(), $today->copy()->endOfDay()])
                 ->orderByDesc('created_at')
                 ->orderByDesc('login')
                 ->get();
 
-            $list = $attendances->map(function ($a) {
+            // Get teacher/visitor attendance from Attendance table where user_type is 'teacher'
+            $teacherAttendances = Attendance::with(['teacherVisitor.user'])
+                ->where('user_type', 'teacher')
+                ->whereBetween('login', [$today->copy()->startOfDay(), $today->copy()->endOfDay()])
+                ->orderByDesc('created_at')
+                ->orderByDesc('login')
+                ->get();
+
+            $studentList = $studentAttendances->map(function ($a) {
                 $studentName = trim(($a->student->lname ?? '') . ', ' . ($a->student->fname ?? ''));
                 $profile = optional(optional($a->student)->user)->profile_picture;
+                $profileUrl = AvatarService::getProfilePictureUrl($profile, $studentName);
+
                 return [
                     'id' => $a->id,
                     'student_id' => $a->student_id,
@@ -53,7 +76,26 @@ class AttendanceController extends Controller
                     'activity' => $a->activity ?? '',
                     'time_in' => optional($a->login)->setTimezone('Asia/Manila')->format('h:i A'),
                     'time_out' => $a->logout ? optional($a->logout)->setTimezone('Asia/Manila')->format('h:i A') : '-',
-                    'profile_picture' => $profile,
+                    'profile_picture' => $profileUrl,
+                    'has_logout' => !is_null($a->logout),
+                ];
+            });
+
+            $teacherList = $teacherAttendances->map(function ($a) {
+                $teacherName = trim(($a->teacherVisitor->lname ?? '') . ', ' . ($a->teacherVisitor->fname ?? ''));
+                $profile = optional(optional($a->teacherVisitor)->user)->profile_picture;
+                $profileUrl = AvatarService::getProfilePictureUrl($profile, $teacherName);
+
+                return [
+                    'id' => $a->id,
+                    'teacher_visitor_id' => $a->teacher_visitor_id,
+                    'name' => $teacherName,
+                    'role' => $a->teacherVisitor->role ?? '',
+                    'department' => $a->teacherVisitor->department ?? '',
+                    'activity' => $a->activity ?? '',
+                    'time_in' => optional($a->login)->setTimezone('Asia/Manila')->format('h:i A'),
+                    'time_out' => $a->logout ? optional($a->logout)->setTimezone('Asia/Manila')->format('h:i A') : '-',
+                    'profile_picture' => $profileUrl,
                     'has_logout' => !is_null($a->logout),
                 ];
             });
@@ -61,7 +103,8 @@ class AttendanceController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'todayAttendance' => $list,
+                    'studentAttendance' => $studentList,
+                    'teacherAttendance' => $teacherList,
                     'last_updated' => now()->toISOString(),
                 ],
             ]);
@@ -134,6 +177,11 @@ class AttendanceController extends Controller
                 // If found, set logout time
                 $attendance->logout = $now;
                 $attendance->save();
+
+                // If the activity was study-related, increment available study slots
+                if (StudyAreaHelper::isStudyActivity($attendance->activity)) {
+                    StudyAreaHelper::updateAvailability(null, 'increment', 1);
+                }
 
                 // If the activity was a book borrowing, update the book's borrowed status
                 if (str_contains($attendance->activity, 'Borrow')) {
@@ -210,6 +258,11 @@ class AttendanceController extends Controller
                             ], 422);
                         }
                     }
+                }
+
+                // If the activity is study-related, decrement available study slots
+                if (StudyAreaHelper::isStudyActivity($activity)) {
+                    StudyAreaHelper::updateAvailability(null, 'decrement', 1);
                 }
 
                 // Create new attendance record with login time and the selected activity

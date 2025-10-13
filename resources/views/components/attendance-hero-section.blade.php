@@ -163,7 +163,7 @@
                 </h1>
                 <div class="divider-line mx-auto mb-6"></div>
                 <p class="text-lg text-gray-600 font-light">
-                    makes your experience smoother through
+                    makes your experience smoother through...
                 </p>
             </div>
             
@@ -174,35 +174,7 @@
                 </div>
             </div>
             
-            <!-- Subtitle -->
-            <div class="fade-in-delayed mb-12">
-                <p class="hero-subtitle text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                    Whether you're here to focus on your studies, borrow your favorite books, or explore other activities, 
-                    we make your library journey <span class="font-medium text-gray-800">easier</span>, <span class="font-medium text-gray-800">smarter</span>, and <span class="font-medium text-gray-800">more connected</span>.
-                </p>
-            </div>
-            
-            <!-- Activity Selection Buttons -->
-            <div class="fade-in-slow mb-16">
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <button onclick="openBorrowModal('borrow')"
-                       class="modern-button inline-flex items-center px-8 py-4 bg-blue-600 text-white font-medium rounded-2xl transition-all duration-300 hover:bg-blue-700 group">
-                        <i class="fas fa-book mr-3 transition-transform group-hover:rotate-12"></i>
-                        <span>Borrow Books</span>
-                        <svg class="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                        </svg>
-                    </button>
-                    <button onclick="openBorrowModal('stay')"
-                       class="modern-button inline-flex items-center px-8 py-4 bg-green-600 text-white font-medium rounded-2xl transition-all duration-300 hover:bg-green-700 group">
-                        <i class="fas fa-clock mr-3 transition-transform group-hover:scale-110"></i>
-                        <span>Stay and Borrow</span>
-                        <svg class="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
+          
             
             
         </div>

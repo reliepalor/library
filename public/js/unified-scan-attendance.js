@@ -540,23 +540,23 @@ function parseQRCode(qrCode) {
             
             console.log('[PARSE] Extracted:', { identifier, name, collegeOrDept, roleOrYear });
             
-            // Determine if student or teacher based on role
-            if (roleOrYear && (roleOrYear.toLowerCase().includes('teacher') || roleOrYear.toLowerCase().includes('prof'))) {
-                console.log('[PARSE] Detected as TEACHER');
-                return { 
-                    userType: 'teacher', 
-                    identifier: identifier, 
+            // Determine if student or teacher/visitor based on role
+            if (roleOrYear && (roleOrYear.toLowerCase().includes('teacher') || roleOrYear.toLowerCase().includes('prof') || roleOrYear.toLowerCase().includes('visitor'))) {
+                console.log('[PARSE] Detected as TEACHER/VISITOR');
+                return {
+                    userType: 'teacher',
+                    identifier: identifier,
                     rawData: qrCode,
                     name: name,
                     collegeOrDept: collegeOrDept,
                     role: roleOrYear
                 };
             } else {
-                // Default to student if not explicitly teacher
+                // Default to student if not explicitly teacher/visitor
                 console.log('[PARSE] Detected as STUDENT');
-                return { 
-                    userType: 'student', 
-                    identifier: identifier, 
+                return {
+                    userType: 'student',
+                    identifier: identifier,
                     rawData: qrCode,
                     name: name,
                     collegeOrDept: collegeOrDept,
@@ -570,15 +570,15 @@ function parseQRCode(qrCode) {
     }
     
     // If not pipe-delimited, try other formats
-    if (qrCode.startsWith('TEACHER-') || qrCode.startsWith('TV-')) {
+    if (qrCode.startsWith('TEACHER-') || qrCode.startsWith('TV-') || qrCode.startsWith('VISITOR-')) {
         const id = qrCode.split('-').pop();
-        console.log('[PARSE] Detected as TEACHER (prefix format)');
+        console.log('[PARSE] Detected as TEACHER/VISITOR (prefix format)');
         return { userType: 'teacher', identifier: id, rawData: qrCode };
     }
     
-    // Check if it's a simple numeric ID - could be teacher
+    // Check if it's a simple numeric ID - could be teacher or visitor
     if (/^\d{1,3}$/.test(qrCode)) {
-        console.log('[PARSE] Detected as TEACHER (small numeric ID)');
+        console.log('[PARSE] Detected as TEACHER/VISITOR (small numeric ID)');
         return { userType: 'teacher', identifier: qrCode, rawData: qrCode };
     }
     
@@ -778,9 +778,9 @@ async function showActivityModal(userType, identifier) {
         } else {
             url = `/admin/attendance/scan?user_type=${userType}&identifier=${encodeURIComponent(identifier)}`;
         }
-        
+
         console.log("[MODAL] Fetching user details from:", url);
-        
+
         const response = await fetch(url, {
             headers: {
                 'Accept': 'application/json',
@@ -788,28 +788,28 @@ async function showActivityModal(userType, identifier) {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             }
         });
-        
+
         console.log("[MODAL] Response status:", response.status);
-        
+
         if (!response.ok) {
             const errorText = await response.text();
             console.error("[MODAL] Server error response:", errorText);
             throw new Error(`Server error: ${response.status}`);
         }
-        
+
         const data = await response.json();
         console.log("[MODAL] User data received:", data);
-        
-        if (response.ok) {
+
+        if (response.ok && data.user) {
             const user = data.user;
             const name = data.name;
             const profilePic = data.profile_picture;
-            
+
             // Update modal with user info
             if (profilePic) {
                 userProfilePic.src = profilePic;
             }
-            
+
             if (userType === 'student') {
                 userDetails.innerHTML = `
                     <p class="text-sm font-semibold text-gray-900">${name}</p>
@@ -817,10 +817,11 @@ async function showActivityModal(userType, identifier) {
                     <p class="text-xs text-gray-600">College: ${user.college || 'N/A'}</p>
                 `;
             } else {
+                // For teachers and visitors, show the same format
                 userDetails.innerHTML = `
                     <p class="text-sm font-semibold text-gray-900">${name}</p>
                     <p class="text-xs text-gray-600">Department: ${user.department || 'N/A'}</p>
-                    <p class="text-xs text-gray-600">Role: ${user.role || 'N/A'}</p>
+                    <p class="text-xs text-gray-600">Role: ${user.role || 'Visitor'}</p>
                 `;
             }
         } else {
@@ -838,8 +839,20 @@ async function showActivityModal(userType, identifier) {
 async function refreshAttendanceTable() {
     const startTime = performance.now();
     console.group(`[${new Date().toLocaleTimeString()}] Refreshing attendance tables...`);
-    
+
     try {
+        // Show loading state on refresh button
+        const refreshBtn = document.getElementById('refresh-btn');
+        const refreshSpinner = document.getElementById('refresh-spinner');
+        const refreshText = document.getElementById('refresh-text');
+
+        if (refreshBtn) {
+            refreshBtn.disabled = true;
+            refreshBtn.classList.add('opacity-75', 'cursor-not-allowed');
+        }
+        if (refreshSpinner) refreshSpinner.classList.remove('hidden');
+        if (refreshText) refreshText.textContent = 'Refreshing...';
+
         // Show loading state
         const statusElement = document.getElementById('refresh-status');
         if (statusElement) {
@@ -911,26 +924,38 @@ async function refreshAttendanceTable() {
             statusElement.textContent = `Last updated: ${new Date().toLocaleTimeString()} (${duration}ms)`;
             statusElement.className = 'text-gray-500 text-xs';
         }
-        
+
         console.log(`[ATTENDANCE] Update completed in ${duration}ms`);
         return true;
-        
+
     } catch (error) {
         console.error('[ATTENDANCE] Error refreshing attendance:', error);
-        
+
         // Show error to user
-        const statusElement = document.getElementById('refresh-status') || 
-            document.getElementById('status-display') || 
+        const statusElement = document.getElementById('refresh-status') ||
+            document.getElementById('status-display') ||
             document.body;
-            
+
         if (statusElement) {
             const errorMsg = error.message || 'Failed to load attendance data';
             statusElement.textContent = `Error: ${errorMsg}`;
             statusElement.className = 'text-red-600 text-sm';
         }
-        
+
         return false;
     } finally {
+        // Reset refresh button state
+        const refreshBtn = document.getElementById('refresh-btn');
+        const refreshSpinner = document.getElementById('refresh-spinner');
+        const refreshText = document.getElementById('refresh-text');
+
+        if (refreshBtn) {
+            refreshBtn.disabled = false;
+            refreshBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+        }
+        if (refreshSpinner) refreshSpinner.classList.add('hidden');
+        if (refreshText) refreshText.textContent = '🔄 Refresh';
+
         console.groupEnd();
     }
 }
