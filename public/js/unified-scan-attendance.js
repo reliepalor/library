@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     };
 
     // Start polling
-    // startPolling();
+    startPolling();
 
     // Also refresh when the window regains focus
     window.addEventListener('focus', () => {
@@ -121,6 +121,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('activity').addEventListener('change', function() {
         const activity = this.value;
         const submitBtn = document.getElementById('modal-submit');
+        const otherActivitiesSection = document.getElementById('other-activities-section');
 
         if (activity === 'Borrow' || activity === 'Stay&Borrow') {
             const userType = document.getElementById('modal-user-type').value;
@@ -128,7 +129,16 @@ document.addEventListener('DOMContentLoaded', async function() {
             showBookSelectionModal(userType, identifier, activity);
             // Hide submit button since modal is shown
             submitBtn.style.display = 'none';
+        } else if (activity === 'Other') {
+            // Show other activities section with smooth transition
+            otherActivitiesSection.style.opacity = '1';
+            otherActivitiesSection.style.maxHeight = '500px'; // Set a reasonable max height
+            // Show submit button for other activities
+            submitBtn.style.display = 'inline-block';
         } else {
+            // Hide other activities section
+            otherActivitiesSection.style.opacity = '0';
+            otherActivitiesSection.style.maxHeight = '0';
             // Show submit button for other activities
             submitBtn.style.display = 'inline-block';
         }
@@ -140,7 +150,18 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         const userType = document.getElementById('modal-user-type').value;
         const identifier = document.getElementById('modal-identifier').value;
-        const activity = document.getElementById('activity').value;
+        let activity = document.getElementById('activity').value;
+
+        // If "Other" is selected, get the custom activity value
+        if (activity === 'Other') {
+            const customActivity = document.getElementById('custom-activity').value.trim();
+            if (customActivity) {
+                activity = customActivity;
+            } else {
+                showNotification('Please specify an activity or select from the predefined options.', 'error');
+                return;
+            }
+        }
 
         // Check if this is a borrowing activity
         if (activity === 'Borrow' || activity === 'Stay&Borrow') {
@@ -288,6 +309,33 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Cancel modal
     document.getElementById('modal-cancel').addEventListener('click', function() {
         document.getElementById('activity-modal').classList.add('hidden');
+        // Reset other activities section when modal is closed
+        const otherActivitiesSection = document.getElementById('other-activities-section');
+        if (otherActivitiesSection) {
+            otherActivitiesSection.style.opacity = '0';
+            otherActivitiesSection.style.maxHeight = '0';
+        }
+        // Clear custom activity input
+        const customActivityInput = document.getElementById('custom-activity');
+        if (customActivityInput) {
+            customActivityInput.value = '';
+        }
+    });
+
+    // Handle predefined activity button clicks
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('other-activity-btn')) {
+            const activity = e.target.getAttribute('data-activity');
+            const customActivityInput = document.getElementById('custom-activity');
+            if (customActivityInput) {
+                customActivityInput.value = activity;
+            }
+            // Add visual feedback
+            e.target.classList.add('bg-blue-200', 'ring-2', 'ring-blue-300');
+            setTimeout(() => {
+                e.target.classList.remove('bg-blue-200', 'ring-2', 'ring-blue-300');
+            }, 200);
+        }
     });
 });
 

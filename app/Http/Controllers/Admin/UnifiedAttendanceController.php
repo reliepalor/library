@@ -223,8 +223,10 @@ class UnifiedAttendanceController extends Controller
                     $activity = 'Wait for approval';
                     break;
                 case 'approved':
-                    $activity = $mostRecentRequest->book 
-                        ? 'Borrow: ' . $mostRecentRequest->book->book_code 
+                    $originalActivity = $mostRecentRequest->original_activity ?? 'Borrow';
+                    $activityPrefix = ($originalActivity === 'Stay&Borrow') ? 'Stay&Borrow:' : 'Borrow:';
+                    $activity = $mostRecentRequest->book
+                        ? $activityPrefix . $mostRecentRequest->book->book_code
                         : $attendance->activity;
                     break;
                 case 'rejected':
@@ -669,7 +671,13 @@ class UnifiedAttendanceController extends Controller
         // Save student records
         foreach ($studentAttendance as $record) {
             $activity = $this->getActivityWithBorrowStatus($record, $borrowRequests, $record->student_id);
-            
+
+            // Calculate duration in minutes if both time_in and time_out exist
+            $duration = null;
+            if ($record->login && $record->logout) {
+                $duration = Carbon::parse($record->login)->diffInMinutes(Carbon::parse($record->logout));
+            }
+
             AttendanceHistory::create([
                 'user_type' => 'student',
                 'student_id' => $record->student_id,
@@ -677,12 +685,19 @@ class UnifiedAttendanceController extends Controller
                 'activity' => $activity,
                 'time_in' => $record->login,
                 'time_out' => $record->logout,
+                'duration' => $duration,
                 'date' => $today
             ]);
         }
 
         // Save teacher records
         foreach ($teacherAttendance as $record) {
+            // Calculate duration in minutes if both time_in and time_out exist
+            $duration = null;
+            if ($record->login && $record->logout) {
+                $duration = Carbon::parse($record->login)->diffInMinutes(Carbon::parse($record->logout));
+            }
+
             AttendanceHistory::create([
                 'user_type' => 'teacher',
                 'teacher_visitor_id' => $record->teacher_visitor_id,
@@ -691,6 +706,7 @@ class UnifiedAttendanceController extends Controller
                 'activity' => $record->activity,
                 'time_in' => $record->login,
                 'time_out' => $record->logout,
+                'duration' => $duration,
                 'date' => $today
             ]);
         }

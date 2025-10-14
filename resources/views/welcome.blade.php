@@ -42,22 +42,91 @@
             <section class="small-hero">Discover our new technology! It’s simple, smart, and designed to help you learn better. </section>
         </main>
 
-        <div class="flex justify-center">
-            <div class="container items-center">
-                <div class="item item-1"><img src="images/library-images/books2.jpg" alt=""></div>
-                <div class="item item-2"><img src="images/library-images/books1.jpg" alt=""></div>
-                <div class="item item-3">
-                    <div class="hero-btn">
-                        <a href="" class="explore">Explore</a>
-                    </div>
-                    <div>
-                        <img src="images/library-images/books4.jpg" alt="">
-                    </div>
+        <!--IMAGES-->
+    <div class="flex justify-center">
+        <div class="container items-center">
+            <div class="item item-1">
+                <img src="images/library-images/books2.jpg" alt="Stack of colorful books on a shelf">
+            </div>
+            <div class="item item-2">
+                <img src="images/library-images/books1.jpg" alt="Open book with pages turning">
+            </div>
+            <div class="item item-3">
+                <div class="hero-btn">
+                    <a href="#" class="explore">Explore</a>
                 </div>
-                <div class="item item-4"><img src="images/library-images/books5.jpg" style="aspect-ratio: 1/4;" alt=""></div>
-                <div class="item item-5"><img src="images/library-images/books3.jpg" alt=""></div>
+                <div class="" >
+                    <img src="images/library-images/books4.jpg" alt="Cozy reading nook with books " class="mt-20flex justify-end items-end">
+                </div>
+            </div>
+            <div class="item item-4">
+                <img src="images/library-images/books5.jpg" alt="Vintage library interior" style="aspect-ratio: 1/4;">
+            </div>
+            <div class="item item-5">
+                <img src="images/library-images/books3.jpg" alt="Books arranged in a artistic pattern">
             </div>
         </div>
+        <!-- Carousel Dots Indicator (Hidden on Desktop) -->
+        <div class="carousel-indicators">
+            <span class="dot active" data-slide="0"></span>
+            <span class="dot" data-slide="1"></span>
+            <span class="dot" data-slide="2"></span>
+            <span class="dot" data-slide="3"></span>
+            <span class="dot" data-slide="4"></span>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+    const container = document.querySelector('.container');
+    const dots = document.querySelectorAll('.dot');
+    const indicators = document.querySelector('.carousel-indicators');
+    let currentIndex = 0;
+    let scrollTimeout;
+
+    // Show/hide carousel based on screen size (for dynamic resize)
+    function toggleCarousel() {
+        if (window.innerWidth <= 1024) {
+            indicators.style.display = 'flex';
+            container.classList.add('carousel-mode'); // Optional class for JS tweaks
+        } else {
+            indicators.style.display = 'none';
+            container.classList.remove('carousel-mode');
+        }
+    }
+
+    toggleCarousel();
+    window.addEventListener('resize', toggleCarousel);
+
+    // Update active dot on scroll
+    container.addEventListener('scroll', () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+            const scrollLeft = container.scrollLeft;
+            const slideWidth = window.innerWidth;
+            currentIndex = Math.round(scrollLeft / slideWidth);
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentIndex);
+            });
+            container.classList.add('scrolled'); // Fade swipe hint
+        }, 50); // Debounce for smooth performance
+    });
+
+    // Click dots to scroll to slide
+    dots.forEach((dot, index) => {
+        dot.addEventListener('click', () => {
+            const scrollTo = index * window.innerWidth;
+            container.scrollTo({
+                left: scrollTo,
+                behavior: 'smooth'
+            });
+        });
+    });
+
+    // Initial active dot
+    dots[0].classList.add('active');
+});
+    </script>
     </div>
 
     <x-books-component/>

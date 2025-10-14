@@ -311,6 +311,33 @@
                                         <option value="Other">Other Activities</option>
                                     </select>
                                 </div>
+
+                                <!-- Other Activities Section -->
+                                <div id="other-activities-section" class="mb-4 opacity-0 max-h-0 overflow-hidden transition-all duration-300 ease-in-out">
+                                    <label class="block mb-2 font-medium text-gray-700">Specify Other Activity</label>
+
+                                    <!-- Predefined Activities -->
+                                    <div class="mb-3">
+                                        <p class="text-sm text-gray-600 mb-2">Quick select:</p>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <button type="button" class="other-activity-btn px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-left" data-activity="Sign Clearance">📰 Sign Clearance</button>
+                                            <button type="button" class="other-activity-btn px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-left" data-activity="Past Time">⏰ Past Time</button>
+                                            <button type="button" class="other-activity-btn px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-left" data-activity="Waiting for Class">📚 Waiting for Class</button>
+                                            <button type="button" class="other-activity-btn px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-left" data-activity="Comfort Room">🚻 Comfort Room</button>
+                                            <button type="button" class="other-activity-btn px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-left" data-activity="Research">🔍 Research</button>
+                                            <button type="button" class="other-activity-btn px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-left" data-activity="Group Study">👥 Group Study</button>
+                                            <button type="button" class="other-activity-btn px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-left" data-activity="Reading">📖 Reading</button>
+                                            <button type="button" class="other-activity-btn px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-left" data-activity="Computer Use">💻 Computer Use</button>
+                                            <button type="button" class="other-activity-btn px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-left" data-activity="Meeting">🤝 Meeting</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Custom Activity Input -->
+                                    <div>
+                                        <label for="custom-activity" class="block text-sm text-gray-600 mb-1">Or enter custom activity:</label>
+                                        <input type="text" id="custom-activity" name="custom_activity" placeholder="Enter your activity..." class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                    </div>
+                                </div>
                                 
                                 <div class="flex justify-end space-x-2">
                                     <button type="button" id="modal-cancel" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">Cancel</button>

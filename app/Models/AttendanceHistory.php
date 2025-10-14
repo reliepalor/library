@@ -20,6 +20,7 @@ class AttendanceHistory extends Model
         'activity',
         'time_in',
         'time_out',
+        'duration',
         'date'
     ];
 

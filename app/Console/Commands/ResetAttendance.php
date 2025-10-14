@@ -28,7 +28,14 @@ class ResetAttendance extends Command
 
             // Archive attendance records
             foreach ($todayAttendance as $record) {
+                // Calculate duration in minutes if both time_in and time_out exist
+                $duration = null;
+                if ($record->created_at && $record->time_out) {
+                    $duration = Carbon::parse($record->created_at)->diffInMinutes(Carbon::parse($record->time_out));
+                }
+
                 AttendanceHistory::create([
+                    'user_type' => 'student', // Assuming old records are students
                     'student_id' => $record->student_id,
                     'activity' => $record->activity,
                     'book_code' => $record->book_code,
@@ -37,6 +44,7 @@ class ResetAttendance extends Command
                     'date' => $record->created_at->toDateString(),
                     'time_in' => $record->created_at->toTimeString(),
                     'time_out' => $record->time_out ? $record->time_out->toTimeString() : null,
+                    'duration' => $duration,
                 ]);
             }
 

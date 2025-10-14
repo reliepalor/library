@@ -197,27 +197,7 @@
     <x-header />
     
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
-        <!-- Study Area Availability -->
-        <div class="mb-6 fade-in">
-            <div class="bg-white rounded-lg shadow-sm p-4 flex items-center justify-between">
-                <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-blue-50 mr-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-medium text-gray-900">Study Area Availability</h3>
-                        <p class="text-sm text-gray-500">Real-time updates on available study spaces</p>
-                    </div>
-                </div>
-                <div class="flex items-center">
-                    <span id="study-area-badge" class="badge bg-success text-white px-4 py-2 rounded-full text-sm font-medium">
-                        <span id="study-area-availability">Loading...</span>
-                    </span>
-                </div>
-            </div>
-        </div>
+
 
         <!-- Hero Section -->
         <div class="header-section p-8 text-center text-white fade-in">
@@ -278,210 +258,378 @@
                 </div>
             </div>
 
-            <!-- Attendance Table -->
-            <div class="modern-table bg-white overflow-hidden">
-                <div class="flex flex-col sm:flex-row justify-between items-center p-6 border-b border-gray-100">
-                    <h3 class="text-xl font-medium text-gray-800">Attendance Records</h3>
+<!-- Attendance Table -->
+<div class="modern-table bg-white overflow-hidden">
+    <div class="flex flex-col sm:flex-row justify-between items-center p-6 border-b border-gray-100">
+        <h3 class="text-xl font-medium text-gray-800">Attendance Records</h3>
+    </div>
+    
+    <!-- Desktop Table -->
+    <div class="hidden lg:block">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="table-header">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Student ID</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">College</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Year</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Activity</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Login</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Logout</th>
+                    </tr>
+                </thead>
+                <tbody id="attendance-table-body">
+                    @forelse($attendances as $attendance)
+                        <tr class="table-row">
+                            <td class="px-6 py-4 font-semibold text-gray-800 text-sm">{{ $attendance->student_id }}</td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center space-x-3">
+                                    <img src="{{ \App\Services\AvatarService::getProfilePictureUrl($attendance->student->user->profile_picture ?? null, ($attendance->student->fname ?? '') . ' ' . ($attendance->student->lname ?? ''), 44) }}"
+                                        alt="Profile Picture"
+                                        class="profile-img"
+                                        onerror="this.onerror=null; this.src='{{ asset('images/default-profile.png') }}'" />
+                                    <div>
+                                        <div class="font-medium text-gray-900">{{ $attendance->student->lname ?? '' }}, {{ $attendance->student->fname ?? '' }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="college-{{ $attendance->student->college ?? '' }}">{{ $attendance->student->college ?? '' }}</span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-600">{{ $attendance->student->year ?? '' }}</td>
+                            <td class="px-6 py-4">
+                                @php
+                                    $activityText = $attendance->activity ?? '';
+                                    $lower = strtolower($activityText);
+                                @endphp
+                                @if(str_contains($lower, 'wait for approval'))
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">{{ $activityText }}</span>
+                                @elseif(str_starts_with($lower, 'stay&borrow:'))
+                                    @php
+                                        $parts = explode(':', $activityText);
+                                        $code = $parts[1] ?? '';
+                                    @endphp
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Stay&Borrow: {{ trim($code) }}</span>
+                                @elseif(str_contains($lower, 'borrow:'))
+                                    @php
+                                        $parts = explode(':', $activityText);
+                                        $code = $parts[1] ?? '';
+                                    @endphp
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Borrow: {{ trim($code) }}</span>
+                                @elseif(str_contains($lower, 'borrow book rejected'))
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">{{ $activityText }}</span>
+                                @elseif(str_contains($lower, 'book returned'))
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">{{ $activityText }}</span>
+                                @else
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full text-gray-800">{{ $activityText }}</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm font-medium text-gray-900">{{ \Carbon\Carbon::parse($attendance->login)->setTimezone('Asia/Manila')->format('h:i A') }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm font-medium text-gray-900">{{ $attendance->logout ? \Carbon\Carbon::parse($attendance->logout)->setTimezone('Asia/Manila')->format('h:i A') : '-' }}</div>
+                                @if($attendance->logout)
+                                    <div class="text-xs text-emerald-600 hidden">Completed</div>
+                                @else
+                                    <div class="text-xs text-blue-600 hidden">Active</div>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="px-6 py-12 text-center">
+                                <div class="text-gray-400">
+                                    <svg class="mx-auto h-12 w-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                    </svg>
+                                    <p class="text-lg font-medium">No attendance logs yet</p>
+                                    <p class="text-sm">Student activities will appear here as they occur</p>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Mobile/Tablet Cards -->
+    <div class="block lg:hidden space-y-1 px-3 pb-3">
+        @forelse($attendances as $attendance)
+            <div class="bg-gray-50 rounded-md p-1 border border-gray-200">
+                <div class="flex flex-wrap items-start justify-between gap-1 mb-0.5 text-xs leading-tight">
+                    <div class="flex items-start space-x-1 min-w-0 flex-1">
+                        <img src="{{ \App\Services\AvatarService::getProfilePictureUrl($attendance->student->user->profile_picture ?? null, ($attendance->student->fname ?? '') . ' ' . ($attendance->student->lname ?? ''), 44) }}"
+                            alt="Profile Picture"
+                            class="profile-img w-5 h-5 rounded-full flex-shrink-0 mt-0.5"
+                            onerror="this.onerror=null; this.src='{{ asset('images/default-profile.png') }}'" />
+                        <div class="min-w-0 flex-1">
+                            <div class="font-medium text-gray-900 break-words">{{ $attendance->student->lname ?? '' }}, {{ $attendance->student->fname ?? '' }}</div>
+                            <div class="text-gray-500 break-words">{{ $attendance->student_id }}</div>
+                        </div>
+                    </div>
+                    <div class="flex-1 min-w-[60px] text-center">
+                        <span class="text-[10px] text-gray-600">College: </span><span class="college-{{ $attendance->student->college ?? '' }}">{{ $attendance->student->college ?? '' }}</span>
+                    </div>
+                    <div class="flex-1 min-w-[40px] text-center">
+                        <span class="text-[10px] text-gray-600">Year: </span>{{ $attendance->student->year ?? '' }}
+                    </div>
                 </div>
-                
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="table-header">
-                            <tr>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Student ID</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">College</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider hidden sm:table-cell">Year</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Activity</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Login</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider hidden sm:table-cell">Logout</th>
-                            </tr>
-                        </thead>
-                        <tbody id="attendance-table-body">
-                            @forelse($attendances as $attendance)
-                                <tr class="table-row">
-                                    <td class="px-6 py-4 font-semibold text-gray-800 text-sm">{{ $attendance->student_id }}</td>
-                                    <td class="px-6 py-4">
-                                        <div class="flex items-center space-x-3">
-                                            <img src="{{ \App\Services\AvatarService::getProfilePictureUrl($attendance->student->user->profile_picture ?? null, ($attendance->student->fname ?? '') . ' ' . ($attendance->student->lname ?? ''), 44) }}"
-                                                alt="Profile Picture"
-                                                class="profile-img"
-                                                onerror="this.onerror=null; this.src='{{ asset('images/default-profile.png') }}'" />
-                                            <div>
-                                                <div class="font-medium text-gray-900">{{ $attendance->student->lname ?? '' }}, {{ $attendance->student->fname ?? '' }}</div>
-                                                <div class="text-sm text-gray-500 sm:hidden">{{ $attendance->student_id }}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <span class="college-{{ $attendance->student->college ?? '' }}">{{ $attendance->student->college ?? '' }}</span>
-                                    </td>
-                                    <td class="px-6 py-4 text-sm text-gray-600 hidden sm:table-cell">{{ $attendance->student->year ?? '' }}</td>
-                                    <td class="px-6 py-4">
-                                        @php
-                                            $activityText = $attendance->activity ?? '';
-                                            $lower = strtolower($activityText);
-                                        @endphp
-                                        @if(str_contains($lower, 'wait for approval'))
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">{{ $activityText }}</span>
-                                        @elseif(str_starts_with($lower, 'stay&borrow:'))
-                                            @php
-                                                $parts = explode(':', $activityText);
-                                                $code = $parts[1] ?? '';
-                                            @endphp
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Stay&Borrow: {{ trim($code) }}</span>
-                                        @elseif(str_contains($lower, 'borrow:'))
-                                            @php
-                                                $parts = explode(':', $activityText);
-                                                $code = $parts[1] ?? '';
-                                            @endphp
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Borrow: {{ trim($code) }}</span>
-                                        @elseif(str_contains($lower, 'borrow book rejected'))
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">{{ $activityText }}</span>
-                                        @elseif(str_contains($lower, 'book returned'))
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">{{ $activityText }}</span>
-                                        @else
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full text-gray-800">{{ $activityText }}</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="text-sm font-medium text-gray-900">{{ \Carbon\Carbon::parse($attendance->login)->setTimezone('Asia/Manila')->format('h:i A') }}</div>
-                                        <div class="text-xs text-gray-500 sm:hidden">Year: {{ $attendance->student->year ?? '' }}</div>
-                                    </td>
-                                    <td class="px-6 py-4 hidden sm:table-cell">
-                                        <div class="text-sm font-medium text-gray-900">{{ $attendance->logout ? \Carbon\Carbon::parse($attendance->logout)->setTimezone('Asia/Manila')->format('h:i A') : '-' }}</div>
-                                        @if($attendance->logout)
-                                            <div class="text-xs text-emerald-600">Completed</div>
-                                        @else
-                                            <div class="text-xs text-blue-600">Active</div>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="7" class="px-6 py-12 text-center">
-                                        <div class="text-gray-400">
-                                            <svg class="mx-auto h-12 w-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                                            </svg>
-                                            <p class="text-lg font-medium">No attendance logs yet</p>
-                                            <p class="text-sm">Student activities will appear here as they occur</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                <div class="flex flex-wrap items-start justify-between gap-1 text-xs leading-tight">
+                    <div class="min-w-0 flex-1">
+                        <span class="block text-gray-600 text-[10px] mb-0.5">Activity:</span>
+                        @php
+                            $activityText = $attendance->activity ?? '';
+                            $lower = strtolower($activityText);
+                        @endphp
+                        @if(str_contains($lower, 'wait for approval'))
+                            <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-yellow-100 text-yellow-800 block break-words w-full">{{ $activityText }}</span>
+                        @elseif(str_starts_with($lower, 'stay&borrow:'))
+                            @php
+                                $parts = explode(':', $activityText);
+                                $code = $parts[1] ?? '';
+                            @endphp
+                            <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-green-100 text-green-800 block break-words w-full">Stay&Borrow: {{ trim($code) }}</span>
+                        @elseif(str_contains($lower, 'borrow:'))
+                            @php
+                                $parts = explode(':', $activityText);
+                                $code = $parts[1] ?? '';
+                            @endphp
+                            <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-green-100 text-green-800 block break-words w-full">Borrow: {{ trim($code) }}</span>
+                        @elseif(str_contains($lower, 'borrow book rejected'))
+                            <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-red-100 text-red-800 block break-words w-full">{{ $activityText }}</span>
+                        @elseif(str_contains($lower, 'book returned'))
+                            <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-blue-100 text-blue-800 block break-words w-full">{{ $activityText }}</span>
+                        @else
+                            <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full text-gray-800 block break-words w-full">{{ $activityText }}</span>
+                        @endif
+                    </div>
+                    <div class="text-center flex-1 min-w-[45px]">
+                        <span class="block text-gray-600 text-[10px] mb-0.5">Login:</span>
+                        <div class="font-medium text-gray-900">{{ \Carbon\Carbon::parse($attendance->login)->setTimezone('Asia/Manila')->format('h:i A') }}</div>
+                    </div>
+                    <div class="text-center flex-1 min-w-[60px]">
+                        <span class="block text-gray-600 text-[10px] mb-0.5">Logout:</span>
+                        <div class="font-medium text-gray-900">{{ $attendance->logout ? \Carbon\Carbon::parse($attendance->logout)->setTimezone('Asia/Manila')->format('h:i A') : '-' }}</div>
+                        @if($attendance->logout)
+                            <div class="text-emerald-600 text-[10px] hidden">Completed</div>
+                        @else
+                            <div class="text-blue-600 text-[10px] hidden">Active</div>
+                        @endif
+                    </div>
                 </div>
             </div>
-
-            <!-- Teachers & Visitors Attendance Table -->
-            <div class="modern-table bg-white overflow-hidden mt-8">
-                <div class="flex flex-col sm:flex-row justify-between items-center p-6 border-b border-gray-100">
-                    <h3 class="text-xl font-medium text-gray-800">Teachers & Visitors Attendance</h3>
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="table-header">
-                            <tr>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Role</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Department</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Activity</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Login</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider hidden sm:table-cell">Logout</th>
-                            </tr>
-                        </thead>
-                        <tbody id="teacher-attendance-table-body">
-                            @forelse($teacherAttendances as $attendance)
-                                <tr class="table-row">
-                                    <td class="px-6 py-4">
-                                        <span class="px-2 py-1 inline-flex items-center text-xs font-medium rounded bg-blue-100 text-blue-700">
-                                            <svg class="mr-1.5 h-2 w-2 text-blue-400" fill="currentColor" viewBox="0 0 8 8">
-                                                <circle cx="4" cy="4" r="3" />
-                                            </svg>
-                                            {{ $attendance->teacherVisitor->role ?? 'Staff' }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="flex items-center space-x-3">
-                                            <img src="{{ \App\Services\AvatarService::getProfilePictureUrl($attendance->teacherVisitor->user->profile_picture ?? null, ($attendance->teacherVisitor->fname ?? '') . ' ' . ($attendance->teacherVisitor->lname ?? ''), 44) }}"
-                                                alt="Profile Picture"
-                                                class="profile-img"
-                                                onerror="this.onerror=null; this.src='{{ asset('images/default-profile.png') }}'" />
-                                            <div>
-                                                <div class="font-medium text-gray-900">{{ $attendance->teacherVisitor->lname ?? '' }}, {{ $attendance->teacherVisitor->fname ?? '' }}</div>
-                                                <div class="text-sm text-gray-500 sm:hidden">ID: {{ $attendance->teacher_visitor_id }}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <span class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
-                                            <svg class="mr-1.5 h-2 w-2 text-purple-400" fill="currentColor" viewBox="0 0 8 8">
-                                                <circle cx="4" cy="4" r="3" />
-                                            </svg>
-                                            {{ $attendance->teacherVisitor->department ?? 'N/A' }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        @php
-                                            $activityText = $attendance->activity ?? '';
-                                            $lower = strtolower($activityText);
-                                        @endphp
-                                        @if(str_contains($lower, 'wait for approval'))
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">{{ $activityText }}</span>
-                                        @elseif(str_starts_with($lower, 'stay&borrow:'))
-                                            @php
-                                                $parts = explode(':', $activityText);
-                                                $code = $parts[1] ?? '';
-                                            @endphp
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Stay&Borrow: {{ trim($code) }}</span>
-                                        @elseif(str_contains($lower, 'borrow:'))
-                                            @php
-                                                $parts = explode(':', $activityText);
-                                                $code = $parts[1] ?? '';
-                                            @endphp
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Borrow: {{ trim($code) }}</span>
-                                        @elseif(str_contains($lower, 'borrow book rejected'))
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">{{ $activityText }}</span>
-                                        @elseif(str_contains($lower, 'book returned'))
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">{{ $activityText }}</span>
-                                        @elseif(str_contains($lower, 'study'))
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Stay to Study</span>
-                                        @else
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">{{ $activityText }}</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="text-sm font-medium text-gray-900">{{ \Carbon\Carbon::parse($attendance->login)->setTimezone('Asia/Manila')->format('h:i A') }}</div>
-                                    </td>
-                                    <td class="px-6 py-4 hidden sm:table-cell">
-                                        <div class="text-sm font-medium text-gray-900">{{ $attendance->logout ? \Carbon\Carbon::parse($attendance->logout)->setTimezone('Asia/Manila')->format('h:i A') : '-' }}</div>
-                                        @if($attendance->logout)
-                                            <div class="text-xs text-emerald-600">Completed</div>
-                                        @else
-                                            <div class="text-xs text-blue-600">Active</div>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" class="px-6 py-12 text-center">
-                                        <div class="text-gray-400">
-                                            <svg class="mx-auto h-12 w-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                                            </svg>
-                                            <p class="text-lg font-medium">No teacher attendance records yet</p>
-                                            <p class="text-sm">Teacher activities will appear here as they occur</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+        @empty
+            <div class="text-center py-6 px-3">
+                <div class="text-gray-400">
+                    <svg class="mx-auto h-8 w-8 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    <p class="text-sm font-medium">No attendance logs yet</p>
+                    <p class="text-xs">Student activities will appear here as they occur</p>
                 </div>
             </div>
+        @endforelse
+    </div>
+</div>
+
+<!-- Teachers & Visitors Attendance Table -->
+<div class="modern-table bg-white overflow-hidden mt-8">
+    <div class="flex flex-col sm:flex-row justify-between items-center p-6 border-b border-gray-100">
+        <h3 class="text-xl font-medium text-gray-800">Teachers & Visitors Attendance</h3>
+    </div>
+
+    <!-- Desktop Table -->
+    <div class="hidden lg:block">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="table-header">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Role</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Department</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Activity</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Login</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Logout</th>
+                    </tr>
+                </thead>
+                <tbody id="teacher-attendance-table-body">
+                    @forelse($teacherAttendances as $attendance)
+                        <tr class="table-row">
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-1 inline-flex items-center text-xs font-medium rounded bg-blue-100 text-blue-700">
+                                    <svg class="mr-1.5 h-2 w-2 text-blue-400" fill="currentColor" viewBox="0 0 8 8">
+                                        <circle cx="4" cy="4" r="3" />
+                                    </svg>
+                                    {{ $attendance->teacherVisitor->role ?? 'Staff' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center space-x-3">
+                                    <img src="{{ \App\Services\AvatarService::getProfilePictureUrl($attendance->teacherVisitor->user->profile_picture ?? null, ($attendance->teacherVisitor->fname ?? '') . ' ' . ($attendance->teacherVisitor->lname ?? ''), 44) }}"
+                                        alt="Profile Picture"
+                                        class="profile-img"
+                                        onerror="this.onerror=null; this.src='{{ asset('images/default-profile.png') }}'" />
+                                    <div>
+                                        <div class="font-medium text-gray-900">{{ $attendance->teacherVisitor->lname ?? '' }}, {{ $attendance->teacherVisitor->fname ?? '' }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                                    <svg class="mr-1.5 h-2 w-2 text-purple-400" fill="currentColor" viewBox="0 0 8 8">
+                                        <circle cx="4" cy="4" r="3" />
+                                    </svg>
+                                    {{ $attendance->teacherVisitor->department ?? 'N/A' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                @php
+                                    $activityText = $attendance->activity ?? '';
+                                    $lower = strtolower($activityText);
+                                @endphp
+                                @if(str_contains($lower, 'wait for approval'))
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">{{ $activityText }}</span>
+                                @elseif(str_starts_with($lower, 'stay&borrow:'))
+                                    @php
+                                        $parts = explode(':', $activityText);
+                                        $code = $parts[1] ?? '';
+                                    @endphp
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Stay&Borrow: {{ trim($code) }}</span>
+                                @elseif(str_contains($lower, 'borrow:'))
+                                    @php
+                                        $parts = explode(':', $activityText);
+                                        $code = $parts[1] ?? '';
+                                    @endphp
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Borrow: {{ trim($code) }}</span>
+                                @elseif(str_contains($lower, 'borrow book rejected'))
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">{{ $activityText }}</span>
+                                @elseif(str_contains($lower, 'book returned'))
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">{{ $activityText }}</span>
+                                @elseif(str_contains($lower, 'study'))
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Stay to Study</span>
+                                @else
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">{{ $activityText }}</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm font-medium text-gray-900">{{ \Carbon\Carbon::parse($attendance->login)->setTimezone('Asia/Manila')->format('h:i A') }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm font-medium text-gray-900">{{ $attendance->logout ? \Carbon\Carbon::parse($attendance->logout)->setTimezone('Asia/Manila')->format('h:i A') : '-' }}</div>
+                                @if($attendance->logout)
+                                    <div class="text-xs text-emerald-600 hidden">Completed</div>
+                                @else
+                                    <div class="text-xs text-blue-600 hidden">Active</div>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="px-6 py-12 text-center">
+                                <div class="text-gray-400">
+                                    <svg class="mx-auto h-12 w-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                    </svg>
+                                    <p class="text-lg font-medium">No teacher attendance records yet</p>
+                                    <p class="text-sm">Teacher activities will appear here as they occur</p>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Mobile/Tablet Cards -->
+    <div class="block lg:hidden space-y-1 px-3 pb-3">
+        @forelse($teacherAttendances as $attendance)
+            <div class="bg-gray-50 rounded-md p-1 border border-gray-200">
+                <div class="flex flex-wrap items-start justify-between gap-1 mb-0.5 text-xs leading-tight">
+                    <div class="flex items-start space-x-1 min-w-0 flex-1">
+                        <img src="{{ \App\Services\AvatarService::getProfilePictureUrl($attendance->teacherVisitor->user->profile_picture ?? null, ($attendance->teacherVisitor->fname ?? '') . ' ' . ($attendance->teacherVisitor->lname ?? ''), 44) }}"
+                            alt="Profile Picture"
+                            class="profile-img w-5 h-5 rounded-full flex-shrink-0 mt-0.5"
+                            onerror="this.onerror=null; this.src='{{ asset('images/default-profile.png') }}'" />
+                        <div class="min-w-0 flex-1">
+                            <div class="font-medium text-gray-900 break-words">{{ $attendance->teacherVisitor->lname ?? '' }}, {{ $attendance->teacherVisitor->fname ?? '' }}</div>
+                            <div class="text-gray-500 break-words">ID: {{ $attendance->teacher_visitor_id }}</div>
+                        </div>
+                    </div>
+                    <div class="flex-1 min-w-[50px] text-center">
+                        <span class="px-0.5 py-0.5 inline-flex items-center font-medium rounded bg-blue-100 text-blue-700 flex-shrink-0">
+                            <svg class="h-1.5 w-1.5 text-blue-400" fill="currentColor" viewBox="0 0 8 8">
+                                <circle cx="4" cy="4" r="3" />
+                            </svg>
+                            {{ $attendance->teacherVisitor->role ?? 'Staff' }}
+                        </span>
+                    </div>
+                    <div class="flex-1 min-w-[60px] text-center">
+                        <span class="text-[10px] text-gray-600">Dept: </span>{{ $attendance->teacherVisitor->department ?? 'N/A' }}
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-start justify-between gap-1 text-xs leading-tight">
+                    <div class="min-w-0 flex-1">
+                        <span class="block text-gray-600 text-[10px] mb-0.5">Activity:</span>
+                        @php
+                            $activityText = $attendance->activity ?? '';
+                            $lower = strtolower($activityText);
+                        @endphp
+                        @if(str_contains($lower, 'wait for approval'))
+                            <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-yellow-100 text-yellow-800 block break-words w-full">{{ $activityText }}</span>
+                        @elseif(str_starts_with($lower, 'stay&borrow:'))
+                            @php
+                                $parts = explode(':', $activityText);
+                                $code = $parts[1] ?? '';
+                            @endphp
+                            <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-green-100 text-green-800 block break-words w-full">Stay&Borrow: {{ trim($code) }}</span>
+                        @elseif(str_contains($lower, 'borrow:'))
+                            @php
+                                $parts = explode(':', $activityText);
+                                $code = $parts[1] ?? '';
+                            @endphp
+                            <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-green-100 text-green-800 block break-words w-full">Borrow: {{ trim($code) }}</span>
+                        @elseif(str_contains($lower, 'borrow book rejected'))
+                            <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-red-100 text-red-800 block break-words w-full">{{ $activityText }}</span>
+                        @elseif(str_contains($lower, 'book returned'))
+                            <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-blue-100 text-blue-800 block break-words w-full">{{ $activityText }}</span>
+                        @elseif(str_contains($lower, 'study'))
+                            <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-blue-100 text-blue-800 block break-words w-full">Stay to Study</span>
+                        @else
+                            <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-gray-100 text-gray-800 block break-words w-full">{{ $activityText }}</span>
+                        @endif
+                    </div>
+                    <div class="text-center flex-1 min-w-[45px]">
+                        <span class="block text-gray-600 text-[10px] mb-0.5">Login:</span>
+                        <div class="font-medium text-gray-900">{{ \Carbon\Carbon::parse($attendance->login)->setTimezone('Asia/Manila')->format('h:i A') }}</div>
+                    </div>
+                    <div class="text-center flex-1 min-w-[60px]">
+                        <span class="block text-gray-600 text-[10px] mb-0.5">Logout:</span>
+                        <div class="font-medium text-gray-900">{{ $attendance->logout ? \Carbon\Carbon::parse($attendance->logout)->setTimezone('Asia/Manila')->format('h:i A') : '-' }}</div>
+                        @if($attendance->logout)
+                            <div class="text-emerald-600 text-[10px] hidden">Completed</div>
+                        @else
+                            <div class="text-blue-600 text-[10px] hidden">Active</div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @empty
+            <div class="text-center py-6 px-3">
+                <div class="text-gray-400">
+                    <svg class="mx-auto h-8 w-8 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    <p class="text-sm font-medium">No teacher attendance records yet</p>
+                    <p class="text-xs">Teacher activities will appear here as they occur</p>
+                </div>
+            </div>
+        @endforelse
+    </div>
+</div>
         </section>
     </div>
 
