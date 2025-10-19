@@ -130,6 +130,9 @@
     </div>
 
     <x-books-component/>
+
+    <x-library-policy />
+
 <!-- Campus News Section -->
 <section class="py-8 md:py-16 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -373,12 +376,14 @@
         }
     }
 </style>
+ <x-library-policy />
+@stack('scripts')
 
 <script>
 function showFeaturedNews(index, clickedElement) {
     // Only run on desktop/tablet view
     if (window.innerWidth < 768) return;
-    
+
     const featuredNews = document.getElementById('featured-news');
     const featuredContent = featuredNews.querySelector('.featured-content');
 
@@ -390,30 +395,30 @@ function showFeaturedNews(index, clickedElement) {
     const url = clickedElement.dataset.url;
     const category = clickedElement.dataset.category;
     const isFeatured = clickedElement.dataset.is_featured === 'true';
-    
+
     // Remove active state from all news items
     document.querySelectorAll('.news-item').forEach(item => {
         item.classList.remove('bg-blue-50/30', 'border-l-2', 'border-l-csu-blue');
     });
-    
+
     // Add active state to clicked item
     clickedElement.classList.add('bg-blue-50/30', 'border-l-2', 'border-l-csu-blue');
-    
+
     // Fade out current content
     featuredContent.style.opacity = '0';
     featuredContent.style.transform = 'translateY(10px)';
-    
+
     setTimeout(() => {
         // Determine image height based on screen size
         const isLargeScreen = window.innerWidth >= 1024;
         const imageHeight = isLargeScreen ? 'h-80' : 'h-64';
-        
+
         // Update content
         const imageHtml = image ? 
             `<div class="flex-shrink-0 bg-gray-100 ${imageHeight}">
                 <img src="${image}" alt="${title}" class="w-full h-full object-contain transition-transform duration-700 ease-out">
              </div>` : '';
-        
+
         const categoryBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">${category.charAt(0).toUpperCase() + category.slice(1)}</span>`;
         const featuredBadge = isFeatured ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"><i class="fas fa-star mr-1"></i>Featured</span>` : '';
         const badgesHtml = `<div class="flex flex-wrap gap-2 mb-3">${categoryBadge}${isFeatured ? ' ' + featuredBadge : ''}</div>`;
@@ -441,7 +446,7 @@ function showFeaturedNews(index, clickedElement) {
                 </div>
             </div>
         `;
-        
+
         // Fade in new content
         featuredContent.style.opacity = '1';
         featuredContent.style.transform = 'translateY(0)';

@@ -284,6 +284,113 @@
                         </div>
                     </div>
 
+                    <!-- Study Area Settings Section -->
+                    <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6 fade-in">
+                        <div class="p-6">
+                            <div class="flex justify-between items-center mb-6">
+                                <div>
+                                    <h2 class="text-xl font-semibold text-gray-800 mb-2">Study Area Settings</h2>
+                                    <p class="text-sm text-gray-600">Configure the maximum capacity for study area slots</p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                                <!-- Maximum Capacity -->
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-600">Maximum Capacity</p>
+                                            <p class="text-2xl font-bold text-gray-800" id="maxCapacity">{{ $studyArea->max_capacity }}</p>
+                                        </div>
+                                        <div class="p-3 bg-blue-50 rounded-full">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Available Slots -->
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-600">Available Slots</p>
+                                            <p class="text-2xl font-bold text-gray-800" id="availableSlots">{{ $studyArea->available_slots }}</p>
+                                        </div>
+                                        <div class="p-3 bg-green-50 rounded-full">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Status -->
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-600">Status</p>
+                                            <p class="text-lg font-semibold" id="statusText">
+                                                @if($studyArea->available_slots <= 5)
+                                                    <span class="text-red-600">Critical</span>
+                                                @elseif($studyArea->available_slots <= 10)
+                                                    <span class="text-yellow-600">Warning</span>
+                                                @else
+                                                    <span class="text-green-600">Good</span>
+                                                @endif
+                                            </p>
+                                        </div>
+                                        <div class="p-3 rounded-full" id="statusIcon">
+                                            @if($studyArea->available_slots <= 5)
+                                                <div class="bg-red-50 rounded-full p-3">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                                    </svg>
+                                                </div>
+                                            @elseif($studyArea->available_slots <= 10)
+                                                <div class="bg-yellow-50 rounded-full p-3">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                                    </svg>
+                                                </div>
+                                            @else
+                                                <div class="bg-green-50 rounded-full p-3">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Update Form -->
+                            <form id="studyAreaForm" class="bg-gray-50 rounded-lg p-4">
+                                @csrf
+                                <div class="flex items-end space-x-4">
+                                    <div class="flex-1">
+                                        <label for="max_capacity" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Set Maximum Capacity
+                                        </label>
+                                        <input type="number" id="max_capacity" name="max_capacity"
+                                               value="{{ $studyArea->max_capacity }}"
+                                               min="1" max="1000"
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                               placeholder="Enter maximum capacity">
+                                    </div>
+                                    <button type="submit"
+                                            class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 flex items-center space-x-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                        </svg>
+                                        <span>Update</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
                     <!-- Overdue Books Section  -->
                     <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6 fade-in">
                         <div class="p-6">
@@ -294,7 +401,7 @@
                                 </div>
                                 <form id="sendRemindersForm" action="{{ route('admin.overdue.books.send-reminders') }}" method="POST" class="inline">
                                     @csrf
-                                    <button type="submit" 
+                                    <button type="submit"
                                         class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 flex items-center space-x-2">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                             <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
@@ -339,7 +446,94 @@ function showToast(message, type = 'success', duration = 3000) {
     }, duration - 300);
 }
 
+        // Study Area Form Handler
         document.addEventListener('DOMContentLoaded', function() {
+            const studyAreaForm = document.getElementById('studyAreaForm');
+            if (studyAreaForm) {
+                studyAreaForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    const maxCapacityInput = document.getElementById('max_capacity');
+                    const submitBtn = studyAreaForm.querySelector('button[type="submit"]');
+                    const originalBtnHtml = submitBtn.innerHTML;
+
+                    // Disable button and show loading
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = `
+                        <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                        </svg>
+                        Updating…`;
+
+                    try {
+                        const response = await fetch('{{ route("admin.dashboard.update-study-area") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRF-TOKEN': csrfToken,
+                            },
+                            body: JSON.stringify({
+                                max_capacity: maxCapacityInput.value,
+                                _token: csrfToken
+                            })
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok && data.success) {
+                            // Update the UI with new values
+                            document.getElementById('maxCapacity').textContent = data.data.max_capacity;
+                            document.getElementById('availableSlots').textContent = data.data.available_slots;
+                            maxCapacityInput.value = data.data.max_capacity;
+
+                            // Update status
+                            const statusText = document.getElementById('statusText');
+                            const statusIcon = document.getElementById('statusIcon');
+
+                            if (data.data.available_slots <= 5) {
+                                statusText.innerHTML = '<span class="text-red-600">Critical</span>';
+                                statusIcon.innerHTML = `
+                                    <div class="bg-red-50 rounded-full p-3">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                        </svg>
+                                    </div>`;
+                            } else if (data.data.available_slots <= 10) {
+                                statusText.innerHTML = '<span class="text-yellow-600">Warning</span>';
+                                statusIcon.innerHTML = `
+                                    <div class="bg-yellow-50 rounded-full p-3">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                        </svg>
+                                    </div>`;
+                            } else {
+                                statusText.innerHTML = '<span class="text-green-600">Good</span>';
+                                statusIcon.innerHTML = `
+                                    <div class="bg-green-50 rounded-full p-3">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>`;
+                            }
+
+                            showToast('Study area capacity updated successfully!', 'success');
+                        } else {
+                            showToast(data.message || 'Failed to update study area capacity.', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error updating study area:', error);
+                        showToast('An error occurred while updating the study area.', 'error');
+                    } finally {
+                        // Re-enable button and restore original text
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalBtnHtml;
+                    }
+                });
+            }
+
             const container = document.getElementById('overdueBooksList');
             
             function loadOverdueBooks() {

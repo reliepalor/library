@@ -57,6 +57,25 @@ class AvatarService
     }
 
     /**
+     * Generate a placeholder avatar URL with custom background color
+     */
+    public static function getPlaceholderAvatarWithColor(?string $name = null, int $size = 300, string $backgroundColor = 'random'): string
+    {
+        // Use UI Avatars service for generating avatars
+        $initials = $name ? self::getInitials($name) : 'U';
+
+        // If backgroundColor is 'random', use the existing color generation logic
+        if ($backgroundColor === 'random') {
+            $backgroundColor = self::generateColorFromString($name ?? 'default');
+        }
+
+        return "https://ui-avatars.com/api/?name=" . urlencode($initials) .
+               "&background=" . urlencode($backgroundColor) .
+               "&color=fff&size=" . $size .
+               "&rounded=true&bold=true";
+    }
+
+    /**
      * Get profile picture URL with fallback
      */
     public static function getProfilePictureUrl(?string $profilePicture, ?string $name = null, int $size = 300): string
@@ -64,7 +83,8 @@ class AvatarService
         if ($profilePicture && Storage::disk('public')->exists($profilePicture)) {
             return asset('storage/' . $profilePicture);
         }
-        
+
+        // If profile picture is not found, try to generate placeholder avatar
         return self::getPlaceholderAvatar($name, $size);
     }
 }

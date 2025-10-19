@@ -7,8 +7,10 @@ use App\Models\Books;
 use App\Models\Student;
 use App\Models\BorrowRequest;
 use App\Models\Attendance;
+use App\Models\StudyArea;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
@@ -43,6 +45,9 @@ class DashboardController extends Controller
             ->whereDate('created_at', Carbon::today())
             ->get();
 
+        // Get study area information
+        $studyArea = StudyArea::getAvailableSlots();
+
         return view('admin.dashboard', compact(
             'totalBooks',
             'totalStudents',
@@ -51,7 +56,59 @@ class DashboardController extends Controller
             'recentBorrows',
             'books',
             'students',
-            'todayAttendanceRecords'
+            'todayAttendanceRecords',
+            'studyArea'
         ));
     }
-} 
+
+    public function updateStudyAreaSettings(Request $request)
+    {
+        $request->validate([
+            'max_capacity' => 'required|integer|min:1|max:1000',
+        ]);
+
+        try {
+            $studyArea = StudyArea::firstOrCreate(
+                ['name' => 'Main Study Area'],
+                ['max_capacity' => 30, 'available_slots' => 30]
+            );
+
+            $oldCapacity = $studyArea->max_capacity;
+            $newCapacity = $request->max_capacity;
+
+            $studyArea->update(['max_capacity' => $newCapacity]);
+
+            // Recalculate available slots based on active study sessions
+            $activeStudySessions = Attendance::whereNull('logout')
+                ->where(function($query) {
+                    $query->where('activity', 'like', '%study%')
+                          ->orWhere('activity', 'like', '%stay%')
+                          ->orWhere('activity', 'like', '%read%');
+                })
+                ->count();
+
+            $newAvailableSlots = max(0, $newCapacity - $activeStudySessions);
+            $studyArea->update(['available_slots' => $newAvailableSlots]);
+
+            Log::info("Study area capacity updated from {$oldCapacity} to {$newCapacity}, available slots recalculated to {$newAvailableSlots}");
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Study area capacity updated successfully',
+                'data' => [
+                    'max_capacity' => $newCapacity,
+                    'available_slots' => $newAvailableSlots,
+                    'status_color' => $newAvailableSlots <= 5 ? 'danger' : ($newAvailableSlots <= 10 ? 'warning' : 'success')
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error updating study area settings: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update study area settings'
+            ], 500);
+        }
+    }
+}

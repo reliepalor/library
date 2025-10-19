@@ -86,7 +86,8 @@
    
 
                             <!-- Table Card -->
-                            <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                            <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow">
+
                                 <div class="flex flex-col md:flex-row justify-between items-center p-6 bg-gray-100 border-b border-gray-200">
                                     <h2 class="text-xl font-semibold text-gray-800" x-text="showArchived ? '📚 Archived Students' : '👥 Active Students'"></h2>
                                     <div class="flex flex-wrap items-center gap-2 mb-4">
@@ -98,7 +99,7 @@
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                                                     </svg>
                                                 </button>
-                                                <ul id="collegeFilterMenu" class="absolute z-20 mt-2 w-32 bg-white/10 backdrop-blur-md border border-gray-400 rounded-2xl shadow-2xl hidden transform origin-top transition-all duration-300 ease-out opacity-0 scale-y-95">
+                                                <ul id="collegeFilterMenu" class="absolute z-50 mt-2 w-32 bg-white/10 backdrop-blur-md border border-gray-400 rounded-2xl shadow-2xl hidden transform origin-top transition-all duration-300 ease-out opacity-0 scale-y-95">
                                                     <li>
                                                         <button class="college-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-college="All">All</button>
                                                     </li>
@@ -122,6 +123,31 @@
                                                     </li>
                                                 </ul>
                                             </div>
+                                            <div class="relative inline-block text-left">
+                                                <button id="yearFilterButton" class="year-filter glass-button px-4 py-2 text-gray-500 text-sm font-medium rounded-2xl flex items-center justify-between w-32 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white/10 backdrop-blur-md border border-gray-400 shadow-md" data-year="All" aria-expanded="false" aria-controls="yearFilterMenu">
+                                                    <span id="selectedYear">All</span>
+                                                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </button>
+                                                <ul id="yearFilterMenu" class="absolute z-50 mt-2 w-32 bg-white/10 backdrop-blur-md border border-gray-400 rounded-2xl shadow-2xl hidden transform origin-top transition-all duration-300 ease-out opacity-0 scale-y-95">
+                                                    <li>
+                                                        <button class="year-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-year="All">All</button>
+                                                    </li>
+                                                    <li>
+                                                        <button class="year-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-year="1">1st Year</button>
+                                                    </li>
+                                                    <li>
+                                                        <button class="year-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-year="2">2nd Year</button>
+                                                    </li>
+                                                    <li>
+                                                        <button class="year-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-year="3">3rd Year</button>
+                                                    </li>
+                                                    <li>
+                                                        <button class="year-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-year="4">4th Year</button>
+                                                    </li>
+                                                </ul>
+                                            </div>
                                             <button id="applyFiltersButton" class="glass-button px-3 py-1.5 text-gray-500 text-sm font-medium rounded-2xl transition-all duration-300 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white/10 backdrop-blur-md border border-gray-400 shadow-md hidden">
                                                 Apply
                                             </button>
@@ -140,11 +166,21 @@
                                         </a>
                                     </div>
                                 </div>
-
+                                <!-- Search Bar -->
+                                <div class="bg-white p-1">
+                                    <div class="relative max-w-md">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                            </svg>
+                                        </div>
+                                        <input type="text" id="student-search" placeholder="Search students by name..." class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                    </div>
+                                </div>
 
                                 <!-- Active Students Table -->
                                 <div x-show="!showArchived" x-transition>
-                                    <div class="overflow-x-auto p-4 py-10">
+                                    <div class="overflow-x-auto p-4 py-6">
                                         <table class="w-full table-auto text-sm text-left text-gray-700">
                                             <thead class="bg-gray-50 text-gray-500 uppercase text-xs font-semibold border-b">
                                                 <tr>

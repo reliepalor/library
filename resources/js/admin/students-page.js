@@ -94,17 +94,178 @@
       });
     }
 
+    // College filter logic
+    const collegeFilterButton = document.getElementById('collegeFilterButton');
+    const collegeFilterMenu = document.getElementById('collegeFilterMenu');
+    const selectedCollege = document.getElementById('selectedCollege');
+    let currentCollegeFilter = 'All';
+    let collegeMenuOpen = false;
+
+    function openCollegeFilterMenu() {
+      collegeFilterMenu.classList.remove('hidden', 'opacity-0', 'scale-y-95');
+      collegeFilterMenu.classList.add('opacity-100', 'scale-y-100');
+      collegeFilterButton.setAttribute('aria-expanded', 'true');
+      collegeMenuOpen = true;
+    }
+
+    function closeCollegeFilterMenu() {
+      collegeFilterMenu.classList.add('opacity-0', 'scale-y-95');
+      collegeFilterMenu.classList.remove('opacity-100', 'scale-y-100');
+      setTimeout(() => {
+        collegeFilterMenu.classList.add('hidden');
+        collegeMenuOpen = false;
+      }, 300);
+      collegeFilterButton.setAttribute('aria-expanded', 'false');
+    }
+
+    function toggleCollegeFilterMenu() {
+      if (collegeMenuOpen) {
+        closeCollegeFilterMenu();
+      } else {
+        openCollegeFilterMenu();
+      }
+    }
+
+    if (collegeFilterButton) {
+      collegeFilterButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleCollegeFilterMenu();
+      });
+    }
+
+    // Close college menu when clicking outside
+    document.addEventListener('click', function (e) {
+      if (collegeMenuOpen && !collegeFilterButton.contains(e.target) && !collegeFilterMenu.contains(e.target)) {
+        closeCollegeFilterMenu();
+      }
+    });
+
+    document.querySelectorAll('.college-filter-option').forEach(option => {
+      option.addEventListener('click', function (e) {
+        e.stopPropagation();
+        const college = this.getAttribute('data-college');
+        selectedCollege.textContent = college === 'All' ? 'All' : college;
+        currentCollegeFilter = college;
+        collegeFilterButton.setAttribute('data-college', college);
+        closeCollegeFilterMenu();
+        applyFilters();
+      });
+    });
+
+    // Year filter logic
+    const yearFilterButton = document.getElementById('yearFilterButton');
+    const yearFilterMenu = document.getElementById('yearFilterMenu');
+    const selectedYear = document.getElementById('selectedYear');
+    let currentYearFilter = 'All';
+    let yearMenuOpen = false;
+
+    function openYearFilterMenu() {
+      yearFilterMenu.classList.remove('hidden', 'opacity-0', 'scale-y-95');
+      yearFilterMenu.classList.add('opacity-100', 'scale-y-100');
+      yearFilterButton.setAttribute('aria-expanded', 'true');
+      yearMenuOpen = true;
+    }
+
+    function closeYearFilterMenu() {
+      yearFilterMenu.classList.add('opacity-0', 'scale-y-95');
+      yearFilterMenu.classList.remove('opacity-100', 'scale-y-100');
+      setTimeout(() => {
+        yearFilterMenu.classList.add('hidden');
+        yearMenuOpen = false;
+      }, 300);
+      yearFilterButton.setAttribute('aria-expanded', 'false');
+    }
+
+    function toggleYearFilterMenu() {
+      if (yearMenuOpen) {
+        closeYearFilterMenu();
+      } else {
+        openYearFilterMenu();
+      }
+    }
+
+    if (yearFilterButton) {
+      yearFilterButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleYearFilterMenu();
+      });
+    }
+
+    // Close year menu when clicking outside
+    document.addEventListener('click', function (e) {
+      if (yearMenuOpen && !yearFilterButton.contains(e.target) && !yearFilterMenu.contains(e.target)) {
+        closeYearFilterMenu();
+      }
+    });
+
+    document.querySelectorAll('.year-filter-option').forEach(option => {
+      option.addEventListener('click', function (e) {
+        e.stopPropagation();
+        const year = this.getAttribute('data-year');
+        selectedYear.textContent = year === 'All' ? 'All' : year + (year === '1' ? 'st' : year === '2' ? 'nd' : year === '3' ? 'rd' : 'th') + ' Year';
+        currentYearFilter = year;
+        yearFilterButton.setAttribute('data-year', year);
+        closeYearFilterMenu();
+        applyFilters();
+      });
+    });
+
+    // Apply filters function
+    function applyFilters() {
+      const rows = document.querySelectorAll('#student-table-body tr');
+      rows.forEach(row => {
+        const college = row.getAttribute('data-college');
+        const year = row.querySelector('td:nth-child(7)').textContent.trim(); // Year column
+
+        const collegeMatch = currentCollegeFilter === 'All' || college === currentCollegeFilter;
+        const yearMatch = currentYearFilter === 'All' || year === currentYearFilter;
+
+        if (collegeMatch && yearMatch) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      // Update select all checkbox
+      updateSelectAllState();
+    }
+
+    // Update select all checkbox state
+    function updateSelectAllState() {
+      const selectAll = document.getElementById('select-all');
+      if (!selectAll) return;
+
+      const visibleCheckboxes = Array.from(document.querySelectorAll('.select-student')).filter(cb => {
+        const row = cb.closest('tr');
+        return row && row.style.display !== 'none';
+      });
+
+      const checkedVisible = visibleCheckboxes.filter(cb => cb.checked).length;
+      selectAll.checked = visibleCheckboxes.length > 0 && checkedVisible === visibleCheckboxes.length;
+      selectAll.indeterminate = checkedVisible > 0 && checkedVisible < visibleCheckboxes.length;
+    }
+
     // Select all logic
     const selectAll = document.getElementById('select-all');
     if (selectAll) {
       selectAll.addEventListener('change', function () {
         document.querySelectorAll('.select-student').forEach(cb => {
           const row = cb.closest('tr');
-          if (!row || row.classList.contains('hidden')) return;
+          if (!row || row.style.display === 'none') return;
           cb.checked = selectAll.checked;
         });
       });
     }
+
+    // Update select all when individual checkboxes change
+    document.addEventListener('change', function (e) {
+      if (e.target.classList.contains('select-student')) {
+        updateSelectAllState();
+      }
+    });
 
     // Batch Print Modal logic
     const modal = document.getElementById('batch-print-modal');
@@ -205,6 +366,30 @@
     if (modal) {
       modal.addEventListener('click', function (e) {
         if (e.target === modal) closeModalFn();
+      });
+    }
+
+    // Student search functionality
+    const searchInput = document.getElementById('student-search');
+    if (searchInput) {
+      searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        const rows = document.querySelectorAll('#student-table-body tr');
+
+        rows.forEach(row => {
+          const firstName = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+          const lastName = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+          const fullName = `${firstName} ${lastName}`;
+
+          if (fullName.includes(searchTerm) || searchTerm === '') {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        });
+
+        // Update select all checkbox state after filtering
+        updateSelectAllState();
       });
     }
 

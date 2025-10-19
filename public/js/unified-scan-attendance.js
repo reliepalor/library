@@ -122,6 +122,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         const activity = this.value;
         const submitBtn = document.getElementById('modal-submit');
         const otherActivitiesSection = document.getElementById('other-activities-section');
+        const backBtn = document.getElementById('modal-back');
 
         if (activity === 'Borrow' || activity === 'Stay&Borrow') {
             const userType = document.getElementById('modal-user-type').value;
@@ -129,18 +130,24 @@ document.addEventListener('DOMContentLoaded', async function() {
             showBookSelectionModal(userType, identifier, activity);
             // Hide submit button since modal is shown
             submitBtn.style.display = 'none';
+            // Show back button for borrow activities
+            if (backBtn) backBtn.classList.remove('hidden');
         } else if (activity === 'Other') {
             // Show other activities section with smooth transition
             otherActivitiesSection.style.opacity = '1';
             otherActivitiesSection.style.maxHeight = '500px'; // Set a reasonable max height
             // Show submit button for other activities
             submitBtn.style.display = 'inline-block';
+            // Show back button for other activities
+            if (backBtn) backBtn.classList.remove('hidden');
         } else {
             // Hide other activities section
             otherActivitiesSection.style.opacity = '0';
             otherActivitiesSection.style.maxHeight = '0';
             // Show submit button for other activities
             submitBtn.style.display = 'inline-block';
+            // Hide back button for default activities
+            if (backBtn) backBtn.classList.add('hidden');
         }
     });
 
@@ -163,8 +170,53 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
         }
 
+        // Check if activity is study-related and study area is full
+        const isStudyRelated = isStudyRelatedActivity(activity);
+        if (isStudyRelated) {
+            try {
+                const studyAreaData = await checkStudyAreaAvailability();
+                if (studyAreaData && studyAreaData.available_slots <= 0) {
+                    // Show study area full warning modal
+                    showStudyAreaFullWarningModal();
+                    return; // Prevent attendance logging
+                }
+            } catch (error) {
+                console.error('Error checking study area availability:', error);
+                // Continue with attendance logging if check fails
+            }
+        }
+
         // Check if this is a borrowing activity
         if (activity === 'Borrow' || activity === 'Stay&Borrow') {
+            // Check study area availability for Stay&Borrow activities
+            if (activity === 'Stay&Borrow') {
+                console.log('[DEBUG] Checking study area for Stay&Borrow activity:', activity);
+                const isStudyRelated = isStudyRelatedActivity(activity);
+                console.log('[DEBUG] Is study related:', isStudyRelated);
+
+                if (isStudyRelated) {
+                    try {
+                        console.log('[DEBUG] Fetching study area availability...');
+                        const studyAreaData = await checkStudyAreaAvailability();
+                        console.log('[DEBUG] Study area data:', studyAreaData);
+
+                        if (studyAreaData && studyAreaData.available_slots <= 0) {
+                            console.log('[DEBUG] Study area full, showing warning modal');
+                            // Show study area full warning modal
+                            showStudyAreaFullWarningModal();
+                            return; // Prevent attendance logging
+                        } else {
+                            console.log('[DEBUG] Study area has slots available:', studyAreaData?.available_slots);
+                        }
+                    } catch (error) {
+                        console.error('Error checking study area availability:', error);
+                        // Continue with attendance logging if check fails
+                    }
+                } else {
+                    console.log('[DEBUG] Activity not considered study-related');
+                }
+            }
+
             if (activity === 'Stay&Borrow') {
                 // For Stay&Borrow, log attendance first, then show book selection modal
                 showLoadingOverlay("Logging in...");
@@ -320,6 +372,38 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (customActivityInput) {
             customActivityInput.value = '';
         }
+    });
+
+    // Study area full modal OK button
+    const studyAreaFullOkBtn = document.getElementById('study-area-full-ok');
+    if (studyAreaFullOkBtn) {
+        studyAreaFullOkBtn.addEventListener('click', function() {
+            document.getElementById('study-area-full-modal').classList.add('hidden');
+        });
+    }
+
+    // Back button in activity modal
+    document.getElementById('modal-back').addEventListener('click', function() {
+        // Reset activity selection to default
+        const activitySelect = document.getElementById('activity');
+        if (activitySelect) {
+            activitySelect.value = 'Stay to Study';
+            // Trigger change event to reset the UI
+            activitySelect.dispatchEvent(new Event('change'));
+        }
+        // Reset other activities section
+        const otherActivitiesSection = document.getElementById('other-activities-section');
+        if (otherActivitiesSection) {
+            otherActivitiesSection.style.opacity = '0';
+            otherActivitiesSection.style.maxHeight = '0';
+        }
+        // Clear custom activity input
+        const customActivityInput = document.getElementById('custom-activity');
+        if (customActivityInput) {
+            customActivityInput.value = '';
+        }
+        // Hide the back button since we're back to default
+        this.classList.add('hidden');
     });
 
     // Handle predefined activity button clicks
@@ -795,7 +879,7 @@ async function handleLogout(userType, identifier, activity = 'Logout') {
             const userName = data.user?.name || (isStudent ? 'Student' : 'User');
             const emoji = isStudent ? '🎓' : '👨‍🏫';
             
-            showNotification(`Logout Successful, ${userName}! ${emoji}`, 'success');
+            showNotification(`Logout Successful`, 'success');
             
             // Clear input field and refresh table
             const qrInput = document.getElementById('qr-input');
@@ -1172,10 +1256,10 @@ function updateStudentTable(attendance) {
                 console.log('Processed times:', { timeIn, timeOut, status, statusText });
                 console.groupEnd();
                 
-                // Build the row HTML with proper fallbacks
-                const profilePic = record.profile_picture || 
-                                 studentInfo.profile_picture || 
-                                 `https://ui-avatars.com/api/?name=${encodeURIComponent(studentName)}&background=random&size=100`;
+                // Build the row HTML with proper fallbacks - prioritize storage profile picture
+                const profilePic = record.profile_picture
+                    ? (window.assetBaseUrl + 'storage/' + record.profile_picture)
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(studentName)}&background=random&size=100`;
                 
                 row.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" title="Student ID: ${studentId}">
@@ -1627,10 +1711,10 @@ function updateSingleTeacherRecord(record) {
     }
     const statusText = status === 'out' ? 'Signed Out' : 'Signed In';
 
-    // Build profile pic with fallback
-    const profilePic = record.profile_picture ||
-                     teacherInfo.profile_picture ||
-                     `https://ui-avatars.com/api/?name=${encodeURIComponent(teacherName)}&background=random&size=100`;
+                // Build profile pic with fallback - prioritize storage profile picture
+                const profilePic = record.profile_picture
+                    ? (window.assetBaseUrl + 'storage/' + record.profile_picture)
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(teacherName)}&background=random&size=100`;
 
     // Create new row if it doesn't exist
     let row = document.getElementById(rowId);
@@ -1903,11 +1987,13 @@ function initializeBorrowUI() {
         manualBorrowForm.addEventListener('submit', handleManualBorrow);
     }
     
-    // Cancel button
+    // Cancel button (now Back button)
     if (bookSelectionCancel) {
         bookSelectionCancel.addEventListener('click', () => {
+            // Hide book selection modal and show activity modal again
             document.getElementById('book-selection-modal').classList.add('hidden');
-            document.getElementById('activity-modal').classList.add('hidden');
+            document.getElementById('activity-modal').classList.remove('hidden');
+            // Keep the back button visible since we're returning to the activity selection
         });
     }
     
@@ -2321,9 +2407,10 @@ function loadMoreStudentRecords() {
             }
             const statusText = status === 'out' ? 'Logged Out' : 'Present';
 
-            const profilePic = record.profile_picture ||
-                             studentInfo.profile_picture ||
-                             `https://ui-avatars.com/api/?name=${encodeURIComponent(studentName)}&background=random&size=100`;
+            // Prioritize storage profile picture over avatar service
+            const profilePic = record.profile_picture
+                ? (window.assetBaseUrl + 'storage/' + record.profile_picture)
+                : `https://ui-avatars.com/api/?name=${encodeURIComponent(studentName)}&background=random&size=100`;
 
             row.innerHTML = `
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" title="Student ID: ${studentId}">
@@ -2387,6 +2474,50 @@ function loadMoreStudentRecords() {
     }
 
     console.log(`[LOAD MORE] Added ${recordsToLoad} more records. Total loaded: ${tbody.getAttribute('data-loaded')}`);
+}
+
+// Check if activity is study-related
+function isStudyRelatedActivity(activity) {
+    if (!activity) return false;
+
+    console.log('[DEBUG] Checking if activity is study-related:', activity);
+    const studyKeywords = ['study', 'stay', 'reading', 'research', 'group study', 'computer use', 'meeting'];
+    const lowerActivity = activity.toLowerCase();
+
+    const result = studyKeywords.some(keyword => lowerActivity.includes(keyword));
+    console.log('[DEBUG] Study keywords check result:', result, 'for keywords:', studyKeywords);
+
+    return result;
+}
+
+// Check study area availability
+async function checkStudyAreaAvailability() {
+    try {
+        console.log('[DEBUG] Fetching study area availability from API...');
+        const response = await fetch('/api/study-area/availability');
+        console.log('[DEBUG] API response status:', response.status);
+
+        const data = await response.json();
+        console.log('[DEBUG] API response data:', data);
+
+        if (data.success) {
+            console.log('[DEBUG] Returning study area data:', data.data);
+            return data.data;
+        }
+        console.log('[DEBUG] API call unsuccessful, returning null');
+        return null;
+    } catch (error) {
+        console.error('Error checking study area availability:', error);
+        return null;
+    }
+}
+
+// Show study area full warning modal
+function showStudyAreaFullWarningModal() {
+    const modal = document.getElementById('study-area-full-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+    }
 }
 
 // Debounce utility function

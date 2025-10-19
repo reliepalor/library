@@ -63,6 +63,7 @@ Route::middleware(['auth', UserMiddleware::class])->group(function () {
 
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('admin/dashboard', [DashboardController::class, 'index'])->name('admin.auth.dashboard');
+    Route::post('admin/dashboard/update-study-area', [DashboardController::class, 'updateStudyAreaSettings'])->name('admin.dashboard.update-study-area');
 
     // Real-time attendance data
     Route::get('admin/attendance/realtime', [\App\Http\Controllers\Admin\AttendanceController::class, 'getRealtimeAttendance'])

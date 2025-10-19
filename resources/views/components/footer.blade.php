@@ -3,6 +3,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
             <!-- Contact Us -->
             <div>
+
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 tracking-tight">Contact Us</h3>
                 <p class="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
                     CSU Library<br>
@@ -16,7 +17,7 @@
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 tracking-tight">Quick Links</h3>
                 <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-200">
                     <li><a href="#about" class="hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200">About</a></li>
-                    <li><a href="#" class="hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200">Library Policies</a></li>
+                    <li><a href="#" onclick="window.togglePolicyModal(); return false;" class="hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200">Library Policies</a></li>
                     <li><a href="#" class="hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200">Accessibility</a></li>
                     <li><a href="#hours" class="hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200">Opening Hours</a></li>
                 </ul>
@@ -45,13 +46,14 @@
             <!-- Placeholder Section -->
             <div>
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 tracking-tight">Placeholder</h3>
-                <p class="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
-                    This section is reserved for future content. Add your custom content here, such as additional links, a newsletter signup, or other features.
-                </p>
+             
             </div>
         </div>
         <div class="mt-12 pt-8 border-t border-gray-200/50 dark:border-gray-700/50 text-center">
             <p class="text-sm text-gray-700 dark:text-gray-200">© 2025 CSU Library. All rights reserved.</p>
         </div>
     </div>
+
 </footer>
+
+<x-library-policy />

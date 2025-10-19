@@ -10,6 +10,7 @@ use App\Models\TeacherVisitor;
 use App\Models\BorrowedBook;
 use App\Models\Books;
 use App\Mail\AttendanceNotification;
+use App\Services\AvatarService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -131,6 +132,8 @@ class UnifiedAttendanceController extends Controller
                 'identifier' => $student ? ($student->student_id ?? $record->student_id) : $record->student_id,
                 'name' => $name ?: 'Unknown Student',
                 'profile_picture' => $student?->user?->profile_picture,
+                'fname' => $student?->fname,
+                'lname' => $student?->lname,
                 'college_or_dept' => $student ? ($student->college ?? '') : '',
                 'activity' => $activity,
                 'time_in' => $record->login ? Carbon::parse($record->login)->format('h:i A') : 'N/A',
@@ -169,6 +172,8 @@ class UnifiedAttendanceController extends Controller
                 'identifier' => $record->teacher_visitor_id,
                 'name' => $name ?: 'Unknown Staff',
                 'profile_picture' => $teacher?->user?->profile_picture,
+                'fname' => $teacher?->fname,
+                'lname' => $teacher?->lname,
                 'college_or_dept' => $teacher ? ($teacher->department ?? '') : '',
                 'role' => $teacher ? ($teacher->role ?? '') : '',
                 'activity' => $record->activity,
@@ -823,6 +828,7 @@ class UnifiedAttendanceController extends Controller
                         'college' => $student ? ($student->college ?? null) : null,
                         'course' => $student ? ($student->course ?? null) : null,
                     ],
+                    'profile_picture' => $student?->user?->profile_picture,
                     'time_in' => $record->login,
                     'time_out' => $record->logout,
                     'activity' => $record->activity,
@@ -849,6 +855,7 @@ class UnifiedAttendanceController extends Controller
                         'department' => $teacher ? ($teacher->department ?? null) : null,
                         'department_name' => $teacher ? ($teacher->department ?? null) : null, // Alias for compatibility
                     ],
+                    'profile_picture' => $teacher?->user?->profile_picture,
                     'time_in' => $record->login,
                     'time_out' => $record->logout,
                     'activity' => $activity, // Use the processed activity

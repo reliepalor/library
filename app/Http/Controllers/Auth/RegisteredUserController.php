@@ -36,12 +36,15 @@ class RegisteredUserController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password' => ['required', 'confirmed', Rules\Password::defaults(), 'regex:/^(?=.*[a-zA-Z])(?=.*\d).+$/'],
             'usertype' => ['required', 'in:user,admin'],
         ]);
 
+        // Capitalize the name properly
+        $capitalizedName = ucwords(strtolower($request->name));
+
         $user = User::create([
-            'name' => $request->name,
+            'name' => $capitalizedName,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'usertype' => $request->usertype,
@@ -50,6 +53,6 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        return redirect('/');
     }
 }

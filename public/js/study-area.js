@@ -40,13 +40,22 @@ class StudyAreaAvailability {
     updateUI(data) {
         if (!this.availabilityElement) return;
 
-        const { available_slots, status_color, is_full } = data;
+        const { available_slots, max_capacity, status_color, is_full } = data;
+
+        // Update max capacity if provided
+        if (max_capacity) {
+            this.maxCapacity = max_capacity;
+            const maxSlotsElement = document.getElementById('max-slots');
+            if (maxSlotsElement) {
+                maxSlotsElement.textContent = max_capacity;
+            }
+        }
 
         // Update the badge text and class
         this.availabilityElement.textContent = `Available Study Areas: ${available_slots}/${this.maxCapacity}`;
 
         // Update badge color based on availability
-        this.availabilityBadge.className = `badge bg-${status_color} text-white`;
+        this.availabilityBadge.className = `badge bg-${status_color} text-gray-900`;
 
         // Update the available slots span
         const availableSlotsElement = document.getElementById('available-slots');
@@ -98,11 +107,7 @@ class StudyAreaAvailability {
         notification.id = 'study-area-full-notification';
         notification.className = 'alert alert-warning alert-dismissible fade show mt-3';
         notification.role = 'alert';
-        notification.innerHTML = `
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            <strong>Warning:</strong> All study areas are currently occupied. Please check back later.
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        `;
+        
         
         // Insert after the availability badge
         this.availabilityElement.parentNode.insertBefore(notification, this.availabilityElement.nextSibling);

@@ -35,7 +35,7 @@ class AuthenticatedSessionController extends Controller
             return redirect('admin/dashboard');
         }
 
-        return redirect()->intended('/user');
+        return redirect()->intended('/');
     }
 
     /**
@@ -78,7 +78,7 @@ class AuthenticatedSessionController extends Controller
             return redirect('admin/dashboard');
         }
 
-        return redirect()->intended('/user');
+        return redirect()->intended('/');
     }
 
     /**

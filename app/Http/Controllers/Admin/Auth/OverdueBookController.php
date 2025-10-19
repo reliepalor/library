@@ -17,34 +17,32 @@ class OverdueBookController extends Controller
     public function sendReminders(Request $request)
     {
         Log::info('Starting to send overdue book reminders');
-        
+
         // Get current time in Asia/Manila timezone
         $now = Carbon::now('Asia/Manila');
-        $startTime = $now->copy()->setTime(17, 0, 0); // 5:00 PM cut-off reference
-        $endTime = $now->copy()->setTime(18, 0, 0);   // 6:00 PM cut-off reference
+        $fivePM = $now->copy()->setTime(17, 0, 0); // 5:00 PM reference
 
-        // Only send reminders if current time is between 5-6 PM
-        // Temporarily disabled for testing
-        // if ($now->lt($startTime) || $now->gt($endTime)) {
-        //     $message = "Reminders can only be sent between 5:00 PM and 6:00 PM.";
-        //     Log::info($message);
-        //     if ($request->ajax()) {
-        //         return response()->json(['message' => $message], 400);
-        //     }
-        //     return back()->with('error', $message);
-        // }
+        // Allow sending reminders at any time, but filter overdue books based on 5 PM logic
+        $isAfterFivePM = $now->gte($fivePM);
 
         // Candidates: all approved, not yet returned
         $candidates = BorrowedBook::whereNull('returned_at')
             ->with(['student', 'book'])
             ->get();
 
-        // Determine overdue: due date is next day at 5:00 PM (within 5–6 PM window, consider 5 PM cutoff)
-        $overdueBooks = $candidates->filter(function ($borrow) use ($now) {
+        // Determine overdue: only send reminders after 5 PM for books that haven't been returned/logged out
+        $overdueBooks = $candidates->filter(function ($borrow) use ($now, $isAfterFivePM) {
+            // Only send reminders if it's 5 PM or later
+            if (!$isAfterFivePM) {
+                return false;
+            }
+
             $borrowedAt = $borrow->borrowed_at ?? $borrow->created_at;
             $borrowedAt = $borrowedAt ? Carbon::parse($borrowedAt, 'Asia/Manila') : Carbon::now('Asia/Manila');
+
+            // Books are due by 5 PM the next day
             $dueAt = $borrowedAt->copy()->addDay()->setTime(17, 0, 0); // 5 PM next day
-            return $now->greaterThan($dueAt);
+            return $now->greaterThanOrEqualTo($dueAt);
         });
 
         // Group by student

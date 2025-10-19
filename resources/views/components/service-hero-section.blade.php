@@ -388,25 +388,7 @@
         </div>
     </section>
 
-    <!-- CTA Section -->
-    <section class="py-20 px-6">
-        <div class="max-w-4xl mx-auto text-center animate-on-scroll">
-            <h2 class="text-3xl md:text-4xl font-light text-gray-900 mb-4">
-                Ready to get started?
-            </h2>
-            <p class="text-lg text-gray-600 font-light mb-12 max-w-2xl mx-auto">
-                Join thousands of students already benefiting from our modern library services.
-            </p>
-            <div class="flex flex-col sm:flex-row justify-center gap-4">
-                <a href="#" class="inline-flex items-center px-6 py-3 bg-gray-900 text-white font-medium rounded-full transition-all duration-300 hover:bg-gray-800 hover:scale-105">
-                    Create Account
-                </a>
-                <a href="#" class="inline-flex items-center px-6 py-3 border border-gray-300 text-gray-900 font-medium rounded-full transition-all duration-300 hover:border-gray-400 hover:scale-105">
-                    Sign In
-                </a>
-            </div>
-        </div>
-    </section>
+
 
     <script>
         // Carousel functionality

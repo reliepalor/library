@@ -6,7 +6,7 @@
     <title>Unified Attendance Management - Library System</title>
     <link rel="icon" type="image/x-icon" href="/favicon/Library.png">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/heroicons/2.0.18/heroicons.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -24,6 +24,9 @@
         .sidebar-expanded { margin-left: 15rem; }
         @media (max-width: 768px) {
             .sidebar-collapsed, .sidebar-expanded { margin-left: 0; }
+        }
+        .attendance-fullscreen-active .main-content {
+            margin-left: 0 !important;
         }
         .college-CICS { background-color: #e9d5ff; color: #454545; }  /* purple-200 */
         .college-CTED { background-color: #bfdbfe; color: #454545; }  /* blue-200 */
@@ -59,10 +62,12 @@
                                 <h2 class="text-3xl font-bold text-gray-800">Unified Attendance Scanner</h2>
                             </div>
                             <div class="flex space-x-2">
-                                <button id="fullscreen-btn" onclick="toggleFullScreen()" class="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-xl text-md shadow-lg">
+                                <button id="fullscreen-btn" onclick="toggleFullScreen()" class="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-xl text-md shadow-lg not-fullscreen-btn">
                                     Full Screen
                                 </button>
-                                <x-attendance-menu />
+                                <div class="not-fullscreen-btn not-fullscreen">
+                                    <x-attendance-menu />
+                                </div>
                             </div>
                         </div>
                         <div class="flex gap-2">
@@ -97,60 +102,89 @@
                         <p id="mode-description" class="text-sm text-gray-700">System automatically detects user type • Both use same scanner</p>
                     </div>
 
-                    <!-- Overall Statistics -->
-                    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-                        <div class="shadcn-card p-4">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-600">Total Attendance</p>
-                                    <p class="text-2xl font-bold text-gray-900">{{ $overallStats['total'] }}</p>
-                                </div>
-                                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                                    <span class="text-2xl">👥</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="shadcn-card p-4">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-600">Students Present</p>
-                                    <p class="text-2xl font-bold text-green-600">{{ $overallStats['students_present'] }}</p>
-                                </div>
-                                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                                    <span class="text-2xl">🎓</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="shadcn-card p-4">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-600">Teachers Present</p>
-                                    <p class="text-2xl font-bold text-purple-600">{{ $overallStats['teachers_present'] }}</p>
-                                </div>
-                                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                                    <span class="text-2xl">👨‍🏫</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="shadcn-card p-4">
-                            <div class="flex flex-col justify-center space-y-2">
-                                <button id="refresh-btn" onclick="refreshAttendanceTable()" class="w-full bg-blue-600 px-4 py-2 text-white rounded-lg font-bold hover:bg-blue-700 duration-100 flex items-center justify-center space-x-2">
-                                    <svg class="w-4 h-4 animate-spin hidden" id="refresh-spinner" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                    </svg>
-                                    <span id="refresh-text">🔄 Refresh</span>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="shadcn-card p-4">
-                            <form action="{{ route('admin.attendance.save-reset') }}" method="POST" class="h-full flex flex-col justify-center">
-                                @csrf
-                                <button type="submit" class="w-full bg-gray-800 px-4 py-2 text-white rounded-lg font-bold hover:bg-gray-700 duration-100">
-                                    💾 Save & Reset
-                                </button>
-                            </form>
-                        </div>
+<!-- Overall Statistics -->
+<div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+    <div class="px-4 py-3 border-b border-gray-100">
+        <h3 class="text-sm font-semibold text-gray-900">Today's Overview</h3>
+        <p class="text-xs text-gray-500 mt-0.5">Real-time attendance and study area stats</p>
+    </div>
+
+    <div class="p-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+
+            <!-- Total Attendance -->
+            <div class="flex items-center gap-3">
+                <!-- Icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-700 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M9 13v5m4-10v10m4-7v7" />
+                </svg>
+                <!-- Text -->
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-gray-900 truncate">{{ $overallStats['total'] }}</p>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Total</p>
+                </div>
+            </div>
+
+            <!-- Students Present -->
+            <div class="flex items-center gap-3">
+                <!-- Icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-700 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 14v7m0 0l-3-1.5M12 21l3-1.5" />
+                </svg>
+                <!-- Text -->
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-gray-900 truncate">{{ $overallStats['students_present'] }}</p>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Students</p>
+                </div>
+            </div>
+
+            <!-- Teachers Present -->
+            <div class="flex items-center gap-3">
+                <!-- Icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-700 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-4-4h-1m-6 6v-2a4 4 0 014-4h1m-6 6H3v-2a4 4 0 014-4h1m6-6a3 3 0 11-6 0 3 3 0 016 0zm8 3a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <!-- Text -->
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-gray-900 truncate">{{ $overallStats['teachers_present'] }}</p>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Teachers</p>
+                </div>
+            </div>
+
+            <!-- Study Area Status -->
+            <div class="flex items-center gap-3">
+                <!-- Icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-700 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 10.5l9-7.5 9 7.5V21a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4H9v4a1 1 0 01-1 1H4a1 1 0 01-1-1V10.5z" />
+                </svg>
+                <!-- Text -->
+                <div class="flex-1 min-w-0">
+                    <div id="study-area-badge" class="flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-white border border-gray-200 max-w-fit">
+                        <span class="w-1.5 h-1.5 rounded-full bg-gray-400 mr-1" id="status-dot"></span>
+                        <span id="study-area-availability" class="truncate text-gray-700">Loading...</span>
                     </div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide mt-1">Study Area</p>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex justify-end col-span-1 sm:col-span-2 lg:col-span-1">
+                <form action="{{ route('admin.attendance.save-reset') }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit"
+                        class="bg-black hover:bg-gray-900 text-white font-medium py-1.5 px-3 rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 text-xs whitespace-nowrap">
+                        Save & Reset
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
 
                     <!-- Students Attendance Table -->
                     <div class="shadcn-card overflow-hidden mb-6">
@@ -228,10 +262,10 @@
                                             </td>
                                             <td class="px-6 py-4">
                                                 <div class="flex items-center">
-                                                    <img src="{{ \App\Services\AvatarService::getPlaceholderAvatar($attendance['name'], 100) }}" 
-                                                         class="h-10 w-10 rounded-full object-cover mr-3" 
-                                                         alt="{{ $attendance['name'] }}"
-                                                         onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ urlencode($attendance['name'] ?? 'User') }}&background=random&size=100'">
+                                                <img src="{{ \App\Services\AvatarService::getProfilePictureUrl($attendance['profile_picture'], $attendance['name'], 100) }}"
+                                                     class="h-10 w-10 rounded-full object-cover mr-3"
+                                                     alt="{{ $attendance['name'] }}"
+                                                     onerror="this.onerror=null; this.src='{{ asset('images/default-profile.png') }}'">
                                                     <div>
                                                         <div class="text-sm font-medium text-gray-900">{{ $attendance['name'] }}</div>
                                                         <div class="text-xs text-gray-500">{{ $attendance['identifier'] ?? 'N/A' }}</div>
@@ -289,8 +323,9 @@
                                     <div class="flex items-center space-x-4">
                                         <div class="flex-shrink-0">
                                             <div class="relative">
-                                                <img id="user-profile-pic" src="{{ \App\Services\AvatarService::getPlaceholderAvatar('User', 100) }}" 
-                                                     alt="Profile" class="w-16 h-16 rounded-full object-cover border-2 shadow-sm" id="profile-pic-border">
+                                                <img id="user-profile-pic" src="{{ \App\Services\AvatarService::getPlaceholderAvatarWithColor('User', 100, '3b82f6') }}"
+                                                     alt="Profile" class="w-16 h-16 rounded-full object-cover border-2 shadow-sm" id="profile-pic-border"
+                                                     onerror="this.onerror=null; this.src='{{ asset('images/default-profile.png') }}'">
                                                 <div class="absolute -bottom-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center text-xl" id="user-type-icon"></div>
                                             </div>
                                         </div>
@@ -339,9 +374,20 @@
                                     </div>
                                 </div>
                                 
-                                <div class="flex justify-end space-x-2">
-                                    <button type="button" id="modal-cancel" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">Cancel</button>
-                                    <button type="submit" id="modal-submit" class="px-4 py-2 text-white rounded-lg transition-colors" style="background-color: #3b82f6;">Log Attendance</button>
+                                <div class="flex justify-between space-x-2">
+                                    <button type="button" id="modal-back" class="px-6 py-3 bg-gray-300 text-gray-700 rounded-full border-2 border-transparent hover:bg-gray-400 hover:border-gray-600 transition-all duration-300 ease-in-out focus:outline-none flex items-center space-x-3 group">
+                                    <span class="transform group-hover:translate-x-2 transition-all duration-300 ease-in-out">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                        </svg>
+                                    </span>
+                                    <span>Back</span>
+                                    </button>
+
+                                    <div class="flex space-x-2">
+                                        <button type="button" id="modal-cancel" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">Cancel</button>
+                                        <button type="submit" id="modal-submit" class="px-4 py-2 text-white rounded-lg transition-colors" style="background-color: #3b82f6;">Log Attendance</button>
+                                    </div>
                                 </div>
                             </form>
                         </div>
@@ -356,9 +402,19 @@
                                     <h3 class="text-xl font-semibold text-gray-900">Select Books to Borrow</h3>
                                     <p class="text-sm text-gray-600 mt-1">Choose from available books in the library</p>
                                 </div>
-                                <button type="button" id="book-selection-cancel" class="px-3 py-1.5 text-sm rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200">Close</button>
+
+
+                                <button type="button" id="book-selection-cancel" class="px-6 py-3 bg-gray-300 text-gray-700 rounded-full border-2 border-transparent hover:bg-gray-400 hover:border-gray-600 transition-all duration-300 ease-in-out focus:outline-none flex items-center space-x-3 group">
+                                <span class="transform group-hover:translate-x-2 transition-all duration-300 ease-in-out">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                    </svg>
+                                </span>
+                                <span>Back</span>
+                                </button>
+
                             </div>
-                            
+
                             <!-- Search and Filters -->
                             <div class="p-6 border-b border-gray-100">
                                 <div class="flex flex-col gap-3">
@@ -376,7 +432,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Books Grid -->
                             <div class="p-6">
                                 <div id="available-books-container" class="border border-gray-200 rounded-xl max-h-[32rem] overflow-y-auto bg-white">
@@ -384,7 +440,7 @@
                                     <div id="available-books-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4"></div>
                                 </div>
                             </div>
-                            
+
                             <!-- Manual Entry Section -->
                             <div class="p-6 border-t border-gray-100 bg-gray-50">
                                 <div class="max-w-md mx-auto">
@@ -402,6 +458,51 @@
                         </div>
                     </div>
 
+                    <!-- Study Area Full Modal -->
+                    <div id="study-area-full-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-[70]">
+                        <div class="bg-white rounded-lg shadow-lg p-6 w-96 max-w-md">
+                            <div class="text-center">
+                                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
+                                    <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                                    </svg>
+                                </div>
+                                <h3 class="text-lg font-bold text-gray-900 mb-2">Study Area Slot Warning</h3>
+                                <p class="text-sm text-gray-600 mb-4">
+                                    We're sorry, but all study area spaces are currently occupied (0 of 10 slots available).
+                                    Students are already utilizing all available space.
+                                    Please try again later or consider other activities that don't require study area access.
+                                </p>
+                                <div class="flex justify-center">
+                                    <button type="button" id="study-area-full-ok" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                        I Understand
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fullscreen Exit Password Modal -->
+                    <div id="fullscreen-exit-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-[70]">
+                        <div class="bg-white rounded-lg shadow-lg p-6 w-96">
+                            <div class="mb-4">
+                                <h3 class="text-lg font-bold text-gray-900">Exit Fullscreen Mode</h3>
+                                <p class="text-sm text-gray-600 mt-1">Enter the password to exit fullscreen mode.</p>
+                            </div>
+                            <form id="fullscreen-exit-form">
+                                <div class="mb-4">
+                                    <label for="exit-password" class="block mb-1 font-medium text-gray-700">Password</label>
+                                    <input type="password" id="exit-password" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter password..." required>
+                                </div>
+                                <div id="exit-error-message" class="mb-4 text-sm text-red-600 hidden">Access denied. Only authorized library staff can exit fullscreen mode.</div>
+                                <div class="flex justify-end space-x-2">
+                                    <button type="button" id="exit-modal-cancel" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">Cancel</button>
+                                    <button type="submit" class="px-4 py-2 text-white rounded-lg transition-colors" style="background-color: #3b82f6;">Exit Fullscreen</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -412,5 +513,6 @@
         window.studentAttendanceData = @json($studentAttendance);
     </script>
     <script src="{{ asset('js/unified-scan-attendance.js') }}"></script>
+    <script src="{{ asset('js/study-area.js') }}"></script>
 </body>
 </html>

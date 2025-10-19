@@ -203,47 +203,47 @@
         <div class="header-section p-8 text-center text-white fade-in">
             <x-attendance-hero-section/>
         </div>
-<!-- Study Area Availability -->
-<div class="mb-6 fade-in">
-    <div class="bg-white rounded-lg shadow-sm p-6">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <div class="flex items-start sm:items-center mb-4 sm:mb-0">
-                <div class="p-3 rounded-full bg-blue-50 mr-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
+    <!-- Study Area Availability -->
+    <div class="mb-6 fade-in">
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex items-start sm:items-center mb-4 sm:mb-0">
+                    <div class="p-3 rounded-full bg-blue-50 mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900">Study Area Status</h3>
+                        <p class="text-sm text-gray-500">
+                            <span id="available-slots">-</span> of <span id="max-slots">30</span> slots available
+                        </p>
+                    </div>
                 </div>
-                <div>
-                    <h3 class="text-lg font-medium text-gray-900">Study Area Status</h3>
-                     <p class="text-sm text-gray-500">
-                        <span id="available-slots">-</span> of 30 slots available
-                    </p>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="hidden sm:flex items-center">
+                        <div class="relative mr-3">
+                            <div class="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div id="progress-bar" class="h-full bg-green-500 transition-all duration-300" style="width: 100%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="study-area-badge" class="flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-gray-50 border border-gray-200">
+                        <span class="w-2 h-2 rounded-full bg-gray-400 mr-2" id="status-dot"></span>
+                        <span id="study-area-availability"></span>
+                    </div>
                 </div>
             </div>
             
-            <div class="flex items-center space-x-4">
-                <div class="hidden sm:flex items-center">
-                    <div class="relative mr-3">
-                        <div class="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
-                            <div id="progress-bar" class="h-full bg-green-500 transition-all duration-300" style="width: 100%"></div>
-                        </div>
-                    </div>
+            <!-- Mobile progress bar -->
+            <div class="mt-4 sm:hidden">
+                <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div id="mobile-progress-bar" class="h-full bg-green-500 transition-all duration-300" style="width: 100%"></div>
                 </div>
-                <div id="study-area-badge" class="flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-gray-50 border border-gray-200">
-                    <span class="w-2 h-2 rounded-full bg-gray-400 mr-2" id="status-dot"></span>
-                    <span id="study-area-availability">Loading...</span>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Mobile progress bar -->
-        <div class="mt-4 sm:hidden">
-            <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div id="mobile-progress-bar" class="h-full bg-green-500 transition-all duration-300" style="width: 100%"></div>
             </div>
         </div>
     </div>
-</div>
 
         <!-- Main Content -->
         <section class="modern-card p-8 fade-in">
@@ -258,182 +258,182 @@
                 </div>
             </div>
 
-<!-- Attendance Table -->
-<div class="modern-table bg-white overflow-hidden">
-    <div class="flex flex-col sm:flex-row justify-between items-center p-6 border-b border-gray-100">
-        <h3 class="text-xl font-medium text-gray-800">Attendance Records</h3>
-    </div>
-    
-    <!-- Desktop Table -->
-    <div class="hidden lg:block">
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="table-header">
-                    <tr>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Student ID</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">College</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Year</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Activity</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Login</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Logout</th>
-                    </tr>
-                </thead>
-                <tbody id="attendance-table-body">
-                    @forelse($attendances as $attendance)
-                        <tr class="table-row">
-                            <td class="px-6 py-4 font-semibold text-gray-800 text-sm">{{ $attendance->student_id }}</td>
-                            <td class="px-6 py-4">
-                                <div class="flex items-center space-x-3">
-                                    <img src="{{ \App\Services\AvatarService::getProfilePictureUrl($attendance->student->user->profile_picture ?? null, ($attendance->student->fname ?? '') . ' ' . ($attendance->student->lname ?? ''), 44) }}"
-                                        alt="Profile Picture"
-                                        class="profile-img"
-                                        onerror="this.onerror=null; this.src='{{ asset('images/default-profile.png') }}'" />
-                                    <div>
-                                        <div class="font-medium text-gray-900">{{ $attendance->student->lname ?? '' }}, {{ $attendance->student->fname ?? '' }}</div>
-                                    </div>
+        <!-- Attendance Table -->
+        <div class="modern-table bg-white overflow-hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-center p-6 border-b border-gray-100">
+                <h3 class="text-xl font-medium text-gray-800">Attendance Records</h3>
+            </div>
+            
+            <!-- Desktop Table -->
+            <div class="hidden lg:block">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="table-header">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Student ID</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">College</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Year</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Activity</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Login</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Logout</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendance-table-body">
+                            @forelse($attendances as $attendance)
+                                <tr class="table-row">
+                                    <td class="px-6 py-4 font-semibold text-gray-800 text-sm">{{ $attendance->student_id }}</td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center space-x-3">
+                                            <img src="{{ \App\Services\AvatarService::getProfilePictureUrl($attendance->student->user->profile_picture ?? null, ($attendance->student->fname ?? '') . ' ' . ($attendance->student->lname ?? ''), 44) }}"
+                                                alt="Profile Picture"
+                                                class="profile-img"
+                                                onerror="this.onerror=null; this.src='{{ asset('images/default-profile.png') }}'" />
+                                            <div>
+                                                <div class="font-medium text-gray-900">{{ $attendance->student->lname ?? '' }}, {{ $attendance->student->fname ?? '' }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="college-{{ $attendance->student->college ?? '' }}">{{ $attendance->student->college ?? '' }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-600">{{ $attendance->student->year ?? '' }}</td>
+                                    <td class="px-6 py-4">
+                                        @php
+                                            $activityText = $attendance->activity ?? '';
+                                            $lower = strtolower($activityText);
+                                        @endphp
+                                        @if(str_contains($lower, 'wait for approval'))
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">{{ $activityText }}</span>
+                                        @elseif(str_starts_with($lower, 'stay&borrow:'))
+                                            @php
+                                                $parts = explode(':', $activityText);
+                                                $code = $parts[1] ?? '';
+                                            @endphp
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Stay&Borrow: {{ trim($code) }}</span>
+                                        @elseif(str_contains($lower, 'borrow:'))
+                                            @php
+                                                $parts = explode(':', $activityText);
+                                                $code = $parts[1] ?? '';
+                                            @endphp
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Borrow: {{ trim($code) }}</span>
+                                        @elseif(str_contains($lower, 'borrow book rejected'))
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">{{ $activityText }}</span>
+                                        @elseif(str_contains($lower, 'book returned'))
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">{{ $activityText }}</span>
+                                        @else
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full text-gray-800">{{ $activityText }}</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="text-sm font-medium text-gray-900">{{ \Carbon\Carbon::parse($attendance->login)->setTimezone('Asia/Manila')->format('h:i A') }}</div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="text-sm font-medium text-gray-900">{{ $attendance->logout ? \Carbon\Carbon::parse($attendance->logout)->setTimezone('Asia/Manila')->format('h:i A') : '-' }}</div>
+                                        @if($attendance->logout)
+                                            <div class="text-xs text-emerald-600 hidden">Completed</div>
+                                        @else
+                                            <div class="text-xs text-blue-600 hidden">Active</div>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="px-6 py-12 text-center">
+                                        <div class="text-gray-400">
+                                            <svg class="mx-auto h-12 w-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                            </svg>
+                                            <p class="text-lg font-medium">No attendance logs yet</p>
+                                            <p class="text-sm">Student activities will appear here as they occur</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Mobile/Tablet Cards -->
+            <div class="block lg:hidden space-y-1 px-3 pb-3">
+                @forelse($attendances as $attendance)
+                    <div class="bg-gray-50 rounded-md p-1 border border-gray-200">
+                        <div class="flex flex-wrap items-start justify-between gap-1 mb-0.5 text-xs leading-tight">
+                            <div class="flex items-start space-x-1 min-w-0 flex-1">
+                                <img src="{{ \App\Services\AvatarService::getProfilePictureUrl($attendance->student->user->profile_picture ?? null, ($attendance->student->fname ?? '') . ' ' . ($attendance->student->lname ?? ''), 44) }}"
+                                    alt="Profile Picture"
+                                    class="profile-img w-5 h-5 rounded-full flex-shrink-0 mt-0.5"
+                                    onerror="this.onerror=null; this.src='{{ asset('images/default-profile.png') }}'" />
+                                <div class="min-w-0 flex-1">
+                                    <div class="font-medium text-gray-900 break-words">{{ $attendance->student->lname ?? '' }}, {{ $attendance->student->fname ?? '' }}</div>
+                                    <div class="text-gray-500 break-words">{{ $attendance->student_id }}</div>
                                 </div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="college-{{ $attendance->student->college ?? '' }}">{{ $attendance->student->college ?? '' }}</span>
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-600">{{ $attendance->student->year ?? '' }}</td>
-                            <td class="px-6 py-4">
+                            </div>
+                            <div class="flex-1 min-w-[60px] text-center">
+                                <span class="text-[10px] text-gray-600">College: </span><span class="college-{{ $attendance->student->college ?? '' }}">{{ $attendance->student->college ?? '' }}</span>
+                            </div>
+                            <div class="flex-1 min-w-[40px] text-center">
+                                <span class="text-[10px] text-gray-600">Year: </span>{{ $attendance->student->year ?? '' }}
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap items-start justify-between gap-1 text-xs leading-tight">
+                            <div class="min-w-0 flex-1">
+                                <span class="block text-gray-600 text-[10px] mb-0.5">Activity:</span>
                                 @php
                                     $activityText = $attendance->activity ?? '';
                                     $lower = strtolower($activityText);
                                 @endphp
                                 @if(str_contains($lower, 'wait for approval'))
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">{{ $activityText }}</span>
+                                    <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-yellow-100 text-yellow-800 block break-words w-full">{{ $activityText }}</span>
                                 @elseif(str_starts_with($lower, 'stay&borrow:'))
                                     @php
                                         $parts = explode(':', $activityText);
                                         $code = $parts[1] ?? '';
                                     @endphp
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Stay&Borrow: {{ trim($code) }}</span>
+                                    <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-green-100 text-green-800 block break-words w-full">Stay&Borrow: {{ trim($code) }}</span>
                                 @elseif(str_contains($lower, 'borrow:'))
                                     @php
                                         $parts = explode(':', $activityText);
                                         $code = $parts[1] ?? '';
                                     @endphp
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Borrow: {{ trim($code) }}</span>
+                                    <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-green-100 text-green-800 block break-words w-full">Borrow: {{ trim($code) }}</span>
                                 @elseif(str_contains($lower, 'borrow book rejected'))
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">{{ $activityText }}</span>
+                                    <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-red-100 text-red-800 block break-words w-full">{{ $activityText }}</span>
                                 @elseif(str_contains($lower, 'book returned'))
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">{{ $activityText }}</span>
+                                    <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-blue-100 text-blue-800 block break-words w-full">{{ $activityText }}</span>
                                 @else
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full text-gray-800">{{ $activityText }}</span>
+                                    <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full text-gray-800 block break-words w-full">{{ $activityText }}</span>
                                 @endif
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="text-sm font-medium text-gray-900">{{ \Carbon\Carbon::parse($attendance->login)->setTimezone('Asia/Manila')->format('h:i A') }}</div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="text-sm font-medium text-gray-900">{{ $attendance->logout ? \Carbon\Carbon::parse($attendance->logout)->setTimezone('Asia/Manila')->format('h:i A') : '-' }}</div>
+                            </div>
+                            <div class="text-center flex-1 min-w-[45px]">
+                                <span class="block text-gray-600 text-[10px] mb-0.5">Login:</span>
+                                <div class="font-medium text-gray-900">{{ \Carbon\Carbon::parse($attendance->login)->setTimezone('Asia/Manila')->format('h:i A') }}</div>
+                            </div>
+                            <div class="text-center flex-1 min-w-[60px]">
+                                <span class="block text-gray-600 text-[10px] mb-0.5">Logout:</span>
+                                <div class="font-medium text-gray-900">{{ $attendance->logout ? \Carbon\Carbon::parse($attendance->logout)->setTimezone('Asia/Manila')->format('h:i A') : '-' }}</div>
                                 @if($attendance->logout)
-                                    <div class="text-xs text-emerald-600 hidden">Completed</div>
+                                    <div class="text-emerald-600 text-[10px] hidden">Completed</div>
                                 @else
-                                    <div class="text-xs text-blue-600 hidden">Active</div>
+                                    <div class="text-blue-600 text-[10px] hidden">Active</div>
                                 @endif
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="px-6 py-12 text-center">
-                                <div class="text-gray-400">
-                                    <svg class="mx-auto h-12 w-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                                    </svg>
-                                    <p class="text-lg font-medium">No attendance logs yet</p>
-                                    <p class="text-sm">Student activities will appear here as they occur</p>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Mobile/Tablet Cards -->
-    <div class="block lg:hidden space-y-1 px-3 pb-3">
-        @forelse($attendances as $attendance)
-            <div class="bg-gray-50 rounded-md p-1 border border-gray-200">
-                <div class="flex flex-wrap items-start justify-between gap-1 mb-0.5 text-xs leading-tight">
-                    <div class="flex items-start space-x-1 min-w-0 flex-1">
-                        <img src="{{ \App\Services\AvatarService::getProfilePictureUrl($attendance->student->user->profile_picture ?? null, ($attendance->student->fname ?? '') . ' ' . ($attendance->student->lname ?? ''), 44) }}"
-                            alt="Profile Picture"
-                            class="profile-img w-5 h-5 rounded-full flex-shrink-0 mt-0.5"
-                            onerror="this.onerror=null; this.src='{{ asset('images/default-profile.png') }}'" />
-                        <div class="min-w-0 flex-1">
-                            <div class="font-medium text-gray-900 break-words">{{ $attendance->student->lname ?? '' }}, {{ $attendance->student->fname ?? '' }}</div>
-                            <div class="text-gray-500 break-words">{{ $attendance->student_id }}</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="flex-1 min-w-[60px] text-center">
-                        <span class="text-[10px] text-gray-600">College: </span><span class="college-{{ $attendance->student->college ?? '' }}">{{ $attendance->student->college ?? '' }}</span>
+                @empty
+                    <div class="text-center py-6 px-3">
+                        <div class="text-gray-400">
+                            <svg class="mx-auto h-8 w-8 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                            <p class="text-sm font-medium">No attendance logs yet</p>
+                            <p class="text-xs">Student activities will appear here as they occur</p>
+                        </div>
                     </div>
-                    <div class="flex-1 min-w-[40px] text-center">
-                        <span class="text-[10px] text-gray-600">Year: </span>{{ $attendance->student->year ?? '' }}
-                    </div>
-                </div>
-                <div class="flex flex-wrap items-start justify-between gap-1 text-xs leading-tight">
-                    <div class="min-w-0 flex-1">
-                        <span class="block text-gray-600 text-[10px] mb-0.5">Activity:</span>
-                        @php
-                            $activityText = $attendance->activity ?? '';
-                            $lower = strtolower($activityText);
-                        @endphp
-                        @if(str_contains($lower, 'wait for approval'))
-                            <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-yellow-100 text-yellow-800 block break-words w-full">{{ $activityText }}</span>
-                        @elseif(str_starts_with($lower, 'stay&borrow:'))
-                            @php
-                                $parts = explode(':', $activityText);
-                                $code = $parts[1] ?? '';
-                            @endphp
-                            <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-green-100 text-green-800 block break-words w-full">Stay&Borrow: {{ trim($code) }}</span>
-                        @elseif(str_contains($lower, 'borrow:'))
-                            @php
-                                $parts = explode(':', $activityText);
-                                $code = $parts[1] ?? '';
-                            @endphp
-                            <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-green-100 text-green-800 block break-words w-full">Borrow: {{ trim($code) }}</span>
-                        @elseif(str_contains($lower, 'borrow book rejected'))
-                            <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-red-100 text-red-800 block break-words w-full">{{ $activityText }}</span>
-                        @elseif(str_contains($lower, 'book returned'))
-                            <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-blue-100 text-blue-800 block break-words w-full">{{ $activityText }}</span>
-                        @else
-                            <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full text-gray-800 block break-words w-full">{{ $activityText }}</span>
-                        @endif
-                    </div>
-                    <div class="text-center flex-1 min-w-[45px]">
-                        <span class="block text-gray-600 text-[10px] mb-0.5">Login:</span>
-                        <div class="font-medium text-gray-900">{{ \Carbon\Carbon::parse($attendance->login)->setTimezone('Asia/Manila')->format('h:i A') }}</div>
-                    </div>
-                    <div class="text-center flex-1 min-w-[60px]">
-                        <span class="block text-gray-600 text-[10px] mb-0.5">Logout:</span>
-                        <div class="font-medium text-gray-900">{{ $attendance->logout ? \Carbon\Carbon::parse($attendance->logout)->setTimezone('Asia/Manila')->format('h:i A') : '-' }}</div>
-                        @if($attendance->logout)
-                            <div class="text-emerald-600 text-[10px] hidden">Completed</div>
-                        @else
-                            <div class="text-blue-600 text-[10px] hidden">Active</div>
-                        @endif
-                    </div>
-                </div>
+                @endforelse
             </div>
-        @empty
-            <div class="text-center py-6 px-3">
-                <div class="text-gray-400">
-                    <svg class="mx-auto h-8 w-8 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                    </svg>
-                    <p class="text-sm font-medium">No attendance logs yet</p>
-                    <p class="text-xs">Student activities will appear here as they occur</p>
-                </div>
-            </div>
-        @endforelse
-    </div>
-</div>
+        </div>
 
 <!-- Teachers & Visitors Attendance Table -->
 <div class="modern-table bg-white overflow-hidden mt-8">
@@ -636,6 +636,8 @@
     <div class="mb-20"></div>
     <x-footer />
 
+    <x-library-policy />
+
     <script>
         // Add fade-in animation on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -732,24 +734,13 @@
                     attendanceData.forEach((record) => {
                         if (!record) return;
 
-                        const studentInfo = record.student || record;
-                        const studentName = studentInfo.name || studentInfo.student_name || 'N/A';
-                        const studentSection = studentInfo.section || studentInfo.student_section || studentInfo.section_name || '';
-                        const studentCollege = studentInfo.college || studentInfo.student_college || studentInfo.college_name || '';
-                        const studentCourse = studentInfo.course || studentInfo.student_course || studentInfo.course_name || '';
-                        const studentId = record.student_id || record.id || '';
+                        const studentName = record.student_name || 'N/A';
+                        const studentCollege = record.college || '';
+                        const studentYear = record.year || '';
+                        const studentId = record.student_id || '';
 
-                        const timeInRaw = record.time_in || record.login || record.created_at || record.date;
-                        const timeOutRaw = record.logout || record.time_out;
-
-                        const timeIn = formatDateTime(timeInRaw);
-                        const timeOut = timeOutRaw ? formatDateTime(timeOutRaw) : '';
-
-                        let status = record.status;
-                        if (!status) {
-                            status = (timeOutRaw || record.logout || record.time_out) ? 'out' : 'in';
-                        }
-                        const statusText = status === 'out' ? 'Signed Out' : 'Signed In';
+                        const timeIn = record.time_in || '';
+                        const timeOut = record.time_out || '';
 
                         const profilePic = record.profile_picture || defaultProfile;
 
@@ -762,23 +753,20 @@
                                     <img class="profile-img" src="${profilePic}" alt="${escapeHtml(studentName)}" onerror="this.onerror=null; this.src='${defaultProfile}'; this.title='Default profile picture'" />
                                     <div>
                                         <div class="font-medium text-gray-900">${escapeHtml(studentName)}</div>
-                                        ${studentSection ? `<div class="text-xs text-gray-500">${escapeHtml(studentSection)}</div>` : ''}
                                     </div>
                                 </div>
                             </td>
                             <td class="px-6 py-4">
                                 ${studentCollege ? `<span class="college-${studentCollege}">${escapeHtml(studentCollege)}</span>` : '<span class="text-gray-400">N/A</span>'}
-                                ${studentCourse ? `<div class="mt-1 text-xs text-gray-500">${escapeHtml(studentCourse)}</div>` : ''}
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-600 hidden sm:table-cell">${studentCourse || ''}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600">${studentYear || ''}</td>
                             <td class="px-6 py-4">${getActivityBadge(record.activity)}</td>
                             <td class="px-6 py-4">
                                 <div class="text-sm font-medium text-gray-900">${timeIn}</div>
-                                <div class="text-xs text-gray-500 sm:hidden">Year: ${studentCourse || ''}</div>
                             </td>
-                            <td class="px-6 py-4 hidden sm:table-cell">
+                            <td class="px-6 py-4">
                                 <div class="text-sm font-medium text-gray-900">${timeOut}</div>
-                                <div class="text-xs ${status === 'out' ? 'text-emerald-600' : 'text-blue-600'}">${statusText}</div>
+                                <div class="text-xs ${timeOut ? 'text-emerald-600' : 'text-blue-600'}">${timeOut ? 'Completed' : 'Active'}</div>
                             </td>
                         `;
                         fragment.appendChild(row);
@@ -815,23 +803,13 @@
                     attendanceData.forEach((record) => {
                         if (!record) return;
 
-                        // Use the exact field names from the User controller response
                         const teacherName = record.name || 'N/A';
                         const teacherRole = record.role || 'Staff';
                         const teacherDepartment = record.department || 'N/A';
-                        const teacherId = record.teacher_visitor_id || record.id || '';
+                        const teacherId = record.teacher_visitor_id || '';
 
-                        const timeInRaw = record.time_in || record.login || record.created_at;
-                        const timeOutRaw = record.time_out || record.logout;
-
-                        const timeIn = formatDateTime(timeInRaw);
-                        const timeOut = timeOutRaw ? formatDateTime(timeOutRaw) : '';
-
-                        let status = record.status;
-                        if (!status) {
-                            status = (timeOutRaw || record.time_out || record.logout) ? 'out' : 'in';
-                        }
-                        const statusText = status === 'out' ? 'Signed Out' : 'Signed In';
+                        const timeIn = record.time_in || '';
+                        const timeOut = record.time_out || '';
 
                         const profilePic = record.profile_picture || defaultProfile;
 
@@ -851,7 +829,6 @@
                                     <img class="profile-img" src="${profilePic}" alt="${escapeHtml(teacherName)}" onerror="this.onerror=null; this.src='${defaultProfile}'; this.title='Default profile picture'" />
                                     <div>
                                         <div class="font-medium text-gray-900">${escapeHtml(teacherName)}</div>
-                                        <div class="text-xs text-gray-500">ID: ${escapeHtml(teacherId)}</div>
                                     </div>
                                 </div>
                             </td>
@@ -867,9 +844,9 @@
                             <td class="px-6 py-4">
                                 <div class="text-sm font-medium text-gray-900">${timeIn}</div>
                             </td>
-                            <td class="px-6 py-4 hidden sm:table-cell">
+                            <td class="px-6 py-4">
                                 <div class="text-sm font-medium text-gray-900">${timeOut}</div>
-                                <div class="text-xs ${status === 'out' ? 'text-emerald-600' : 'text-blue-600'}">${statusText}</div>
+                                <div class="text-xs ${timeOut ? 'text-emerald-600' : 'text-blue-600'}">${timeOut ? 'Completed' : 'Active'}</div>
                             </td>
                         `;
                         fragment.appendChild(row);
@@ -881,6 +858,8 @@
             }
 
             let inFlight = null;
+            let lastUpdateTime = null;
+
             const refreshAttendanceTable = async () => {
                 try {
                     if (inFlight) return;
@@ -894,6 +873,14 @@
                     if (!json?.success || !json?.data) return;
 
                     const responseData = json.data || json;
+                    const currentUpdateTime = responseData.last_updated;
+
+                    // Only update if we have new data
+                    if (lastUpdateTime && currentUpdateTime === lastUpdateTime) {
+                        return; // No new data, skip update
+                    }
+                    lastUpdateTime = currentUpdateTime;
+
                     let studentData = [];
                     let teacherData = [];
 
@@ -936,8 +923,22 @@
                     studentData = studentData.filter(Boolean);
                     teacherData = teacherData.filter(Boolean);
 
+                    // Smooth update with fade effect
+                    const tables = document.querySelectorAll('#attendance-table-body, #teacher-attendance-table-body');
+                    tables.forEach(table => {
+                        table.style.opacity = '0.7';
+                        table.style.transition = 'opacity 0.3s ease';
+                    });
+
                     updateStudentTable(studentData);
                     updateTeacherTable(teacherData);
+
+                    // Fade back in
+                    setTimeout(() => {
+                        tables.forEach(table => {
+                            table.style.opacity = '1';
+                        });
+                    }, 100);
 
                 } catch (e) {
                     console.debug('User realtime fetch failed:', e);
@@ -946,9 +947,9 @@
                 }
             };
 
-            // Initial load and poll every 3s
+            // Initial load and poll every 2 seconds for smoother updates
             refreshAttendanceTable();
-            setInterval(refreshAttendanceTable, 3000);
+            setInterval(refreshAttendanceTable, 2000);
         })();
     </script>
 </body>
