@@ -78,16 +78,36 @@ class DashboardController extends Controller
 
             $studyArea->update(['max_capacity' => $newCapacity]);
 
-            // Recalculate available slots based on active study sessions
-            $activeStudySessions = Attendance::whereNull('logout')
+            // Recalculate available slots based on active study sessions from both tables
+            $studentStudySessions = Attendance::whereNull('logout')
                 ->where(function($query) {
                     $query->where('activity', 'like', '%study%')
                           ->orWhere('activity', 'like', '%stay%')
-                          ->orWhere('activity', 'like', '%read%');
+                          ->orWhere('activity', 'like', '%read%')
+                          ->orWhere('activity', 'like', '%reading%')
+                          ->orWhere('activity', 'like', '%research%')
+                          ->orWhere('activity', 'like', '%group study%')
+                          ->orWhere('activity', 'like', '%computer use%')
+                          ->orWhere('activity', 'like', '%meeting%');
                 })
                 ->count();
 
-            $newAvailableSlots = max(0, $newCapacity - $activeStudySessions);
+            $teacherVisitorStudySessions = \App\Models\TeachersVisitorsAttendance::whereNull('logout')
+                ->where(function($query) {
+                    $query->where('activity', 'like', '%study%')
+                          ->orWhere('activity', 'like', '%stay%')
+                          ->orWhere('activity', 'like', '%read%')
+                          ->orWhere('activity', 'like', '%reading%')
+                          ->orWhere('activity', 'like', '%research%')
+                          ->orWhere('activity', 'like', '%group study%')
+                          ->orWhere('activity', 'like', '%computer use%')
+                          ->orWhere('activity', 'like', '%meeting%');
+                })
+                ->count();
+
+            $totalActiveStudySessions = $studentStudySessions + $teacherVisitorStudySessions;
+
+            $newAvailableSlots = max(0, $newCapacity - $totalActiveStudySessions);
             $studyArea->update(['available_slots' => $newAvailableSlots]);
 
             Log::info("Study area capacity updated from {$oldCapacity} to {$newCapacity}, available slots recalculated to {$newAvailableSlots}");

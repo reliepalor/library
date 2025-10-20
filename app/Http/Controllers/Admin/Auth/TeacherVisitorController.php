@@ -57,7 +57,7 @@ class TeacherVisitorController extends \App\Http\Controllers\Controller
                 "MI"         => "nullable|string|max:155",
                 "email"      => "required|string|email|max:155|unique:teachers_visitors,email",
                 "department" => "required|string|max:155",
-                "role"       => "required|in:teacher,visitor",
+                "role"       => "required|in:Teacher,Visitor",
             ]);
 
             // Create the teacher/visitor record
@@ -197,7 +197,7 @@ class TeacherVisitorController extends \App\Http\Controllers\Controller
             "MI"         => "nullable|string|max:155",
             "email"      => "required|string|email|max:155|unique:teachers_visitors,email," . $id,
             "department" => "required|string|max:155",
-            "role"       => "required|in:teacher,visitor",
+            "role"       => "required|in:Teacher,Visitor",
         ]);
         $teacherVisitor->update($validate);
 

@@ -254,16 +254,41 @@ class BorrowRequestController extends Controller
         }
 
         // Send email to user if they have an email
-        if ($borrow->student && $borrow->student->email) {
+        // Determine user type dynamically based on the identifier
+        $student = \App\Models\Student::where('student_id', $borrow->student_id)->first();
+        $teacherVisitor = \App\Models\TeacherVisitor::find($borrow->student_id);
+
+        if ($student && $student->email) {
+            // Send rejection email to student
             try {
-                Mail::to($borrow->student->email)->send(new BorrowRequestRejection(
+                Mail::to($student->email)->send(new BorrowRequestRejection(
                     $borrow,
-                    $request->input('rejection_reason')
+                    $request->input('rejection_reason'),
+                    'student'
                 ));
             } catch (\Exception $e) {
                 // Log the error but don't fail the rejection
-                Log::error('Failed to send rejection email: ' . $e->getMessage());
+                Log::error('Failed to send rejection email to student: ' . $e->getMessage());
             }
+        } elseif ($teacherVisitor && $teacherVisitor->email) {
+            // Send rejection email to teacher/visitor
+            try {
+                Mail::to($teacherVisitor->email)->send(new BorrowRequestRejection(
+                    $borrow,
+                    $request->input('rejection_reason'),
+                    'teacher'
+                ));
+            } catch (\Exception $e) {
+                // Log the error but don't fail the rejection
+                Log::error('Failed to send rejection email to teacher/visitor: ' . $e->getMessage());
+            }
+        } else {
+            // Log that no email was found for the user
+            Log::warning('No email found for borrow request rejection', [
+                'borrow_id' => $borrow->id,
+                'student_id' => $borrow->student_id,
+                'user_type' => $borrow->user_type
+            ]);
         }
 
         if ($request->expectsJson()) {

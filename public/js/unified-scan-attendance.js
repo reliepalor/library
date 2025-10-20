@@ -6,6 +6,41 @@ let lastScannedQR = null;
 let lastScanTime = 0;
 const SCAN_COOLDOWN = 3000; // 3 seconds cooldown between scans
 
+// AvatarService utility for generating placeholder avatars
+const AvatarService = {
+    getPlaceholderAvatar: function(name, size = 100) {
+        const initials = this.getInitials(name || 'User');
+        const background = this.generateColorFromString(name || 'default');
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=${background}&color=fff&size=${size}&rounded=true&bold=true`;
+    },
+
+    getInitials: function(name) {
+        const parts = name.trim().split(' ');
+        let initials = '';
+        for (const part of parts) {
+            if (part) {
+                initials += part.charAt(0).toUpperCase();
+            }
+        }
+        return initials || 'U';
+    },
+
+    generateColorFromString: function(str) {
+        const colors = [
+            '1abc9c', '2ecc71', '3498db', '9b59b6', 'e74c3c',
+            'f39c12', '34495e', '16a085', '27ae60', '2980b9',
+            '8e44ad', 'c0392b', 'd35400', '7f8c8d', '95a5a6'
+        ];
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) - hash) + str.charCodeAt(i);
+            hash = hash & hash; // Convert to 32-bit integer
+        }
+        const index = Math.abs(hash) % colors.length;
+        return colors[index];
+    }
+};
+
 console.log('[INIT] Unified attendance scanner loading...');
 console.log('[INIT] Script loaded at:', new Date().toLocaleTimeString());
 
@@ -1002,12 +1037,16 @@ async function showActivityModal(userType, identifier) {
         if (response.ok && data.user) {
             const user = data.user;
             const name = data.name;
-            const profilePic = data.profile_picture;
+            const profilePic = data.profile_picture
+                ? (window.assetBaseUrl + 'storage/' + data.profile_picture)
+                : `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=random&size=100`;
 
             // Update modal with user info
-            if (profilePic) {
-                userProfilePic.src = profilePic;
-            }
+            userProfilePic.src = profilePic;
+            userProfilePic.onerror = function() {
+                this.onerror = null;
+                this.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name || 'User')}&background=random&size=100`;
+            };
 
             if (userType === 'student') {
                 userDetails.innerHTML = `
@@ -1259,18 +1298,18 @@ function updateStudentTable(attendance) {
                 // Build the row HTML with proper fallbacks - prioritize storage profile picture
                 const profilePic = record.profile_picture
                     ? (window.assetBaseUrl + 'storage/' + record.profile_picture)
-                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(studentName)}&background=random&size=100`;
-                
+                    : AvatarService.getPlaceholderAvatar(studentName, 100);
+
                 row.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" title="Student ID: ${studentId}">
                         ${studentId || '<span class="text-gray-400">N/A</span>'}
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center">
-                            <img class="h-10 w-10 rounded-full object-cover mr-3" 
-                                 src="${profilePic}" 
-                                 alt="${escapeHtml(studentName)}" 
-                                 onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(studentName || 'User')}&background=random&size=100'">
+                            <img class="h-10 w-10 rounded-full object-cover mr-3"
+                                 src="${profilePic}"
+                                 alt="${escapeHtml(studentName)}"
+                                 onerror="this.onerror=null; this.src='${AvatarService.getPlaceholderAvatar(studentName, 100)}'">
                             <div>
                                 <div class="text-sm font-medium text-gray-900">${escapeHtml(studentName || 'N/A')}</div>
                                 ${studentSection ? `<div class="text-xs text-gray-500">${escapeHtml(studentSection)}</div>` : ''}
@@ -1475,9 +1514,9 @@ function updateTeacherTable(attendance) {
                 const statusText = status === 'out' ? 'Signed Out' : 'Signed In';
                 
                 // Build the row HTML with proper fallbacks
-                const profilePic = record.profile_picture || 
-                                 teacherInfo.profile_picture || 
-                                 `https://ui-avatars.com/api/?name=${encodeURIComponent(teacherName)}&background=random&size=100`;
+                const profilePic = record.profile_picture ||
+                                 teacherInfo.profile_picture ||
+                                 AvatarService.getPlaceholderAvatar(teacherName, 100);
                 
                 row.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
@@ -1714,7 +1753,7 @@ function updateSingleTeacherRecord(record) {
                 // Build profile pic with fallback - prioritize storage profile picture
                 const profilePic = record.profile_picture
                     ? (window.assetBaseUrl + 'storage/' + record.profile_picture)
-                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(teacherName)}&background=random&size=100`;
+                    : AvatarService.getPlaceholderAvatar(teacherName, 100);
 
     // Create new row if it doesn't exist
     let row = document.getElementById(rowId);
@@ -2068,11 +2107,11 @@ function createBookCard(book) {
     const card = document.createElement('div');
     card.className = 'bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer';
 
-    const imageUrl = book.image1 ? `/storage/${book.image1}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(book.name)}&background=random&size=200`;
+    const imageUrl = book.image1 ? `/storage/${book.image1}` : AvatarService.getPlaceholderAvatar(book.name, 200);
 
     card.innerHTML = `
         <div class="aspect-w-3 aspect-h-4 mb-3">
-            <img src="${imageUrl}" alt="${escapeHtml(book.name)}" class="w-full h-48 object-cover rounded-lg" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(book.name)}&background=random&size=200'">
+            <img src="${imageUrl}" alt="${escapeHtml(book.name)}" class="w-full h-48 object-cover rounded-lg" onerror="this.onerror=null; this.src='${AvatarService.getPlaceholderAvatar(book.name, 200)}'">
         </div>
         <div class="space-y-2">
             <h3 class="font-semibold text-gray-900 text-sm line-clamp-2">${escapeHtml(book.name)}</h3>
@@ -2410,7 +2449,7 @@ function loadMoreStudentRecords() {
             // Prioritize storage profile picture over avatar service
             const profilePic = record.profile_picture
                 ? (window.assetBaseUrl + 'storage/' + record.profile_picture)
-                : `https://ui-avatars.com/api/?name=${encodeURIComponent(studentName)}&background=random&size=100`;
+                : AvatarService.getPlaceholderAvatar(studentName, 100);
 
             row.innerHTML = `
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" title="Student ID: ${studentId}">

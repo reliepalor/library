@@ -369,84 +369,100 @@ class AttendanceController extends Controller
         return view('admin.attendance.analytics', compact('stats'));
     }
 
+    /**
+     * Get chart data for analytics dashboard
+     */
     public function getChartData(Request $request)
     {
         try {
-            $dateFrom = $request->date_from ? Carbon::parse($request->date_from) : Carbon::now()->subDays(7);
-            $dateTo = $request->date_to ? Carbon::parse($request->date_to) : Carbon::now();
+            $period = $request->query('period', '30days');
+            $type = $request->query('type', 'student'); // 'student' or 'teacher'
 
-            // Get dates for the range
-            $dates = collect();
-            $currentDate = $dateFrom->copy();
-            while ($currentDate <= $dateTo) {
-                $dates->push($currentDate->format('Y-m-d'));
-                $currentDate->addDay();
+            // Parse period to get days
+            $days = 30;
+            if (preg_match('/(\d+)days?/', $period, $matches)) {
+                $days = (int) $matches[1];
+            }
+            $days = max(1, min(365, $days)); // Limit between 1 and 365 days
+
+            $tz = 'Asia/Manila';
+            $startDate = now($tz)->subDays($days - 1)->toDateString();
+            $endDate = now($tz)->toDateString();
+
+            // Base query for attendance_histories
+            $baseQuery = DB::table('attendance_histories')
+                ->whereBetween('date', [$startDate, $endDate]);
+
+            // Filter by user type if specified
+            if ($type === 'student') {
+                $baseQuery->where('user_type', 'student');
+            } elseif ($type === 'teacher') {
+                $baseQuery->where('user_type', 'teacher');
             }
 
-            // Get attendance counts for each date
-            $attendanceCounts = AttendanceHistory::select(
-                DB::raw('DATE(date) as date'),
-                DB::raw('COUNT(*) as count')
-            )
-                ->whereBetween('date', [$dateFrom, $dateTo])
-                ->groupBy('date')
-                ->pluck('count', 'date')
-                ->toArray();
+            // Get activities data with specific categories
+            $activities = (clone $baseQuery)
+                ->selectRaw("
+                    CASE
+                        WHEN activity LIKE '%study%' AND activity NOT LIKE '%borrow%' THEN 'Stay to Study'
+                        WHEN activity LIKE '%borrow%' AND activity NOT LIKE '%study%' THEN 'Borrow Books'
+                        WHEN activity LIKE '%borrow%' AND activity LIKE '%study%' THEN 'Stay and Borrow Books'
+                        ELSE 'Other Activities'
+                    END as activity_category,
+                    COUNT(*) as cnt
+                ")
+                ->groupBy('activity_category')
+                ->orderByDesc('cnt')
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'activity' => $item->activity_category,
+                        'cnt' => $item->cnt
+                    ];
+                });
 
-            // Get college distribution
-            $collegeData = AttendanceHistory::select(
-                'college',
-                DB::raw('COUNT(*) as count')
-            )
-                ->whereBetween('date', [$dateFrom, $dateTo])
-                ->groupBy('college')
-                ->get();
+            // Ensure all four categories are present with 0 count if missing
+            $requiredCategories = ['Stay to Study', 'Borrow Books', 'Stay and Borrow Books', 'Other Activities'];
+            $existingCategories = $activities->pluck('activity')->toArray();
 
-            // Get activity distribution
-            $activityData = AttendanceHistory::select(
-                'activity',
-                DB::raw('COUNT(*) as count')
-            )
-                ->whereBetween('date', [$dateFrom, $dateTo])
-                ->groupBy('activity')
-                ->get();
+            foreach ($requiredCategories as $category) {
+                if (!in_array($category, $existingCategories)) {
+                    $activities->push([
+                        'activity' => $category,
+                        'cnt' => 0
+                    ]);
+                }
+            }
 
-            // Get peak hours data
-            $hours = collect(range(8, 20))->map(function($hour) {
-                return sprintf('%02d:00', $hour);
-            });
+            // Sort by count descending (highest first), then by predefined order for same counts
+            $activities = $activities->sort(function ($a, $b) use ($requiredCategories) {
+                // First sort by count (descending)
+                if ($a['cnt'] !== $b['cnt']) {
+                    return $b['cnt'] <=> $a['cnt'];
+                }
+                // If counts are equal, sort by predefined order
+                return array_search($a['activity'], $requiredCategories) <=> array_search($b['activity'], $requiredCategories);
+            })->values();
 
-            $hourlyCounts = AttendanceHistory::select(
-                DB::raw('HOUR(time_in) as hour'),
-                DB::raw('COUNT(*) as count')
-            )
-                ->whereBetween('date', [$dateFrom, $dateTo])
-                ->groupBy('hour')
-                ->pluck('count', 'hour')
-                ->toArray();
+            // Get colleges data (only for students)
+            $colleges = [];
+            if ($type === 'student') {
+                $colleges = (clone $baseQuery)
+                    ->select(DB::raw('COALESCE(college, "Unknown") as college'), DB::raw('COUNT(*) as cnt'))
+                    ->groupBy('college')
+                    ->orderByDesc('cnt')
+                    ->get();
+            }
 
-            // Format data for charts
-            $data = [
-                'dates' => $dates->toArray(),
-                'attendance_counts' => $dates->map(function ($date) use ($attendanceCounts) {
-                    return $attendanceCounts[$date] ?? 0;
-                })->toArray(),
-                'colleges' => $collegeData->pluck('college')->toArray(),
-                'college_counts' => $collegeData->pluck('count')->toArray(),
-                'activities' => $activityData->pluck('activity')->toArray(),
-                'activity_counts' => $activityData->pluck('count')->toArray(),
-                'hours' => $hours->toArray(),
-                'hourly_counts' => $hours->map(function($hour) use ($hourlyCounts) {
-                    $hourNum = (int)substr($hour, 0, 2);
-                    return $hourlyCounts[$hourNum] ?? 0;
-                })->toArray()
-            ];
+            return response()->json([
+                'activities' => $activities,
+                'colleges' => $colleges
+            ]);
 
-            return response()->json($data);
         } catch (\Exception $e) {
             Log::error('Error in getChartData: ' . $e->getMessage());
             return response()->json([
-                'error' => 'Failed to fetch chart data',
+                'error' => 'Server error',
                 'message' => $e->getMessage()
             ], 500);
         }
@@ -457,17 +473,22 @@ class AttendanceController extends Controller
         $startOfDay = Carbon::today()->startOfDay();
         $endOfDay = Carbon::today()->endOfDay();
 
-        // Get today's attendance with optimized query
-        $todayAttendance = $this->getTodayAttendance($startOfDay, $endOfDay);
+        // Get today's attendance for both students and teachers
+        $todayStudentAttendance = $this->getTodayStudentAttendance($startOfDay, $endOfDay);
+        $todayTeacherAttendance = $this->getTodayTeacherAttendance($startOfDay, $endOfDay);
 
         // Get borrow requests with optimized query
         $borrowRequests = $this->getTodayBorrowRequests();
 
-        // Create attendance history records with proper activity status
-        $this->createAttendanceHistoryRecords($todayAttendance, $borrowRequests);
+        // Create attendance history records for students
+        $this->createAttendanceHistoryRecords($todayStudentAttendance, $borrowRequests);
+
+        // Create attendance history records for teachers
+        $this->createAttendanceHistoryRecords($todayTeacherAttendance, $borrowRequests);
 
         // Delete today's attendance records
-        $todayAttendance->each->delete();
+        $todayStudentAttendance->each->delete();
+        $todayTeacherAttendance->each->delete();
 
         return redirect()->route('admin.attendance.index')
             ->with('success', 'Attendance records have been saved and reset successfully.');
@@ -481,17 +502,30 @@ class AttendanceController extends Controller
         $today = Carbon::today()->toDateString();
 
         foreach ($attendance as $record) {
-            $studentId = $record->student_id;
-            $activity = $this->getActivityWithBorrowStatus($record, $borrowRequests, $studentId);
-
-            AttendanceHistory::create([
-                'student_id' => $record->student_id,
-                'college' => $record->student->college,
-                'activity' => $activity,
+            $historyData = [
+                'user_type' => $record->user_type,
+                'activity' => $record->activity,
                 'time_in' => $record->login,
                 'time_out' => $record->logout,
                 'date' => $today
-            ]);
+            ];
+
+            if ($record->user_type === 'student') {
+                $studentId = $record->student_id;
+                $activity = $this->getActivityWithBorrowStatus($record, $borrowRequests, $studentId);
+
+                $historyData['student_id'] = $record->student_id;
+                $historyData['college'] = $record->student->college ?? 'N/A';
+                $historyData['activity'] = $activity;
+            } else {
+                // For teachers/visitors
+                $historyData['teacher_visitor_id'] = $record->teacher_visitor_id;
+                $historyData['department'] = $record->teacherVisitor->department ?? 'N/A';
+                $historyData['role'] = $record->teacherVisitor->role ?? 'N/A';
+                $historyData['college'] = null; // College field is not applicable for teachers/visitors
+            }
+
+            AttendanceHistory::create($historyData);
         }
     }
 

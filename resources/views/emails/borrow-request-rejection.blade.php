@@ -1,7 +1,7 @@
 @component('mail::message')
 # Borrow Request Rejected
 
-Dear {{ $borrowedBook->student->fname }} {{ $borrowedBook->student->lname }},
+Dear {{ $userName }},
 
 We regret to inform you that your borrow request for the following book has been rejected.
 
@@ -14,7 +14,6 @@ We regret to inform you that your borrow request for the following book has been
 {{ $rejectionReason }}
 
 If you have any questions or would like to request a different book, please contact the library administration.
-
 
 Thank you for your understanding.
 

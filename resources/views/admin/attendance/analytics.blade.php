@@ -9,244 +9,474 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    .animate-fadeInUp { animation: fadeInUp 0.3s ease-out forwards; }
-    #dropdownMenu.show {
-        transform: scaleY(1);
-        opacity: 1;
-        display: block;
-    }
-    #dropdownButton[aria-expanded="true"] svg {
-        transform: rotate(180deg);
-    }
-    a:hover svg {
-        color: #3B82F6;
-    }
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeInUp { animation: fadeInUp 0.3s ease-out forwards; }
+        #dropdownMenu.show {
+            transform: scaleY(1);
+            opacity: 1;
+            display: block;
+        }
+        #dropdownButton[aria-expanded="true"] svg {
+            transform: rotate(180deg);
+        }
+        a:hover svg {
+            color: #3B82F6;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .period-btn {
+            @apply inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md text-sm font-medium border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground px-4;
+        }
+        .period-btn.active {
+            @apply bg-primary text-primary-foreground border-primary;
+        }
+        .data-type-btn {
+            @apply inline-flex h-8 items-center justify-center whitespace-nowrap rounded-md text-xs font-medium border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground px-3;
+        }
+        .data-type-btn.active {
+            @apply bg-primary text-primary-foreground border-primary;
+        }
+        .no-data {
+            @apply flex items-center justify-center h-full bg-muted text-muted-foreground text-sm rounded-lg;
+        }
+        .chart-container {
+            position: relative;
+            height: 0;
+            padding-bottom: 75%; /* 4:3 aspect ratio for responsiveness */
+        }
+        .chart-container canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
     </style>
 </head>
-<body class="bg-gray-50" x-data="{ sidebarExpanded: true }">
+<body class="bg-background" x-data="{ sidebarExpanded: true }">
     <div class="content-area flex-1" :class="{'ml-16': !sidebarExpanded, 'ml-64': sidebarExpanded}">
         <x-admin-nav-bar />
-
 
         <!-- Main Content -->
         <div class="container mx-auto px-4 py-8">
             <!-- Header -->
             <div class="flex justify-between items-center mb-8">
                 <div>
-                    <h1 class="text-2xl font-semibold text-gray-900">Attendance Analytics</h1>
-                    <!-- Top Activity and College Lists -->
-                <div class="shadcn-card p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Highlights</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <h4 class="font-medium text-gray-700 mb-2">Top Activities</h4>
-                            <ul class="space-y-2">
-                                @foreach(($stats['activities'] ?? []) as $row)
-                                    <li class="flex items-center justify-between">
-                                        <span class="truncate pr-3">{{ $row->activity }}</span>
-                                        <span class="text-sm px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">{{ $row->cnt }}</span>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 class="font-medium text-gray-700 mb-2">Most Active Colleges</h4>
-                            <ul class="space-y-2">
-                                @foreach(($stats['colleges'] ?? []) as $row)
-                                    <li class="flex items-center justify-between">
-                                        <span class="truncate pr-3">{{ $row->college }}</span>
-                                        <span class="text-sm px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">{{ $row->cnt }}</span>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    </div>
+                    <h1 class="text-2xl font-semibold text-foreground">Attendance Analytics</h1>
                 </div>
-            </div>
                 <x-attendance-menu />
             </div>
 
-            <!-- Range Filter -->
-            <div class="shadcn-card p-6 mb-8">
-                <form action="{{ route('admin.attendance.analytics') }}" method="GET" class="flex flex-wrap gap-4 items-end">
-                    <div>
-                        <label for="days" class="block text-sm font-medium text-gray-700">Range</label>
-                        <select id="days" name="days" class="shadcn-input">
-                            @foreach([7,14,30,60,90] as $d)
-                                <option value="{{ $d }}" {{ (int)request('days', 30) === $d ? 'selected' : '' }}>{{ $d }} days</option>
-                            @endforeach
-                        </select>
+            <!-- Time Period Selector -->
+            <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-6 mb-8">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <label class="text-sm font-medium text-muted-foreground">Time Period:</label>
+                        <div class="flex gap-2">
+                            <button id="dailyBtn" class="period-btn active">Daily</button>
+                            <button id="weeklyBtn" class="period-btn">Weekly</button>
+                            <button id="monthlyBtn" class="period-btn">Monthly</button>
+                            <button id="yearlyBtn" class="period-btn">Yearly</button>
+                        </div>
                     </div>
-                    <button type="submit" class="shadcn-button">Apply</button>
-                </form>
-            </div>
-
-            <!-- Summary Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <div class="shadcn-card p-5">
-                    <p class="text-sm text-gray-500">Total Visits</p>
-                    <p class="mt-1 text-2xl font-semibold text-gray-900">{{ number_format($stats['totals']['visits'] ?? 0) }}</p>
-                </div>
-                <div class="shadcn-card p-5">
-                    <p class="text-sm text-gray-500">Unique Students</p>
-                    <p class="mt-1 text-2xl font-semibold text-gray-900">{{ number_format($stats['totals']['unique_students'] ?? 0) }}</p>
-                </div>
-                <div class="shadcn-card p-5">
-                    <p class="text-sm text-gray-500">Today</p>
-                    <p class="mt-1 text-2xl font-semibold text-gray-900">{{ number_format($stats['totals']['today'] ?? 0) }}</p>
-                </div>
-                <div class="shadcn-card p-5">
-                    <p class="text-sm text-gray-500">Avg Duration</p>
-                    <p class="mt-1 text-2xl font-semibold text-gray-900">{{ ($stats['totals']['avg_duration_min'] ?? 0) }} mins</p>
+                    <div id="timeframeDisplay" class="text-sm text-muted-foreground">
+                        <!-- Timeframe will be populated by JavaScript -->
+                    </div>
                 </div>
             </div>
 
             <!-- Analytics Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Daily Attendance Trends -->
-                <div class="shadcn-card p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Daily Attendance Trends</h3>
-                    <div class="h-80">
-                        <canvas id="attendanceTrendsChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- College-wise Distribution -->
-                <div class="shadcn-card p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">College-wise Distribution</h3>
-                    <div class="h-80">
-                        <canvas id="collegeDistributionChart"></canvas>
-                    </div>
-                </div>
-
                 <!-- Activity Distribution -->
-                <div class="shadcn-card p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Activity Distribution</h3>
-                    <div class="h-80">
-                        <canvas id="activityDistributionChart"></canvas>
+                <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+                    <div class="p-6">
+                        <div class="space-y-1">
+                            <h3 class="text-lg font-semibold text-foreground">Activity Distribution</h3>
+                            <p class="text-sm text-muted-foreground">Showing distribution of attendance activities</p>
+                        </div>
+                    </div>
+                    <div class="p-6 pt-0">
+                        <div class="chart-container relative">
+                            <canvas id="activityChart"></canvas>
+                            <div id="activityNoData" class="hidden absolute inset-0 flex items-center justify-center text-muted-foreground text-sm bg-muted/50 rounded-lg">
+                                No attendance data available for this period
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6 pt-0 flex flex-col gap-2 text-xs">
+                        <div id="activityTotal" class="text-muted-foreground"></div>
                     </div>
                 </div>
 
-                <!-- Peak Hours Analysis -->
-                <div class="shadcn-card p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Peak Hours Analysis</h3>
-                    <div class="h-80">
-                        <canvas id="peakHoursChart"></canvas>
+                <!-- College Usage -->
+                <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start">
+                            <div class="space-y-1">
+                                <h3 class="text-lg font-semibold text-foreground">College Usage</h3>
+                                <p class="text-sm text-muted-foreground">Showing usage by college</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button id="studentBtn" class="data-type-btn active">Student</button>
+                                <button id="teacherBtn" class="data-type-btn">Teacher/Visitor</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6 pt-0">
+                        <div class="chart-container relative">
+                            <canvas id="collegeUsageChart"></canvas>
+                            <div id="collegeNoData" class="hidden absolute inset-0 flex items-center justify-center text-muted-foreground text-sm bg-muted/50 rounded-lg">
+                                No data available
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6 pt-0 flex flex-col gap-2 text-xs">
+                        <div id="collegeTotal" class="text-muted-foreground"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .shadcn-card {
-            background: white;
-            border-radius: 0.5rem;
-            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-        }
-        .shadcn-button {
-            background-color: #18181b;
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        .shadcn-button:hover {
-            background-color: #27272a;
-        }
-        .shadcn-input {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.375rem;
-            background-color: white;
-        }
-        .shadcn-input:focus {
-            outline: none;
-            border-color: #18181b;
-            box-shadow: 0 0 0 2px rgba(24, 24, 27, 0.1);
-        }
-    </style>
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const stats = @json($stats);
-            // Daily Attendance Trends Chart
-            new Chart(document.getElementById('attendanceTrendsChart'), {
-                type: 'line',
-                data: {
-                    labels: stats.trend?.labels || [],
-                    datasets: [{
-                        label: 'Attendance Count',
-                        data: stats.trend?.data || [],
-                        borderColor: '#3b82f6',
-                        tension: 0.2,
-                        fill: true,
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true } }
+            let activityChart, collegeChart;
+            let currentPeriod = 'daily';
+            let currentDataType = 'student';
+
+            // Initialize charts
+            function initCharts() {
+                updateCharts(currentPeriod, currentDataType);
+            }
+
+            // Fetch data from API based on period and data type
+            async function fetchChartData(period, dataType) {
+                try {
+                    const response = await fetch(`/admin/attendance/chart-data?period=${period}&type=${dataType}`);
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch data');
+                    }
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error('Error fetching chart data:', error);
+                    // Return empty data structure as fallback
+                    return {
+                        activities: [],
+                        colleges: []
+                    };
                 }
-            });
+            }
 
-            // College Distribution Chart
-            const collegeLabels = (stats.colleges || []).map(r => r.college);
-            const collegeCounts = (stats.colleges || []).map(r => r.cnt);
-            new Chart(document.getElementById('collegeDistributionChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: collegeLabels,
-                    datasets: [{
-                        data: collegeCounts,
-                        backgroundColor: ['#f3e8ff','#dbeafe','#fee2e2','#fce7f3','#fef9c3','#dcfce7','#e5e7eb'],
-                        borderColor: ['#6b21a8','#1e40af','#991b1b','#9d174d','#854d0e','#166534','#374151'],
-                        borderWidth: 2
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
-            });
+            // Update charts based on period and data type
+            async function updateCharts(period, dataType = currentDataType) {
+                currentPeriod = period;
+                currentDataType = dataType;
 
-            // Activity Distribution Chart
-            const activityLabels = (stats.activities || []).map(r => r.activity);
-            const activityCounts = (stats.activities || []).map(r => r.cnt);
-            new Chart(document.getElementById('activityDistributionChart'), {
-                type: 'pie',
-                data: {
-                    labels: activityLabels,
-                    datasets: [{
-                        data: activityCounts,
-                        backgroundColor: ['#10b981','#ef4444','#8b5cf6','#f59e0b','#3b82f6','#22c55e','#eab308'],
-                        borderWidth: 2
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
-            });
+                // Show loading state
+                showLoadingState();
 
-            // Peak Hours Analysis (derived from trend by hour if available later)
-            // Placeholder: we use the same trend to display distribution over labels
-            new Chart(document.getElementById('peakHoursChart'), {
-                type: 'bar',
-                data: {
-                    labels: stats.trend?.labels || [],
-                    datasets: [{ label: 'Daily Count', data: stats.trend?.data || [], backgroundColor: '#8b5cf6', borderRadius: 4 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-            });
+                // Fetch data from API
+                const data = await fetchChartData(period, dataType);
+
+                // Update Activity Distribution Chart (Area Chart with Gradient)
+                let activityData = (data.activities || []).sort((a, b) => a.cnt - b.cnt);
+                const activityLabels = activityData.map(r => r.activity);
+                const activityCounts = activityData.map(r => r.cnt);
+                const hasActivityData = activityCounts.length > 0 && activityCounts.some(count => count > 0);
+                const activityTotal = activityCounts.reduce((a, b) => a + b, 0);
+
+                if (activityChart) {
+                    activityChart.destroy();
+                }
+
+                const activityCtx = document.getElementById('activityChart');
+                document.getElementById('activityTotal').textContent = `Total: ${activityTotal}`;
+                if (hasActivityData) {
+                    const gradientCtx = activityCtx.getContext('2d');
+                    const gradient = gradientCtx.createLinearGradient(0, 0, 0, 400);
+                    gradient.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
+                    gradient.addColorStop(1, 'rgba(59, 130, 246, 0.05)');
+
+                    activityChart = new Chart(activityCtx, {
+                        type: 'line',
+                        data: {
+                            labels: activityLabels,
+                            datasets: [{
+                                label: 'Activities',
+                                data: activityCounts,
+                                borderColor: 'rgb(59, 130, 246)',
+                                backgroundColor: gradient,
+                                fill: true,
+                                tension: 0.4,
+                                borderWidth: 2,
+                                pointBackgroundColor: 'rgb(59, 130, 246)',
+                                pointBorderColor: 'rgb(59, 130, 246)',
+                                pointRadius: 4,
+                                pointHoverRadius: 6,
+                                pointHitRadius: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            layout: {
+                                padding: {
+                                    left: 12,
+                                    right: 12
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    enabled: true
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    grid: {
+                                        display: false,
+                                        drawBorder: false
+                                    },
+                                    border: {
+                                        display: false
+                                    },
+                                    ticks: {
+                                        color: 'hsl(var(--muted-foreground))',
+                                        maxRotation: 45,
+                                        callback: function(value) {
+                                            return value.toString().length > 10 ? value.toString().slice(0, 10) + '...' : value;
+                                        }
+                                    }
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                    grid: {
+                                        display: true,
+                                        drawBorder: false
+                                    },
+                                    border: {
+                                        display: false
+                                    },
+                                    ticks: {
+                                        color: 'hsl(var(--muted-foreground))'
+                                    }
+                                }
+                            },
+                            interaction: {
+                                intersect: false,
+                                mode: 'index'
+                            },
+                            animation: {
+                                duration: 1000
+                            }
+                        }
+                    });
+                    document.getElementById('activityNoData').classList.add('hidden');
+                } else {
+                    document.getElementById('activityNoData').classList.remove('hidden');
+                    document.getElementById('activityTotal').textContent = 'Total: 0';
+                }
+
+                // Update College Usage Chart (Area Chart with Gradient)
+                let collegeData = (data.colleges || []).sort((a, b) => a.cnt - b.cnt);
+                const collegeLabels = collegeData.map(r => r.college);
+                const collegeCounts = collegeData.map(r => r.cnt);
+                const hasCollegeData = collegeCounts.length > 0 && collegeCounts.some(count => count > 0);
+                const collegeTotal = collegeCounts.reduce((a, b) => a + b, 0);
+
+                if (collegeChart) {
+                    collegeChart.destroy();
+                }
+
+                const collegeCtx = document.getElementById('collegeUsageChart');
+                document.getElementById('collegeTotal').textContent = `Total: ${collegeTotal}`;
+                if (hasCollegeData) {
+                    const gradientCtx = collegeCtx.getContext('2d');
+                    const gradient = gradientCtx.createLinearGradient(0, 0, 0, 400);
+                    gradient.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
+                    gradient.addColorStop(1, 'rgba(59, 130, 246, 0.05)');
+
+                    collegeChart = new Chart(collegeCtx, {
+                        type: 'line',
+                        data: {
+                            labels: collegeLabels,
+                            datasets: [{
+                                label: 'Colleges',
+                                data: collegeCounts,
+                                borderColor: 'rgb(59, 130, 246)',
+                                backgroundColor: gradient,
+                                fill: true,
+                                tension: 0.4,
+                                borderWidth: 2,
+                                pointBackgroundColor: 'rgb(59, 130, 246)',
+                                pointBorderColor: 'rgb(59, 130, 246)',
+                                pointRadius: 4,
+                                pointHoverRadius: 6,
+                                pointHitRadius: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            layout: {
+                                padding: {
+                                    left: 12,
+                                    right: 12
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    enabled: true
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    grid: {
+                                        display: false,
+                                        drawBorder: false
+                                    },
+                                    border: {
+                                        display: false
+                                    },
+                                    ticks: {
+                                        color: 'hsl(var(--muted-foreground))',
+                                        maxRotation: 45,
+                                        callback: function(value) {
+                                            return value.toString().length > 10 ? value.toString().slice(0, 10) + '...' : value;
+                                        }
+                                    }
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                    grid: {
+                                        display: true,
+                                        drawBorder: false
+                                    },
+                                    border: {
+                                        display: false
+                                    },
+                                    ticks: {
+                                        color: 'hsl(var(--muted-foreground))'
+                                    }
+                                }
+                            },
+                            interaction: {
+                                intersect: false,
+                                mode: 'index'
+                            },
+                            animation: {
+                                duration: 1000
+                            }
+                        }
+                    });
+                    document.getElementById('collegeNoData').classList.add('hidden');
+                } else {
+                    document.getElementById('collegeNoData').classList.remove('hidden');
+                    document.getElementById('collegeTotal').textContent = 'Total: 0';
+                }
+
+                // Update button styles
+                updatePeriodButtonStyles(period);
+                updateDataTypeButtonStyles(dataType);
+
+                // Hide loading state
+                hideLoadingState();
+            }
+
+            // Show loading state
+            function showLoadingState() {
+                // You can add loading indicators here if needed
+            }
+
+            // Hide loading state
+            function hideLoadingState() {
+                // You can remove loading indicators here if needed
+            }
+
+            // Update period button active states and timeframe display
+            function updatePeriodButtonStyles(activePeriod) {
+                const buttons = ['dailyBtn', 'weeklyBtn', 'monthlyBtn', 'yearlyBtn'];
+                buttons.forEach(btnId => {
+                    const btn = document.getElementById(btnId);
+                    if (btnId.replace('Btn', '') === activePeriod) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+
+                // Update timeframe display
+                updateTimeframeDisplay(activePeriod);
+            }
+
+            // Update timeframe display based on selected period
+            function updateTimeframeDisplay(period) {
+                const now = new Date();
+                const tz = 'Asia/Manila';
+                const options = { timeZone: tz };
+                let displayText = '';
+
+                switch (period) {
+                    case 'daily':
+                        displayText = now.toLocaleDateString('en-GB', { ...options, day: '2-digit', month: '2-digit', year: 'numeric' });
+                        break;
+                    case 'weekly':
+                        const weekEnd = new Date(now);
+                        weekEnd.setDate(now.getDate() + (6 - now.getDay()));
+                        displayText = weekEnd.toLocaleDateString('en-GB', { ...options, day: '2-digit', month: '2-digit', year: 'numeric' });
+                        break;
+                    case 'monthly':
+                        const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                        displayText = monthEnd.toLocaleDateString('en-GB', { ...options, day: '2-digit', month: '2-digit', year: 'numeric' });
+                        break;
+                    case 'yearly':
+                        const yearEnd = new Date(now.getFullYear(), 11, 31);
+                        displayText = yearEnd.toLocaleDateString('en-GB', { ...options, day: '2-digit', month: '2-digit', year: 'numeric' });
+                        break;
+                }
+
+                document.getElementById('timeframeDisplay').textContent = displayText;
+            }
+
+            // Update data type button active states
+            function updateDataTypeButtonStyles(activeType) {
+                const buttons = ['studentBtn', 'teacherBtn'];
+                buttons.forEach(btnId => {
+                    const btn = document.getElementById(btnId);
+                    if (btnId.replace('Btn', '') === activeType) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+            }
+
+            // Event listeners for period buttons
+            document.getElementById('dailyBtn').addEventListener('click', () => updateCharts('daily'));
+            document.getElementById('weeklyBtn').addEventListener('click', () => updateCharts('weekly'));
+            document.getElementById('monthlyBtn').addEventListener('click', () => updateCharts('monthly'));
+            document.getElementById('yearlyBtn').addEventListener('click', () => updateCharts('yearly'));
+
+            // Event listeners for data type buttons
+            document.getElementById('studentBtn').addEventListener('click', () => updateCharts(currentPeriod, 'student'));
+            document.getElementById('teacherBtn').addEventListener('click', () => updateCharts(currentPeriod, 'teacher'));
+
+            // Initialize
+            initCharts();
         });
     </script>
 </body>
-</html> 
+</html>
