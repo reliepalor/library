@@ -82,4 +82,9 @@ class TeacherVisitor extends Model
     {
         return $this->belongsTo(User::class, 'email', 'email');
     }
+
+    public function reservations()
+    {
+        return $this->hasMany(Reservation::class, 'teacher_visitor_email', 'email');
+    }
 }

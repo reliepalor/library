@@ -393,6 +393,19 @@
       });
     }
 
+    // Resend QR spinner logic
+    document.addEventListener('submit', function (e) {
+      const form = e.target;
+      if (form.action.includes('resend-qr')) {
+        const button = form.querySelector('.resend-qr-btn');
+        const spinner = button.querySelector('.spinner');
+        if (button && spinner) {
+          button.disabled = true;
+          spinner.classList.remove('hidden');
+        }
+      }
+    });
+
     // QR Code modal logic
     const qrCodeModal = document.getElementById('qr-code-modal');
     const qrCodeModalImg = document.getElementById('qr-code-modal-img');
@@ -439,6 +452,159 @@
     if (qrCodeModal) {
       qrCodeModal.addEventListener('click', (e) => {
         if (e.target === qrCodeModal) closeQrModal();
+      });
+    }
+
+    // Edit student modal logic
+    const editStudentModal = document.getElementById('edit-student-modal');
+    const editStudentForm = document.getElementById('edit-student-form');
+    const cancelEditStudentBtn = document.getElementById('cancel-edit-student');
+    let currentStudentId = null;
+
+    function openEditStudentModal(studentData) {
+      if (!editStudentModal || !editStudentForm) return;
+
+      // Populate form fields
+      document.getElementById('edit-student_id').value = studentData.student_student_id;
+      document.getElementById('edit-lname').value = studentData.lname;
+      document.getElementById('edit-fname').value = studentData.fname;
+      document.getElementById('edit-MI').value = studentData.mi || '';
+      document.getElementById('edit-email').value = studentData.email;
+      document.getElementById('edit-college').value = studentData.college;
+      document.getElementById('edit-year').value = studentData.year;
+
+      currentStudentId = studentData.student_id;
+      editStudentModal.classList.remove('hidden');
+      editStudentModal.classList.add('flex');
+      editStudentModal.style.opacity = 1;
+    }
+
+    function closeEditStudentModal() {
+      if (!editStudentModal) return;
+      editStudentModal.classList.add('hidden');
+      editStudentModal.classList.remove('flex');
+      editStudentModal.style.opacity = 0;
+      currentStudentId = null;
+      if (editStudentForm) editStudentForm.reset();
+    }
+
+    document.addEventListener('click', function (e) {
+      if (e.target.classList.contains('edit-student-btn') || e.target.closest('.edit-student-btn')) {
+        const button = e.target.classList.contains('edit-student-btn') ? e.target : e.target.closest('.edit-student-btn');
+        const studentData = {
+          student_id: button.getAttribute('data-student-id'),
+          student_student_id: button.getAttribute('data-student-student-id'),
+          lname: button.getAttribute('data-lname'),
+          fname: button.getAttribute('data-fname'),
+          mi: button.getAttribute('data-mi'),
+          email: button.getAttribute('data-email'),
+          college: button.getAttribute('data-college'),
+          year: button.getAttribute('data-year')
+        };
+        openEditStudentModal(studentData);
+      }
+    });
+
+    if (cancelEditStudentBtn) {
+      cancelEditStudentBtn.addEventListener('click', closeEditStudentModal);
+    }
+
+    if (editStudentModal) {
+      editStudentModal.addEventListener('click', function (e) {
+        if (e.target === editStudentModal) closeEditStudentModal();
+      });
+    }
+
+    if (editStudentForm) {
+      editStudentForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(editStudentForm);
+
+        // Send AJAX request with FormData
+        fetch(`/admin/students/${currentStudentId}`, {
+          method: 'POST',
+          headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'X-HTTP-Method-Override': 'PUT'
+          },
+          body: formData
+        })
+        .then(response => {
+          if (response.ok) {
+            return response.json();
+          } else {
+            throw new Error('Server responded with error');
+          }
+        })
+        .then(result => {
+          if (result.success) {
+            showToast('Student updated successfully!', 'success');
+            closeEditStudentModal();
+            // Reload the page to show updated data
+            setTimeout(() => {
+              window.location.reload();
+            }, 1500);
+          } else {
+            showToast(result.message || 'Failed to update student.', 'error');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          showToast('An error occurred while updating the student.', 'error');
+        });
+      });
+    }
+
+    // Archive modal logic
+    const archiveModal = document.getElementById('archive-modal');
+    const cancelArchiveBtn = document.getElementById('cancel-archive');
+    const confirmArchiveBtn = document.getElementById('confirm-archive');
+    const archiveModalMessage = document.getElementById('archive-modal-message');
+    let currentArchiveForm = null;
+
+    function openArchiveModal(studentName, form) {
+      if (!archiveModal || !archiveModalMessage) return;
+      archiveModalMessage.textContent = `Are you sure you want to archive ${studentName}?`;
+      currentArchiveForm = form;
+      archiveModal.classList.remove('hidden');
+      archiveModal.classList.add('flex');
+      archiveModal.style.opacity = 1;
+    }
+
+    function closeArchiveModal() {
+      if (!archiveModal) return;
+      archiveModal.classList.add('hidden');
+      archiveModal.classList.remove('flex');
+      archiveModal.style.opacity = 0;
+      currentArchiveForm = null;
+    }
+
+    document.addEventListener('click', function (e) {
+      if (e.target.classList.contains('archive-btn')) {
+        e.preventDefault();
+        const form = e.target.closest('.archive-form');
+        const studentName = form.getAttribute('data-student-name');
+        openArchiveModal(studentName, form);
+      }
+    });
+
+    if (cancelArchiveBtn) {
+      cancelArchiveBtn.addEventListener('click', closeArchiveModal);
+    }
+
+    if (confirmArchiveBtn) {
+      confirmArchiveBtn.addEventListener('click', function () {
+        if (currentArchiveForm) {
+          currentArchiveForm.submit();
+        }
+        closeArchiveModal();
+      });
+    }
+
+    if (archiveModal) {
+      archiveModal.addEventListener('click', function (e) {
+        if (e.target === archiveModal) closeArchiveModal();
       });
     }
   });

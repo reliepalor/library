@@ -122,7 +122,7 @@
         
     </style>
 </head>
-<body x-data="{ selectedFilter: 'all' }">
+<body x-data="{ selectedFilter: 'all', showReserveModal: false, reserveBookId: null }">
 
     <x-header />
     <section class="relative bg-gradient-to-br from-indigo-50 via-white to-blue-50 py-12 sm:py-16 px-4 sm:px-6 lg:px-8 overflow-hidden mt-10">
@@ -251,13 +251,17 @@
                         $borrowedBy = $book->borrowedBy();
                     @endphp
                     @if($borrowedBy)
-                        @if($borrowedBy->status === 'pending')
+                        @if($borrowedBy->status === 'approved' && $borrowedBy->student)
+                            <span class="absolute top-3 left-3 bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm transform transition-all duration-200 hover:scale-105">
+                                Borrowed by {{ $borrowedBy->student->fname }} {{ $borrowedBy->student->lname }}
+                            </span>
+                        @elseif($borrowedBy->status === 'approved' && $borrowedBy->teacherVisitor)
+                            <span class="absolute top-3 left-3 bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm transform transition-all duration-200 hover:scale-105">
+                                Borrowed by {{ $borrowedBy->teacherVisitor->fname }} {{ $borrowedBy->teacherVisitor->lname }}
+                            </span>
+                        @elseif($borrowedBy->status === 'pending')
                             <span class="absolute top-3 left-3 bg-yellow-100 text-yellow-800 text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm transform transition-all duration-200 hover:scale-105">
                                 Waiting for approval
-                            </span>
-                        @elseif($borrowedBy->status === 'approved' && $borrowedBy->student)
-                            <span class="absolute top-3 left-3 bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm transform transition-all duration-200 hover:scale-105">
-                                Borrowed by {{ $borrowedBy->student->lname }}
                             </span>
                         @else
                             <span class="absolute top-3 left-3 bg-gray-100 text-gray-800 text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm transform transition-all duration-200 hover:scale-105">
@@ -271,15 +275,23 @@
                     <h3 class="text-lg font-semibold text-gray-800 line-clamp-2">{{ $book->name }}</h3>
                     <p class="text-sm text-gray-500">by {{ $book->author }}</p>
                     <div class="flex justify-between items-center pt-2">
-                        <a href="{{ route('user.books.show', $book->id) }}" 
-                           class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50/80 backdrop-blur-sm 
+                        <a href="{{ route('user.books.show', $book->id) }}"
+                           class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50/80 backdrop-blur-sm
                                   rounded-lg shadow-sm hover:bg-indigo-50 hover:shadow-md transition-all duration-200">
                             View
                         </a>
-                        <form action="{{ route('user.books.reserve', $book->id) }}" method="POST" 
-                              onsubmit="return confirm('Are you sure you want to reserve this book?');">
-                            @csrf
-                        </form>
+                        @if(!$book->isBorrowed())
+                            <button @click="showReserveModal = true; reserveBookId = {{ $book->id }}"
+                                    class="px-4 py-2 text-sm font-medium text-white bg-indigo-600
+                                           rounded-lg shadow-sm hover:bg-indigo-700 hover:shadow-md transition-all duration-200">
+                                Reserve
+                            </button>
+                        @else
+                            <span class="px-4 py-2 text-sm font-medium text-red-600 bg-red-100
+                                   rounded-lg shadow-sm">
+                                Unavailable
+                            </span>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -328,6 +340,32 @@
             </div>
             <div id="ebook-results" class="flex flex-wrap justify-center">
                 <!-- E-Book cards will be rendered here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Reserve Confirmation Modal -->
+    <div x-show="showReserveModal" x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95"
+         class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+         @click.away="showReserveModal = false; reserveBookId = null">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Confirm Reservation</h3>
+            <p class="text-gray-600 mb-6">Are you sure you want to reserve this book?</p>
+            <div class="flex justify-end space-x-3">
+                <button @click="showReserveModal = false; reserveBookId = null"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                    Cancel
+                </button>
+                <form x-show="reserveBookId" :action="'/user/books/' + reserveBookId + '/reserve'" method="POST" class="inline">
+                    @csrf
+                    <button type="submit" @click="showReserveModal = false"
+                            class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors">
+                        Confirm Reserve
+                    </button>
+                </form>
             </div>
         </div>
     </div>

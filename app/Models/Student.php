@@ -72,4 +72,9 @@ class Student extends Model
     {
         return $this->hasMany(\App\Models\AttendanceHistory::class, 'student_id', 'student_id');
     }
+
+    public function reservations()
+    {
+        return $this->hasMany(Reservation::class, 'student_id', 'student_id');
+    }
 }

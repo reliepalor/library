@@ -64,10 +64,8 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center py-6">
                 <div class="flex items-center space-x-4">
-                    <div class="bg-gradient-to-r from-blue-500 to-purple-600 p-3 rounded-xl shadow-lg">
-                        <svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 2H9a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2v-1"/>
-                        </svg>
+                    <div class="bg-gradient-to-r from-blue-500 to-purple-600 p-3 rounded-xl shadow-lg hidden">
+                       
                     </div>
                     <div>
                         <h1 class="text-3xl font-bold text-gray-900">Campus News</h1>
@@ -76,7 +74,7 @@
                 </div>
                 <div class="flex items-center space-x-3">
                     <a href="{{ route('admin.campus-news.create') }}"
-                       class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center space-x-2">
+                       class="bg-gray-800 text-white px-6 py-3 rounded-xl hover:from-gray-700 hover:to-gray-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center space-x-2">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                         </svg>
@@ -318,7 +316,7 @@
                                     <h3 class="text-lg font-medium text-gray-900 mb-2">No news found</h3>
                                     <p class="text-gray-500 mb-4">Get started by creating your first campus news article.</p>
                                     <a href="{{ route('admin.campus-news.create') }}"
-                                       class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300">
+                                       class="bg-gray-800 text-white px-4 py-2 rounded-lg hover:from-gray-500 hover:to-gray-700 transition-all duration-300">
                                         Create News
                                     </a>
                                 </div>

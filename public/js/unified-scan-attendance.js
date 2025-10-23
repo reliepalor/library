@@ -2329,22 +2329,22 @@ function loadInitialStudentRecords() {
                                  `https://ui-avatars.com/api/?name=${encodeURIComponent(studentName)}&background=random&size=100`;
 
                 row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" title="Student ID: ${studentId}">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" title="Student ID: ${studentId}" style="min-width: 100px;">
                         ${studentId || '<span class="text-gray-400">N/A</span>'}
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex items-center space-x-3">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex items-center space-x-3" style="min-width: 200px;">
                         <img src="${profilePic}"
                             alt="Profile" class="w-10 h-10 rounded-full object-cover shadow-sm ring-1 ring-blue-100" />
                         <span class="font-medium">${escapeHtml(studentName)}</span>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" style="min-width: 120px;">
                         ${studentCollege ? `
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full college-${studentCollege.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()}">
+                        <span class="inline-flex text-xs leading-5 font-semibold rounded-full college-${studentCollege.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()}">
                             ${escapeHtml(studentCollege)}
                         </span>
                         ` : '<span class="text-gray-400">N/A</span>'}
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" style="min-width: 150px;">
                         ${(() => {
                             const activity = record.activity || '';
                             if (activity.toLowerCase().includes('wait for approval')) {
@@ -2356,9 +2356,9 @@ function loadInitialStudentRecords() {
                             }
                         })()}
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${timeIn}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${timeOut}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" style="min-width: 80px;">${timeIn}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" style="min-width: 80px;">${timeOut}</td>
+                    <td class="px-6 py-4 whitespace-nowrap" style="min-width: 100px;">
                         ${status === 'out' ?
                             '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Logged Out</span>' :
                             '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Present</span>'

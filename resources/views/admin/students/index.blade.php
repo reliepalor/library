@@ -235,19 +235,28 @@
 
                                                     <td class="px-2 py-4 text-right">
                                                         <!-- Edit Button -->
-                                                        <a href="{{ route('admin.students.edit', $student->id) }}"
-                                                           class="inline-flex items-center px-3 py-1 bg-yellow-100 text-yellow-800 rounded-md text-sm hover:bg-yellow-200 transition"
-                                                           title="Edit" aria-label="Edit student {{ $student->student_id }}">
+                                                        <button type="button"
+                                                                class="edit-student-btn inline-flex items-center px-3 py-1 bg-yellow-100 text-yellow-800 rounded-md text-sm hover:bg-yellow-200 transition"
+                                                                title="Edit" aria-label="Edit student {{ $student->student_id }}"
+                                                                data-student-id="{{ $student->id }}"
+                                                                data-student-student-id="{{ $student->student_id }}"
+                                                                data-lname="{{ $student->lname }}"
+                                                                data-fname="{{ $student->fname }}"
+                                                                data-mi="{{ $student->MI }}"
+                                                                data-email="{{ $student->email }}"
+                                                                data-college="{{ $student->college }}"
+                                                                data-year="{{ $student->year }}">
                                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 3.487a2.7 2.7 0 0 1 3.818 3.818L7.227 20.758a4.5 4.5 0 0 1-1.897 1.13l-3.278.984.984-3.278a4.5 4.5 0 0 1 1.13-1.897L16.862 3.487z"/>
                                                             </svg>
-                                                        </a>
+                                                        </button>
                                                         <!-- Resend QR Button (POST) -->
-                                                        <form action="{{ route('admin.students.resend-qr', $student->id) }}" method="POST" class="inline">
+                                                        <form title="Resend QR Code" action="{{ route('admin.students.resend-qr', $student->id) }}" method="POST" class="inline">
                                                             @csrf
                                                             <button type="submit"
-                                                                class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200 transition"
+                                                                class="resend-qr-btn inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200 transition"
                                                                 aria-label="Resend QR to {{ $student->email }}">
+                                                                <span class="spinner hidden w-4 h-4 border-2 border-blue-800 border-t-transparent rounded-full animate-spin mr-1"></span>
                                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" />
                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5h.75v.75h-.75v-.75ZM13.5 19.5h.75v.75h-.75v-.75ZM19.5 13.5h.75v.75h-.75v-.75ZM19.5 19.5h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z" />
@@ -255,13 +264,11 @@
                                                             </button>
                                                         </form>
                                                         <!-- Archive Button -->
-                                                        <form action="{{ route('admin.students.archive', $student->id) }}" method="POST" class="inline">
+                                                        <form action="{{ route('admin.students.archive', $student->id) }}" method="POST" class="inline archive-form" data-student-name="{{ $student->fname }} {{ $student->lname }}">
                                                             @csrf
-                                                            <button type="submit"
-                                                                class="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-800 rounded-md text-sm hover:bg-gray-200 transition"
-                                                                onclick="return confirm('Are you sure you want to archive this student?')"
-                                 php artisan route:clear
-php artisan cache:clear                               title="Archive" aria-label="Archive student {{ $student->student_id }}">
+                                                            <button type="button"
+                                                                class="archive-btn inline-flex items-center px-3 py-1 bg-gray-100 text-gray-800 rounded-md text-sm hover:bg-gray-200 transition"
+                                                                title="Archive" aria-label="Archive student {{ $student->student_id }}">
                                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125 1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
                                                                 </svg>
@@ -369,6 +376,98 @@ php artisan cache:clear                               title="Archive" aria-label
                 <button id="close-qr-modal" class="absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-3xl font-bold transition-transform hover:scale-110">&times;</button>
                 <h3 id="qr-code-modal-name" class="text-lg font-semibold text-center mb-4"></h3>
                 <img id="qr-code-modal-img" src="" alt="QR Code" class="max-w-full max-h-[80vh] object-contain rounded-md" />
+            </div>
+        </div>
+
+        <!-- Edit Student Modal -->
+        <div id="edit-student-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden transition-opacity duration-300">
+            <div class="bg-white rounded-lg shadow-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Edit Student</h3>
+                <form id="edit-student-form" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    @csrf
+                    @method('PUT')
+
+                    {{-- Student ID --}}
+                    <div>
+                        <label for="edit-student_id" class="block text-sm font-medium text-gray-700 mb-1">Student ID</label>
+                        <input type="text" id="edit-student_id" name="student_id" required
+                            class="form-input w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+
+                    {{-- Last Name --}}
+                    <div>
+                        <label for="edit-lname" class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                        <input type="text" id="edit-lname" name="lname" required
+                            class="form-input w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+
+                    {{-- First Name --}}
+                    <div>
+                        <label for="edit-fname" class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                        <input type="text" id="edit-fname" name="fname" required
+                            class="form-input w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+
+                    {{-- Middle Initial --}}
+                    <div>
+                        <label for="edit-MI" class="block text-sm font-medium text-gray-700 mb-1">Middle Initial</label>
+                        <input type="text" id="edit-MI" name="MI"
+                            class="form-input w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+
+                    {{-- Email --}}
+                    <div class="md:col-span-2">
+                        <label for="edit-email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                        <input type="email" id="edit-email" name="email" required
+                            class="form-input w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+
+                    {{-- College --}}
+                    <div>
+                        <label for="edit-college" class="block text-sm font-medium text-gray-700 mb-1">College</label>
+                        <select id="edit-college" name="college" required
+                            class="form-select w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition">
+                            <option value="" disabled>Choose College</option>
+                            <option value="CICS">CICS</option>
+                            <option value="CTED">CTED</option>
+                            <option value="CCJE">CCJE</option>
+                            <option value="CHM">CHM</option>
+                            <option value="CBEA">CBEA</option>
+                            <option value="CA">CA</option>
+                        </select>
+                    </div>
+
+                    {{-- Year --}}
+                    <div>
+                        <label for="edit-year" class="block text-sm font-medium text-gray-700 mb-1">Year</label>
+                        <select id="edit-year" name="year" required
+                            class="form-select w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition">
+                            <option value="" disabled>Choose Year</option>
+                            <option value="1">1st Year</option>
+                            <option value="2">2nd Year</option>
+                            <option value="3">3rd Year</option>
+                            <option value="4">4th Year</option>
+                        </select>
+                    </div>
+
+                    {{-- Submit --}}
+                    <div class="md:col-span-2 flex justify-end space-x-3 mt-6">
+                        <button type="button" id="cancel-edit-student" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">Update Student</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Archive Confirmation Modal -->
+        <div id="archive-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden transition-opacity duration-300">
+            <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Confirm Archive</h3>
+                <p class="text-gray-600 mb-6" id="archive-modal-message">Are you sure you want to archive this student?</p>
+                <div class="flex justify-end space-x-3">
+                    <button id="cancel-archive" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition">Cancel</button>
+                    <button id="confirm-archive" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">Archive</button>
+                </div>
             </div>
         </div>
 

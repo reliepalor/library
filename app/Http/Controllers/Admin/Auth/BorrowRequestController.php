@@ -23,6 +23,14 @@ class BorrowRequestController extends Controller
         $userType = $request->input('user_type', 'student');
         $identifier = $request->student_id;
 
+        // For teachers/visitors, ensure we store email instead of ID
+        if (in_array($userType, ['teacher', 'teacher_visitor']) && is_numeric($identifier)) {
+            $teacherVisitor = \App\Models\TeacherVisitor::find($identifier);
+            if ($teacherVisitor) {
+                $identifier = $teacherVisitor->email;
+            }
+        }
+
         // Convert book_id to uppercase for validation
         $bookCode = strtoupper($request->book_id);
 
@@ -61,6 +69,21 @@ class BorrowRequestController extends Controller
             return back()->withErrors(['book_id' => 'This book is already borrowed by another user.']);
         }
 
+        // Check if user has an active reservation for this book
+        $activeReservation = null;
+        if ($userType === 'student') {
+            $activeReservation = \App\Models\Reservation::where('book_id', $bookCode)
+                ->where('status', 'active')
+                ->where('student_id', $identifier)
+                ->whereNull('teacher_visitor_email')
+                ->first();
+        } elseif (in_array($userType, ['teacher', 'teacher_visitor'])) {
+            $activeReservation = \App\Models\Reservation::where('book_id', $bookCode)
+                ->where('status', 'active')
+                ->where('teacher_visitor_email', $identifier)
+                ->first();
+        }
+
         // Find or create attendance session for this user today
         $startOfDay = \Carbon\Carbon::today()->startOfDay();
         $endOfDay = \Carbon\Carbon::today()->endOfDay();
@@ -85,8 +108,18 @@ class BorrowRequestController extends Controller
             ];
             if ($userType === 'student') {
                 $attendanceData['student_id'] = $identifier;
-            } else {
-                $attendanceData['teacher_visitor_id'] = $identifier;
+            } elseif (in_array($userType, ['teacher', 'teacher_visitor'])) {
+                // For teachers, find the teacher by email to get the ID for teacher_visitor_id
+                $teacherVisitor = \App\Models\TeacherVisitor::where('email', $identifier)->first();
+                if ($teacherVisitor) {
+                    $attendanceData['teacher_visitor_id'] = $teacherVisitor->id;
+                } else {
+                    Log::error("Teacher/Visitor not found for email: {$identifier}");
+                    if ($request->expectsJson()) {
+                        return response()->json(['message' => 'Teacher/Visitor not found.'], 404);
+                    }
+                    return back()->withErrors(['student_id' => 'Teacher/Visitor not found.']);
+                }
             }
             $currentAttendance = \App\Models\Attendance::create($attendanceData);
             Log::info("Created new attendance record for {$userType} {$identifier} when creating borrow request (no active session)");
@@ -101,6 +134,11 @@ class BorrowRequestController extends Controller
             'original_activity' => $request->input('activity', 'Borrow'), // Store the original activity type
         ]);
 
+        // If user had a reservation for this book, cancel it since they're now borrowing it
+        if ($activeReservation) {
+            $activeReservation->cancel();
+        }
+
         if ($request->expectsJson()) {
             return response()->json(['message' => 'Borrow request submitted and waiting for admin approval.']);
         }
@@ -109,8 +147,40 @@ class BorrowRequestController extends Controller
 
     public function index()
     {
-        $requests = \App\Models\BorrowedBook::where('status', 'pending')->with(['student', 'book'])->latest()->get();
+        // Get all pending requests with their associated data
+        $requests = \App\Models\BorrowedBook::where('status', 'pending')->with(['student', 'book'])->get();
+
+        // Separate requests into those with active reservations and those without
+        $requestsWithReservations = collect();
+        $requestsWithoutReservations = collect();
+
+        foreach ($requests as $request) {
+            $hasReservation = false;
+            if ($request->user_type === 'student') {
+                $hasReservation = \App\Models\Reservation::where('book_id', $request->book_id)
+                    ->where('status', 'active')
+                    ->where('student_id', $request->student_id)
+                    ->whereNull('teacher_visitor_email')
+                    ->exists();
+            } elseif (in_array($request->user_type, ['teacher', 'teacher_visitor'])) {
+                $hasReservation = \App\Models\Reservation::where('book_id', $request->book_id)
+                    ->where('status', 'active')
+                    ->where('teacher_visitor_email', $request->student_id)
+                    ->exists();
+            }
+
+            if ($hasReservation) {
+                $requestsWithReservations->push($request);
+            } else {
+                $requestsWithoutReservations->push($request);
+            }
+        }
+
+        // Sort each group by latest first, then combine with reserved requests first
+        $requests = $requestsWithReservations->sortByDesc('created_at')->merge($requestsWithoutReservations->sortByDesc('created_at'));
+
         $borrowedBooks = \App\Models\BorrowedBook::whereIn('status', ['approved', 'rejected'])->with(['student', 'book'])->latest()->get();
+
         return view('admin.borrow_requests.index', compact('requests', 'borrowedBooks'));
     }
 
@@ -150,8 +220,15 @@ class BorrowRequestController extends Controller
                 ];
                 if ($userType === 'student') {
                     $attendanceData['student_id'] = $identifier;
-                } else {
-                    $attendanceData['teacher_visitor_id'] = $identifier;
+                } elseif (in_array($userType, ['teacher', 'teacher_visitor'])) {
+                    // For teachers, find the teacher by email to get the ID for teacher_visitor_id
+                    $teacherVisitor = \App\Models\TeacherVisitor::where('email', $identifier)->first();
+                    if ($teacherVisitor) {
+                        $attendanceData['teacher_visitor_id'] = $teacherVisitor->id;
+                    } else {
+                        Log::error("Teacher/Visitor not found for email: {$identifier}");
+                        throw new \Exception('Teacher/Visitor not found.');
+                    }
                 }
                 $attendance = \App\Models\Attendance::create($attendanceData);
                 Log::info("Created new attendance record for {$userType} {$identifier} when approving borrow request (no linked attendance)");
@@ -228,8 +305,15 @@ class BorrowRequestController extends Controller
             ];
             if ($userType === 'student') {
                 $attendanceData['student_id'] = $identifier;
-            } else {
-                $attendanceData['teacher_visitor_id'] = $identifier;
+            } elseif (in_array($userType, ['teacher', 'teacher_visitor'])) {
+                // For teachers, find the teacher by email to get the ID for teacher_visitor_id
+                $teacherVisitor = \App\Models\TeacherVisitor::where('email', $identifier)->first();
+                if ($teacherVisitor) {
+                    $attendanceData['teacher_visitor_id'] = $teacherVisitor->id;
+                } else {
+                    Log::error("Teacher/Visitor not found for email: {$identifier}");
+                    $attendanceData['teacher_visitor_id'] = null; // Fallback, though this shouldn't happen
+                }
             }
             $attendance = \App\Models\Attendance::create($attendanceData);
             Log::info("Created new attendance record for {$userType} {$identifier} when rejecting borrow request (no linked attendance)");
@@ -256,7 +340,7 @@ class BorrowRequestController extends Controller
         // Send email to user if they have an email
         // Determine user type dynamically based on the identifier
         $student = \App\Models\Student::where('student_id', $borrow->student_id)->first();
-        $teacherVisitor = \App\Models\TeacherVisitor::find($borrow->student_id);
+        $teacherVisitor = \App\Models\TeacherVisitor::where('email', $borrow->student_id)->first();
 
         if ($student && $student->email) {
             // Send rejection email to student

@@ -51,6 +51,22 @@ class Books extends Model
             ->first();
     }
 
+    public function isReserved()
+    {
+        return \App\Models\Reservation::where('book_id', $this->book_code)
+            ->where('status', 'active')
+            ->exists();
+    }
+
+    public function reservedBy()
+    {
+        return \App\Models\Reservation::where('book_id', $this->book_code)
+            ->where('status', 'active')
+            ->with(['student', 'teacherVisitor'])
+            ->latest()
+            ->first();
+    }
+
     public function archive()
     {
         $this->update([

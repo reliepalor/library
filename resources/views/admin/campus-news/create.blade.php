@@ -64,10 +64,8 @@
                         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                             <div class="flex justify-between items-center py-6">
                                 <div class="flex items-center space-x-4">
-                                    <div class="bg-gradient-to-r from-blue-500 to-purple-600 p-3 rounded-xl shadow-lg">
-                                        <svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                                        </svg>
+                                    <div class="bg-gradient-to-r from-blue-300 to-green-400 p-3 rounded-xl shadow-lg">
+                                        
                                     </div>
                                     <div>
                                         <h1 class="text-3xl font-bold text-gray-900">Create Campus News</h1>
@@ -273,7 +271,7 @@
                             </div>
 
                             <!-- SEO Settings -->
-                            <div class="bg-white/80 backdrop-blur-lg rounded-xl shadow-lg p-8 border border-blue-200/40">
+                            <div class="hidden bg-white/80 backdrop-blur-lg rounded-xl shadow-lg p-8 border border-blue-200/40">
                                 <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
                                     <svg class="h-6 w-6 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -333,7 +331,7 @@
                                         Cancel
                                     </a>
                                     <button type="submit"
-                                            class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center space-x-2">
+                                            class="bg-gray-800 text-white px-8 py-3 rounded-lg hoverbg-gray-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center space-x-2">
                                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                         </svg>

@@ -190,8 +190,25 @@
                         @endif
                     @endfor
                 </div>
-                <div class="mt-8">
+                <div class="mt-8 flex gap-4">
                     <a href="{{ route('user.books.index') }}" class="inline-block px-6 py-3 border-2 border-blue-800 text-gray-800 rounded-lg hover:from-indigo-700 hover:to-violet-700 transition hover-scale">Back to Books</a>
+                    @if(!$book->isBorrowed() && !$book->isReserved())
+                        <form action="{{ route('user.books.reserve', $book->id) }}" method="POST"
+                              onsubmit="return confirm('Are you sure you want to reserve this book?');">
+                            @csrf
+                            <button type="submit" class="inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition hover-scale">
+                                Reserve Book
+                            </button>
+                        </form>
+                    @elseif($hasReservation)
+                        <span class="inline-block px-6 py-3 bg-orange-100 text-orange-800 rounded-lg">
+                            Already Reserved
+                        </span>
+                    @else
+                        <span class="inline-block px-6 py-3 bg-red-100 text-red-800 rounded-lg">
+                            Currently Borrowed
+                        </span>
+                    @endif
                 </div>
             </div>
             <!-- Full-Size Image (Right) -->
