@@ -57,6 +57,7 @@ class TeacherVisitorController extends \App\Http\Controllers\Controller
                 "MI"         => "nullable|string|max:155",
                 "email"      => "required|string|email|max:155|unique:teachers_visitors,email",
                 "department" => "required|string|max:155",
+                "gender"     => "nullable|in:Male,Female,Prefer not to say,Other",
                 "role"       => "required|in:Teacher,Visitor",
             ]);
 
@@ -197,6 +198,7 @@ class TeacherVisitorController extends \App\Http\Controllers\Controller
             "MI"         => "nullable|string|max:155",
             "email"      => "required|string|email|max:155|unique:teachers_visitors,email," . $id,
             "department" => "required|string|max:155",
+            "gender"     => "nullable|in:Male,Female,Prefer not to say,Other",
             "role"       => "required|in:Teacher,Visitor",
         ]);
         $teacherVisitor->update($validate);

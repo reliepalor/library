@@ -16,8 +16,8 @@
     if (flash) {
       const success = flash.dataset.success;
       const error = flash.dataset.error;
-      if (success) showToast(success, 'success');
-      else if (error) showToast(error, 'error');
+      if (success && success !== 'null' && success !== '') showToast(success, 'success');
+      else if (error && error !== 'null' && error !== '') showToast(error, 'error');
     }
 
     // Charts: Read data from dataset (to be provided in Blade)
@@ -212,17 +212,78 @@
       });
     });
 
+    // Gender filter logic
+    const genderFilterButton = document.getElementById('genderFilterButton');
+    const genderFilterMenu = document.getElementById('genderFilterMenu');
+    const selectedGender = document.getElementById('selectedGender');
+    let currentGenderFilter = 'All';
+    let genderMenuOpen = false;
+
+    function openGenderFilterMenu() {
+      genderFilterMenu.classList.remove('hidden', 'opacity-0', 'scale-y-95');
+      genderFilterMenu.classList.add('opacity-100', 'scale-y-100');
+      genderFilterButton.setAttribute('aria-expanded', 'true');
+      genderMenuOpen = true;
+    }
+
+    function closeGenderFilterMenu() {
+      genderFilterMenu.classList.add('opacity-0', 'scale-y-95');
+      genderFilterMenu.classList.remove('opacity-100', 'scale-y-100');
+      setTimeout(() => {
+        genderFilterMenu.classList.add('hidden');
+        genderMenuOpen = false;
+      }, 300);
+      genderFilterButton.setAttribute('aria-expanded', 'false');
+    }
+
+    function toggleGenderFilterMenu() {
+      if (genderMenuOpen) {
+        closeGenderFilterMenu();
+      } else {
+        openGenderFilterMenu();
+      }
+    }
+
+    if (genderFilterButton) {
+      genderFilterButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleGenderFilterMenu();
+      });
+    }
+
+    // Close gender menu when clicking outside
+    document.addEventListener('click', function (e) {
+      if (genderMenuOpen && !genderFilterButton.contains(e.target) && !genderFilterMenu.contains(e.target)) {
+        closeGenderFilterMenu();
+      }
+    });
+
+    document.querySelectorAll('.gender-filter-option').forEach(option => {
+      option.addEventListener('click', function (e) {
+        e.stopPropagation();
+        const gender = this.getAttribute('data-gender');
+        selectedGender.textContent = gender === 'All' ? 'All' : gender;
+        currentGenderFilter = gender;
+        genderFilterButton.setAttribute('data-gender', gender);
+        closeGenderFilterMenu();
+        applyFilters();
+      });
+    });
+
     // Apply filters function
     function applyFilters() {
       const rows = document.querySelectorAll('#student-table-body tr');
       rows.forEach(row => {
         const college = row.getAttribute('data-college');
         const year = row.querySelector('td:nth-child(7)').textContent.trim(); // Year column
+        const gender = row.getAttribute('data-gender');
 
         const collegeMatch = currentCollegeFilter === 'All' || college === currentCollegeFilter;
         const yearMatch = currentYearFilter === 'All' || year === currentYearFilter;
+        const genderMatch = currentGenderFilter === 'All' || gender === currentGenderFilter;
 
-        if (collegeMatch && yearMatch) {
+        if (collegeMatch && yearMatch && genderMatch) {
           row.style.display = '';
         } else {
           row.style.display = 'none';
@@ -469,6 +530,7 @@
       document.getElementById('edit-lname').value = studentData.lname;
       document.getElementById('edit-fname').value = studentData.fname;
       document.getElementById('edit-MI').value = studentData.mi || '';
+      document.getElementById('edit-gender').value = studentData.gender || '';
       document.getElementById('edit-email').value = studentData.email;
       document.getElementById('edit-college').value = studentData.college;
       document.getElementById('edit-year').value = studentData.year;
@@ -497,6 +559,7 @@
           lname: button.getAttribute('data-lname'),
           fname: button.getAttribute('data-fname'),
           mi: button.getAttribute('data-mi'),
+          gender: button.getAttribute('data-gender'),
           email: button.getAttribute('data-email'),
           college: button.getAttribute('data-college'),
           year: button.getAttribute('data-year')
@@ -520,23 +583,18 @@
         e.preventDefault();
 
         const formData = new FormData(editStudentForm);
+        formData.append('_method', 'PUT');
 
         // Send AJAX request with FormData
         fetch(`/admin/students/${currentStudentId}`, {
           method: 'POST',
           headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            'X-HTTP-Method-Override': 'PUT'
+            'X-Requested-With': 'XMLHttpRequest'
           },
           body: formData
         })
-        .then(response => {
-          if (response.ok) {
-            return response.json();
-          } else {
-            throw new Error('Server responded with error');
-          }
-        })
+        .then(response => response.json())
         .then(result => {
           if (result.success) {
             showToast('Student updated successfully!', 'success');
@@ -546,7 +604,7 @@
               window.location.reload();
             }, 1500);
           } else {
-            showToast(result.message || 'Failed to update student.', 'error');
+            showToast(result.message || result.first_error || 'Failed to update student.', 'error');
           }
         })
         .catch(error => {

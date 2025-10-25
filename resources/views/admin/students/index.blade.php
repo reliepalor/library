@@ -85,84 +85,119 @@
 
    
 
+
                             <!-- Table Card -->
                             <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow">
 
-                                <div class="flex flex-col md:flex-row justify-between items-center p-6 bg-gray-100 border-b border-gray-200">
+                                <div class="flex flex-col md:flex-row justify-between items-center p-6 bg-gray-50 border-b border-gray-200">
                                     <h2 class="text-xl font-semibold text-gray-800" x-text="showArchived ? '📚 Archived Students' : '👥 Active Students'"></h2>
-                                    <div class="flex flex-wrap items-center gap-2 mb-4">
-                                        <div class="flex items-center space-x-2">
-                                            <div class="relative inline-block text-left">
-                                                <button id="collegeFilterButton" class="college-filter glass-button px-4 py-2 text-gray-500 text-sm font-medium rounded-2xl flex items-center justify-between w-32 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white/10 backdrop-blur-md border border-gray-400 shadow-md" data-college="All" aria-expanded="false" aria-controls="collegeFilterMenu">
-                                                    <span id="selectedCollege">All</span>
-                                                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                                                    </svg>
+                                    <div class="flex flex-col items-start gap-4 mb-4">
+                                        <h3 class="text-sm font-medium text-gray-600">Filter Students</h3>
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <div class="flex items-center space-x-2">
+                                                <div class="relative inline-block text-left">
+                                                    <button id="collegeFilterButton" class="college-filter bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 text-sm font-medium flex items-center justify-between w-32 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500" data-college="All" aria-expanded="false" aria-controls="collegeFilterMenu">
+                                                        <span id="selectedCollege">Colleges</span>
+                                                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                                        </svg>
+                                                    </button>
+                                                    <ul id="collegeFilterMenu" class="absolute z-50 mt-2 w-32 bg-white border border-gray-200 rounded-lg shadow-lg hidden transform origin-top transition-all duration-300 ease-out opacity-0 scale-y-95">
+                                                      
+                                                        <li>
+                                                            <button class="college-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-college="All">All</button>
+                                                        </li>
+                                                        <li>
+                                                            <button class="college-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-college="CICS">CICS</button>
+                                                        </li>
+                                                        <li>
+                                                            <button class="college-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-college="CTED">CTED</button>
+                                                        </li>
+                                                        <li>
+                                                            <button class="college-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-college="CCJE">CCJE</button>
+                                                        </li>
+                                                        <li>
+                                                            <button class="college-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-college="CHM">CHM</button>
+                                                        </li>
+                                                        <li>
+                                                            <button class="college-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-college="CBEA">CBEA</button>
+                                                        </li>
+                                                        <li>
+                                                            <button class="college-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-college="CA">CA</button>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                                <div class="relative inline-block text-left">
+                                                    <button id="yearFilterButton" class="year-filter bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 text-sm font-medium flex items-center justify-between w-32 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500" data-year="All" aria-expanded="false" aria-controls="yearFilterMenu">
+                                                        <span id="selectedYear">Year</span>
+                                                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                                        </svg>
+                                                    </button>
+                                                    <ul id="yearFilterMenu" class="absolute z-50 mt-2 w-32 bg-white border border-gray-200 rounded-lg shadow-lg hidden transform origin-top transition-all duration-300 ease-out opacity-0 scale-y-95">
+                                                        <li>
+                                                            <button class="year-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-year="All">All</button>
+                                                        </li>
+                                                        <li>
+                                                            <button class="year-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-year="1">1st Year</button>
+                                                        </li>
+                                                        <li>
+                                                            <button class="year-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-year="2">2nd Year</button>
+                                                        </li>
+                                                        <li>
+                                                            <button class="year-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-year="3">3rd Year</button>
+                                                        </li>
+                                                        <li>
+                                                            <button class="year-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-year="4">4th Year</button>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                                <div class="relative inline-block text-left">
+                                                    <button id="genderFilterButton" class="gender-filter bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 text-sm font-medium flex items-center justify-between w-32 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500" data-gender="All" aria-expanded="false" aria-controls="genderFilterMenu">
+                                                        <span id="selectedGender">Gender</span>
+                                                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                                        </svg>
+                                                    </button>
+                                                    <ul id="genderFilterMenu" class="absolute z-50 mt-2 w-32 bg-white border border-gray-200 rounded-lg shadow-lg hidden transform origin-top transition-all duration-300 ease-out opacity-0 scale-y-95">
+                                                        <li>
+                                                            <button class="gender-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-gender="All">All</button>
+                                                        </li>
+                                                        <li>
+                                                            <button class="gender-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-gender="Male">Male</button>
+                                                        </li>
+                                                        <li>
+                                                            <button class="gender-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-gender="Female">Female</button>
+                                                        </li>
+                                                        <li>
+                                                            <button class="gender-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-gender="Prefer not to say">Prefer not to say</button>
+                                                        </li>
+                                                        <li>
+                                                            <button class="gender-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-gender="Other">Other</button>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                                <button id="applyFiltersButton" class="bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 hidden">
+                                                    Apply
                                                 </button>
-                                                <ul id="collegeFilterMenu" class="absolute z-50 mt-2 w-32 bg-white/10 backdrop-blur-md border border-gray-400 rounded-2xl shadow-2xl hidden transform origin-top transition-all duration-300 ease-out opacity-0 scale-y-95">
-                                                    <li>
-                                                        <button class="college-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-college="All">All</button>
-                                                    </li>
-                                                    <li>
-                                                        <button class="college-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-college="CICS">CICS</button>
-                                                    </li>
-                                                    <li>
-                                                        <button class="college-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-college="CTED">CTED</button>
-                                                    </li>
-                                                    <li>
-                                                        <button class="college-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-college="CCJE">CCJE</button>
-                                                    </li>
-                                                    <li>
-                                                        <button class="college-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-college="CHM">CHM</button>
-                                                    </li>
-                                                    <li>
-                                                        <button class="college-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-college="CBEA">CBEA</button>
-                                                    </li>
-                                                    <li>
-                                                        <button class="college-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-college="CA">CA</button>
-                                                    </li>
-                                                </ul>
                                             </div>
-                                            <div class="relative inline-block text-left">
-                                                <button id="yearFilterButton" class="year-filter glass-button px-4 py-2 text-gray-500 text-sm font-medium rounded-2xl flex items-center justify-between w-32 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white/10 backdrop-blur-md border border-gray-400 shadow-md" data-year="All" aria-expanded="false" aria-controls="yearFilterMenu">
-                                                    <span id="selectedYear">All</span>
-                                                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                                                    </svg>
-                                                </button>
-                                                <ul id="yearFilterMenu" class="absolute z-50 mt-2 w-32 bg-white/10 backdrop-blur-md border border-gray-400 rounded-2xl shadow-2xl hidden transform origin-top transition-all duration-300 ease-out opacity-0 scale-y-95">
-                                                    <li>
-                                                        <button class="year-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-year="All">All</button>
-                                                    </li>
-                                                    <li>
-                                                        <button class="year-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-year="1">1st Year</button>
-                                                    </li>
-                                                    <li>
-                                                        <button class="year-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-year="2">2nd Year</button>
-                                                    </li>
-                                                    <li>
-                                                        <button class="year-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-year="3">3rd Year</button>
-                                                    </li>
-                                                    <li>
-                                                        <button class="year-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-year="4">4th Year</button>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                            <button id="applyFiltersButton" class="glass-button px-3 py-1.5 text-gray-500 text-sm font-medium rounded-2xl transition-all duration-300 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white/10 backdrop-blur-md border border-gray-400 shadow-md hidden">
-                                                Apply
-                                            </button>
 
+                                            <button id="print-selected-btn" class="bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500">Print QR Code</button>
                                         </div>
-
-                                        <button id="print-selected-btn" class="glass-button px-4 py-2 text-gray-500 text-sm font-medium rounded-2xl flex items-center justify-between w-32 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white/10 backdrop-blur-md border border-gray-400 shadow-md">Print QR Code</button>
                                     </div>
                                     <div class="flex items-center gap-4">
                                         <button @click="showArchived = !showArchived"
-                                                class="inline-flex items-center px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-md hover:bg-gray-700 transition">
+                                                class="inline-flex items-center px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
                                             <span x-text="showArchived ? 'View Active Students' : 'View Archived Students'"></span>
                                         </button>
-                                        <a href="{{ route('admin.students.create')}}" class="inline-flex items-center px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition">
+                                        <a href="{{ route('admin.students.create')}}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
                                             + Add Student
+                                        </a>
+                                        <a href="{{ route('admin.students.bulk-create')}}" class="inline-flex items-center px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors ml-2">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                            </svg>
+                                            Bulk Upload
                                         </a>
                                     </div>
                                 </div>
@@ -193,9 +228,10 @@
                                                     <th class="px-6 py-3">Student ID</th>
                                                     <th class="px-6 py-3">Last Name</th>
                                                     <th class="px-6 py-3">First Name</th>
-                                                    <th class="px-6 py-3">MI</th>
+                                                    <th class="px-3 py-3">MI</th>
                                                     <th class="px-6 py-3">College</th>
-                                                    <th class="px-6 py-3">Year</th>
+                                                    <th class="px-3 py-3">Year</th>
+                                                    <th class="px-6 py-3">Gender</th>
                                                     <th class="px-2 py-3">Email</th>
                                                     <th class="px-2 py-3">QR Code</th>
                                                     <th class="px-2 py-3 text-right">Actions</th>
@@ -203,12 +239,12 @@
                                             </thead>
                                             <tbody class="divide-y divide-gray-100" id="student-table-body">
                                                 @foreach ($students as $student)
-                                                <tr class="hover:bg-gray-50" data-college="{{ $student->college }}">
+                                                <tr class="hover:bg-gray-50" data-college="{{ $student->college }}" data-gender="{{ $student->gender ?? 'N/A' }}">
                                                     <td class="px-2 py-4"><input type="checkbox" class="select-student" value="{{ $student->id }}" data-name="{{ $student->lname }}, {{ $student->fname }}{{ $student->MI ? ' ' . $student->MI . '.' : '' }}" data-student-id="{{ $student->student_id }}" data-college="{{ $student->college }}" data-qr="{{ $student->qr_code_path ? asset('storage/' . $student->qr_code_path) : '' }}"></td>
                                                     <td class="px-6 py-4">{{ $student->student_id }}</td>
                                                     <td class="px-6 py-4">{{ $student->lname }}</td>
                                                     <td class="px-6 py-4">{{ $student->fname }}</td>
-                                                    <td class="px-6 py-4">{{ $student->MI }}</td>
+                                                    <td class="px-3 py-4">{{ $student->MI }}</td>
                                                     <td class="px-6 py-4">
                                                         <span class="px-2 py-1 text-xs font-medium rounded-md
                                                             @if($student->college === 'CICS') bg-violet-200 text-gray-800
@@ -221,7 +257,15 @@
                                                             {{ $student->college }}
                                                         </span>
                                                     </td>
-                                                    <td class="px-6 py-4">{{ $student->year }}</td>
+                                                    <td class="px-3 py-4">{{ $student->year }}</td>
+                                                    <td class="px-6 py-4">
+                                                        <span class="px-2 py-1 text-xs font-medium rounded-md
+                                                            @if($student->gender === 'Male') bg-blue-200 text-gray-800
+                                                            @elseif($student->gender === 'Female') bg-pink-200 text-gray-800
+                                                            @else bg-gray-100 text-gray-700 @endif">
+                                                            {{ $student->gender ?? 'N/A' }}
+                                                        </span>
+                                                    </td>
                                                     <td class="px-2 py-4 text-gray-600 hover:underline">
                                                         <a href="mailto:{{ $student->email }}">{{ $student->email }}</a>
                                                     </td>
@@ -236,13 +280,14 @@
                                                     <td class="px-2 py-4 text-right">
                                                         <!-- Edit Button -->
                                                         <button type="button"
-                                                                class="edit-student-btn inline-flex items-center px-3 py-1 bg-yellow-100 text-yellow-800 rounded-md text-sm hover:bg-yellow-200 transition"
+                                                                class="edit-student-btn inline-flex items-center px-3 py-1 bg-sky-50 border border-gray-200 text-gray-700 rounded-lg text-sm hover:bg-sky-100 transition-colors"
                                                                 title="Edit" aria-label="Edit student {{ $student->student_id }}"
                                                                 data-student-id="{{ $student->id }}"
                                                                 data-student-student-id="{{ $student->student_id }}"
                                                                 data-lname="{{ $student->lname }}"
                                                                 data-fname="{{ $student->fname }}"
                                                                 data-mi="{{ $student->MI }}"
+                                                                data-gender="{{ $student->gender }}"
                                                                 data-email="{{ $student->email }}"
                                                                 data-college="{{ $student->college }}"
                                                                 data-year="{{ $student->year }}">
@@ -254,9 +299,9 @@
                                                         <form title="Resend QR Code" action="{{ route('admin.students.resend-qr', $student->id) }}" method="POST" class="inline">
                                                             @csrf
                                                             <button type="submit"
-                                                                class="resend-qr-btn inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200 transition"
+                                                                class="resend-qr-btn inline-flex items-center px-3 py-1 bg-green-50 border border-gray-200 text-gray-700 rounded-lg text-sm hover:bg-green-100 transition-colors"
                                                                 aria-label="Resend QR to {{ $student->email }}">
-                                                                <span class="spinner hidden w-4 h-4 border-2 border-blue-800 border-t-transparent rounded-full animate-spin mr-1"></span>
+                                                                <span class="spinner hidden w-4 h-4 border-2 border-gray-700 border-t-transparent rounded-full animate-spin mr-1"></span>
                                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" />
                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5h.75v.75h-.75v-.75ZM13.5 19.5h.75v.75h-.75v-.75ZM19.5 13.5h.75v.75h-.75v-.75ZM19.5 19.5h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z" />
@@ -267,7 +312,7 @@
                                                         <form action="{{ route('admin.students.archive', $student->id) }}" method="POST" class="inline archive-form" data-student-name="{{ $student->fname }} {{ $student->lname }}">
                                                             @csrf
                                                             <button type="button"
-                                                                class="archive-btn inline-flex items-center px-3 py-1 bg-gray-100 text-gray-800 rounded-md text-sm hover:bg-gray-200 transition"
+                                                                class="archive-btn inline-flex items-center px-3 py-1 bg-red-50 border border-gray-200 text-gray-700 rounded-lg text-sm hover:bg-red-100 transition-colors"
                                                                 title="Archive" aria-label="Archive student {{ $student->student_id }}">
                                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125 1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
@@ -342,7 +387,6 @@
 
                             </div>
 
-
                         </div>
                     </div>
 
@@ -413,6 +457,19 @@
                         <label for="edit-MI" class="block text-sm font-medium text-gray-700 mb-1">Middle Initial</label>
                         <input type="text" id="edit-MI" name="MI"
                             class="form-input w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+
+                    {{-- Gender --}}
+                    <div>
+                        <label for="edit-gender" class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                        <select id="edit-gender" name="gender"
+                            class="form-select w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition">
+                            <option value="" disabled>Choose Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Prefer not to say">Prefer not to say</option>
+                            <option value="Other">Other</option>
+                        </select>
                     </div>
 
                     {{-- Email --}}

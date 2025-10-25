@@ -204,7 +204,7 @@
                                     <table class="w-full table-auto text-sm text-left text-gray-700">
                                         <thead class="bg-gray-50 text-gray-500 uppercase text-xs font-semibold border-b">
                                             <tr>
-                                                <th class="px-2 py-3">
+                                                <th class="px-2 py-3 w-12">
                                                     <label for="select-all" class="inline-flex items-center gap-2">
                                                         <input type="checkbox" id="select-all" class="h-4 w-4">
                                                         <span>Select All</span>
@@ -215,6 +215,7 @@
                                                 <th class="px-6 py-3">First Name</th>
                                                 <th class="px-6 py-3">MI</th>
                                                 <th class="px-6 py-3">Department</th>
+                                                <th class="px-6 py-3">Gender</th>
                                                 <th class="px-2 py-3">Email</th>
                                                 <th class="px-2 py-3">QR Code</th>
                                                 <th class="px-2 py-3 text-right">Actions</th>
@@ -223,7 +224,7 @@
                                         <tbody class="divide-y divide-gray-100" id="teacher-visitor-table-body">
                                             @foreach ($teachersVisitors as $teacherVisitor)
                                             <tr class="hover:bg-gray-50" data-department="{{ $teacherVisitor->department }}">
-                                                <td class="px-2 py-4"><input type="checkbox" class="select-teacher-visitor" value="{{ $teacherVisitor->id }}" data-name="{{ $teacherVisitor->last_name }}, {{ $teacherVisitor->first_name }}{{ $teacherVisitor->middle_name ? ' ' . $teacherVisitor->middle_name . '.' : '' }}" data-role="{{ $teacherVisitor->role }}" data-qr="{{ $teacherVisitor->qr_code_path ? asset('storage/' . $teacherVisitor->qr_code_path) : '' }}"></td>
+                                                <td class="px-2 py-4 w-12"><input type="checkbox" class="select-teacher-visitor" value="{{ $teacherVisitor->id }}" data-name="{{ $teacherVisitor->last_name }}, {{ $teacherVisitor->first_name }}{{ $teacherVisitor->middle_name ? ' ' . $teacherVisitor->middle_name . '.' : '' }}" data-role="{{ $teacherVisitor->role }}" data-qr="{{ $teacherVisitor->qr_code_path ? asset('storage/' . $teacherVisitor->qr_code_path) : '' }}"></td>
                                                 <td class="px-6 py-4">
                                                     <span class="px-3 py-1.5 inline-flex items-center text-xs font-medium rounded-full
                                                         @if($teacherVisitor->role === 'teacher') bg-blue-100 text-blue-800
@@ -249,7 +250,7 @@
                                                             @elseif($teacherVisitor->department === 'CA') bg-green-100 text-green-800
                                                             @elseif($teacherVisitor->department === 'Guest') bg-gray-100 text-gray-800
                                                             @else bg-gray-100 text-gray-700 @endif">
-                                                            <svg class="-ml-0.5 mr-1.5 h-2 w-2 
+                                                            <svg class="-ml-0.5 mr-1.5 h-2 w-2
                                                                 @if($teacherVisitor->department === 'CICS') text-violet-600
                                                                 @elseif($teacherVisitor->department === 'CTED') text-sky-600
                                                                 @elseif($teacherVisitor->department === 'CCJE') text-red-600
@@ -257,7 +258,7 @@
                                                                 @elseif($teacherVisitor->department === 'CBEA') text-yellow-600
                                                                 @elseif($teacherVisitor->department === 'CA') text-green-600
                                                                 @elseif($teacherVisitor->department === 'Guest') text-gray-600
-                                                                @else text-gray-500 @endif" 
+                                                                @else text-gray-500 @endif"
                                                                 fill="currentColor" viewBox="0 0 8 8">
                                                                 <circle cx="4" cy="4" r="3" />
                                                             </svg>
@@ -265,6 +266,29 @@
                                                         </span>
                                                     @else
                                                         <span class="text-xs text-gray-400">No department</span>
+                                                    @endif
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    @if(!empty($teacherVisitor->gender))
+                                                        <span class="px-3 py-1.5 inline-flex items-center text-xs font-medium rounded-full
+                                                            @if($teacherVisitor->gender === 'Male') bg-blue-100 text-blue-800
+                                                            @elseif($teacherVisitor->gender === 'Female') bg-pink-100 text-pink-800
+                                                            @elseif($teacherVisitor->gender === 'Prefer not to say') bg-gray-100 text-gray-800
+                                                            @elseif($teacherVisitor->gender === 'Other') bg-purple-100 text-purple-800
+                                                            @else bg-gray-100 text-gray-700 @endif">
+                                                            <svg class="-ml-0.5 mr-1.5 h-2 w-2
+                                                                @if($teacherVisitor->gender === 'Male') text-blue-600
+                                                                @elseif($teacherVisitor->gender === 'Female') text-pink-600
+                                                                @elseif($teacherVisitor->gender === 'Prefer not to say') text-gray-600
+                                                                @elseif($teacherVisitor->gender === 'Other') text-purple-600
+                                                                @else text-gray-500 @endif"
+                                                                fill="currentColor" viewBox="0 0 8 8">
+                                                                <circle cx="4" cy="4" r="3" />
+                                                            </svg>
+                                                            {{ $teacherVisitor->gender }}
+                                                        </span>
+                                                    @else
+                                                        <span class="text-xs text-gray-400">N/A</span>
                                                     @endif
                                                 </td>
                                                 <td class="px-2 py-4 text-gray-600 hover:underline">
@@ -288,10 +312,10 @@
                                                         </svg>
                                                     </a>
                                                     <!-- Resend QR Button (POST) -->
-                                                    <form action="{{ route('admin.teachers_visitors.resend-qr', $teacherVisitor->id) }}" method="POST" class="inline">
+                                                    <form action="{{ route('admin.teachers_visitors.resend-qr', $teacherVisitor->id) }}" method="POST" class="inline resend-qr-form">
                                                         @csrf
                                                         <button type="submit"
-                                                            class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200 transition"
+                                                            class="resend-qr-btn inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200 transition"
                                                             aria-label="Resend QR to {{ $teacherVisitor->email }}">
                                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" />
@@ -300,7 +324,7 @@
                                                         </button>
                                                     </form>
                                                     <!-- Archive Button -->
-                                                    <form action="{{ route('admin.teachers_visitors.archive', $teacherVisitor->id) }}" method="POST" class="inline">
+                                                    <form action="{{ route('admin.teachers_visitors.archive', $teacherVisitor->id) }}" method="POST" class="inline archive-form">
                                                         @csrf
                                                         <button type="submit"
                                                             class="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-800 rounded-md text-sm hover:bg-gray-200 transition"
@@ -385,6 +409,16 @@
                             </select>
                         </div>
                         <div>
+                            <label class="block mb-1 font-medium text-gray-700">Gender</label>
+                            <select name="gender" id="edit-gender" class="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-400">
+                                <option value="" disabled>Choose Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Prefer not to say">Prefer not to say</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div>
                             <label class="block mb-1 font-medium text-gray-700">Role</label>
                             <select name="role" id="edit-role" required class="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-400">
                                 <option value="" disabled>Choose Role</option>
@@ -410,11 +444,11 @@
         <!-- Delete Confirmation Modal -->
         <div id="delete-confirmation-modal" class="fixed inset-0 z-[11000] flex items-center justify-center bg-black bg-opacity-50 opacity-0 pointer-events-none transition-opacity duration-300">
             <div class="bg-white rounded-lg p-6 max-w-sm w-full shadow-lg transform scale-95 transition-transform duration-300">
-                <h3 class="text-lg font-semibold mb-4 text-gray-800">Confirm Delete</h3>
-                <p class="mb-6 text-gray-600">Are you sure you want to delete this student? This action cannot be undone.</p>
+                <h3 class="text-lg font-semibold mb-4 text-gray-800">Confirm Archive</h3>
+                <p class="mb-6 text-gray-600">Are you sure you want to archive this teacher/visitor? This action can be undone.</p>
                 <div class="flex justify-end space-x-4">
                     <button id="cancel-delete-btn" class="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400 transition">Cancel</button>
-                    <button id="confirm-delete-btn" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">Delete</button>
+                    <button id="confirm-delete-btn" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">Archive</button>
                 </div>
                 <button id="close-delete-modal" class="absolute top-2 right-2 text-gray-600 hover:text-gray-900 text-2xl font-bold">&times;</button>
             </div>
@@ -702,33 +736,58 @@
                 const editModalErrors = document.getElementById('edit-modal-errors');
                 let currentEditId = null;
                 let currentEditRow = null;
+
                 document.querySelectorAll('a[title="Edit"]').forEach(btn => {
-                        btn.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            const row = this.closest('tr');
-                            currentEditRow = row;
-                            currentEditId = this.getAttribute('data-id');
-                            document.getElementById('edit-teacher-visitor-id-hidden').value = currentEditId;
-                            document.getElementById('edit-last-name').value = row.children[1].textContent.trim();
-                            document.getElementById('edit-first-name').value = row.children[2].textContent.trim();
-                            document.getElementById('edit-middle-name').value = row.children[3].textContent.trim();
-                            document.getElementById('edit-department').value = row.children[4].querySelector('span').textContent.trim();
-                            document.getElementById('edit-role').value = row.children[5].querySelector('span').textContent.trim().toLowerCase();
-                            document.getElementById('edit-email').value = row.children[6].querySelector('a').textContent.trim();
-                            // Set the form action dynamically to the update route with the current teacher/visitor ID
-                            document.getElementById('edit-teacher-visitor-form').action = `/admin/teachers_visitors/${currentEditId}`;
-                            editModalErrors.classList.add('hidden');
-                            editModalErrors.innerHTML = '';
-                            editModal.classList.remove('hidden');
-                            editModal.classList.add('flex');
-                            editModal.style.opacity = 1;
-                        });
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const row = this.closest('tr');
+                        currentEditRow = row;
+                        currentEditId = this.getAttribute('data-id');
+
+                        // Extract data from table row - correct column indices
+                        const cells = row.querySelectorAll('td');
+                        const lastName = cells[2].textContent.trim(); // Last Name column
+                        const firstName = cells[3].textContent.trim(); // First Name column
+                        const middleName = cells[4].textContent.trim(); // MI column
+                        const departmentSpan = cells[5].querySelector('span');
+                        const department = departmentSpan ? departmentSpan.textContent.trim() : '';
+                        const genderSpan = cells[6].querySelector('span');
+                        const gender = genderSpan ? genderSpan.textContent.trim() : '';
+                        const roleSpan = cells[1].querySelector('span'); // Role column (index 1)
+                        const role = roleSpan ? roleSpan.textContent.trim().toLowerCase() : '';
+                        const emailLink = cells[7].querySelector('a');
+                        const email = emailLink ? emailLink.textContent.trim() : '';
+
+                        // Populate form fields
+                        document.getElementById('edit-teacher-visitor-id-hidden').value = currentEditId;
+                        document.getElementById('edit-last-name').value = lastName;
+                        document.getElementById('edit-first-name').value = firstName;
+                        document.getElementById('edit-middle-name').value = middleName;
+                        document.getElementById('edit-department').value = department;
+                        document.getElementById('edit-gender').value = gender;
+                        document.getElementById('edit-role').value = role;
+                        document.getElementById('edit-email').value = email;
+
+                        // Set the form action dynamically to the update route with the current teacher/visitor ID
+                        document.getElementById('edit-teacher-visitor-form').action = `/admin/teachers_visitors/${currentEditId}`;
+
+                        // Clear any previous errors
+                        editModalErrors.classList.add('hidden');
+                        editModalErrors.innerHTML = '';
+
+                        // Show modal
+                        editModal.classList.remove('hidden');
+                        editModal.classList.add('flex');
+                        editModal.style.opacity = 1;
+                    });
                 });
+
                 closeEditModal.addEventListener('click', function() {
                     editModal.classList.add('hidden');
                     editModal.classList.remove('flex');
                     editModal.style.opacity = 0;
                 });
+
                 editModal.addEventListener('click', function(e) {
                     if (e.target === editModal) {
                         editModal.classList.add('hidden');
@@ -736,9 +795,157 @@
                         editModal.style.opacity = 0;
                     }
                 });
-                editForm.addEventListener('submit', function(e) {
-                    // Removed JavaScript fetch submission to use standard form submission instead
+
+                // Handle edit form submission with AJAX
+                editForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+
+                    const formData = new FormData(this);
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    const originalText = submitBtn.textContent;
+
+                    // Show loading state
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Updating...';
+
+                    try {
+                        const response = await fetch(this.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            }
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok && data.success) {
+                            // Update the table row with new data
+                            updateTableRow(currentEditRow, formData);
+
+                            // Close modal
+                            editModal.classList.add('hidden');
+                            editModal.classList.remove('flex');
+                            editModal.style.opacity = 0;
+
+                            // Show success message
+                            showToast(data.message || 'Teacher/Visitor updated successfully!', 'success');
+                        } else {
+                            // Show validation errors
+                            const errors = data.errors || {};
+                            let errorHtml = '<ul class="list-disc list-inside">';
+                            for (const field in errors) {
+                                errors[field].forEach(error => {
+                                    errorHtml += `<li>${error}</li>`;
+                                });
+                            }
+                            errorHtml += '</ul>';
+
+                            editModalErrors.innerHTML = errorHtml;
+                            editModalErrors.classList.remove('hidden');
+
+                            // Scroll to errors
+                            editModalErrors.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        }
+                    } catch (error) {
+                        console.error('Error updating teacher/visitor:', error);
+                        editModalErrors.innerHTML = '<p class="text-red-600">An error occurred while updating. Please try again.</p>';
+                        editModalErrors.classList.remove('hidden');
+                    } finally {
+                        // Reset button state
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = originalText;
+                    }
                 });
+
+                // Function to update table row after successful edit
+                function updateTableRow(row, formData) {
+                    const cells = row.querySelectorAll('td');
+
+                    // Update Last Name (index 2)
+                    cells[2].textContent = formData.get('last_name');
+
+                    // Update First Name (index 3)
+                    cells[3].textContent = formData.get('first_name');
+
+                    // Update Middle Name (index 4)
+                    cells[4].textContent = formData.get('middle_name');
+
+                    // Update Department (index 5) - need to update the span
+                    const deptSpan = cells[5].querySelector('span');
+                    if (deptSpan) {
+                        const department = formData.get('department');
+                        deptSpan.textContent = department;
+
+                        // Update department styling
+                        deptSpan.className = 'px-3 py-1.5 inline-flex items-center text-xs font-medium rounded-full';
+                        if (department === 'CICS') {
+                            deptSpan.classList.add('bg-violet-100', 'text-violet-800');
+                        } else if (department === 'CTED') {
+                            deptSpan.classList.add('bg-sky-100', 'text-sky-800');
+                        } else if (department === 'CCJE') {
+                            deptSpan.classList.add('bg-red-100', 'text-red-800');
+                        } else if (department === 'CHM') {
+                            deptSpan.classList.add('bg-pink-100', 'text-pink-800');
+                        } else if (department === 'CBEA') {
+                            deptSpan.classList.add('bg-yellow-100', 'text-yellow-800');
+                        } else if (department === 'CA') {
+                            deptSpan.classList.add('bg-green-100', 'text-green-800');
+                        } else if (department === 'Guest') {
+                            deptSpan.classList.add('bg-gray-100', 'text-gray-800');
+                        } else {
+                            deptSpan.classList.add('bg-gray-100', 'text-gray-700');
+                        }
+                    }
+
+                    // Update Gender (index 6) - need to update the span
+                    const genderSpan = cells[6].querySelector('span');
+                    if (genderSpan) {
+                        const gender = formData.get('gender');
+                        genderSpan.textContent = gender;
+
+                        // Update gender styling
+                        genderSpan.className = 'px-3 py-1.5 inline-flex items-center text-xs font-medium rounded-full';
+                        if (gender === 'Male') {
+                            genderSpan.classList.add('bg-blue-100', 'text-blue-800');
+                        } else if (gender === 'Female') {
+                            genderSpan.classList.add('bg-pink-100', 'text-pink-800');
+                        } else if (gender === 'Prefer not to say') {
+                            genderSpan.classList.add('bg-gray-100', 'text-gray-800');
+                        } else if (gender === 'Other') {
+                            genderSpan.classList.add('bg-purple-100', 'text-purple-800');
+                        } else {
+                            genderSpan.classList.add('bg-gray-100', 'text-gray-700');
+                        }
+                    }
+
+                    // Update Role (index 1) - need to update the span
+                    const roleSpan = cells[1].querySelector('span');
+                    if (roleSpan) {
+                        const role = formData.get('role');
+                        const capitalizedRole = role.charAt(0).toUpperCase() + role.slice(1);
+                        roleSpan.textContent = capitalizedRole;
+
+                        // Update role styling
+                        roleSpan.className = 'px-3 py-1.5 inline-flex items-center text-xs font-medium rounded-full';
+                        if (role === 'teacher') {
+                            roleSpan.classList.add('bg-blue-100', 'text-blue-800');
+                        } else if (role === 'visitor') {
+                            roleSpan.classList.add('bg-green-100', 'text-green-800');
+                        } else {
+                            roleSpan.classList.add('bg-gray-100', 'text-gray-700');
+                        }
+                    }
+
+                    // Update Email (index 7)
+                    const emailLink = cells[7].querySelector('a');
+                    if (emailLink) {
+                        emailLink.textContent = formData.get('email');
+                        emailLink.href = 'mailto:' + formData.get('email');
+                    }
+                }
 
                 // Toast logic
                 const toast = document.getElementById('toast');
@@ -763,11 +970,11 @@
                 const closeDeleteModalBtn = document.getElementById('close-delete-modal');
                 let formToDelete = null;
 
-                document.querySelectorAll('form.inline').forEach(form => {
-                    const deleteBtn = form.querySelector('button[type="submit"]');
+                document.querySelectorAll('form.inline.archive-form').forEach(form => {
+                    const archiveBtn = form.querySelector('button[type="submit"]');
                     // Remove inline confirm
-                    deleteBtn.removeAttribute('onclick');
-                    deleteBtn.addEventListener('click', function(e) {
+                    archiveBtn.removeAttribute('onclick');
+                    archiveBtn.addEventListener('click', function(e) {
                         e.preventDefault();
                         formToDelete = form;
                         deleteModal.classList.remove('opacity-0', 'pointer-events-none');
@@ -799,6 +1006,31 @@
                     if (formToDelete) {
                         formToDelete.submit();
                     }
+                });
+
+                // Resend QR code spinner logic
+                document.querySelectorAll('.resend-qr-form').forEach(form => {
+                    form.addEventListener('submit', function(e) {
+                        const btn = form.querySelector('.resend-qr-btn');
+                        const originalHtml = btn.innerHTML;
+
+                        // Replace button content with spinner
+                        btn.innerHTML = `
+                            <svg class="animate-spin size-4" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        `;
+
+                        // Disable button
+                        btn.disabled = true;
+
+                        // Re-enable after 3 seconds (in case of error)
+                        setTimeout(() => {
+                            btn.innerHTML = originalHtml;
+                            btn.disabled = false;
+                        }, 3000);
+                    });
                 });
             });
         </script>

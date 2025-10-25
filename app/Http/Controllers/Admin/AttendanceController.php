@@ -11,7 +11,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Cache;
 use App\Mail\AttendanceNotification;
+use App\Mail\LogoutCodeMail;
 use Psr\Log\LoggerInterface;
 use Illuminate\Support\Collection;
 use App\Models\Books;
@@ -52,7 +54,7 @@ class AttendanceController extends Controller
     private function getTodayAttendance($startOfDay, $endOfDay)
     {
         return Attendance::with(['student' => function($query) {
-                $query->select('student_id', 'lname', 'fname', 'college', 'email')->with('user');
+                $query->select('student_id', 'lname', 'fname', 'college', 'email', 'gender')->with('user');
             }])
             ->whereBetween('login', [$startOfDay, $endOfDay])
             ->orderBy('created_at', 'desc')
@@ -132,6 +134,7 @@ class AttendanceController extends Controller
                     ? asset('storage/profile_pictures/' . $attendance->student->user->profile_picture)
                     : null,
                 'college' => $attendance->student->college ?? 'N/A',
+                'gender' => $attendance->student->gender ?? 'N/A',
                 'activity' => $activity,
                 'time_in' => $attendance->login ? Carbon::parse($attendance->login)->setTimezone('Asia/Manila')->format('h:i A') : 'N/A',
                 'time_out' => $attendance->logout ? Carbon::parse($attendance->logout)->setTimezone('Asia/Manila')->format('h:i A') : 'N/A'
@@ -1068,7 +1071,9 @@ class AttendanceController extends Controller
      */
     private function getTodayStudentAttendance($startOfDay, $endOfDay)
     {
-        return Attendance::with(['student.user'])
+        return Attendance::with(['student' => function($query) {
+                $query->select('student_id', 'lname', 'fname', 'college', 'email', 'gender')->with('user');
+            }])
             ->where('user_type', 'student')
             ->whereBetween('login', [$startOfDay, $endOfDay])
             ->orderBy('created_at', 'desc')
@@ -1173,6 +1178,7 @@ class AttendanceController extends Controller
                 'name' => $name,
                 'profile_picture' => $profilePicture,
                 'college_or_dept' => $student ? ($student->college ?? 'N/A') : 'N/A',
+                'gender' => $student ? ($student->gender ?? 'N/A') : 'N/A',
                 'activity' => $activity,
                 'time_in' => $attendance->login ? Carbon::parse($attendance->login)->setTimezone('Asia/Manila')->format('h:i A') : 'N/A',
                 'time_out' => $attendance->logout ? Carbon::parse($attendance->logout)->setTimezone('Asia/Manila')->format('h:i A') : '',
@@ -1208,11 +1214,220 @@ class AttendanceController extends Controller
                 'profile_picture' => $profilePicture,
                 'college_or_dept' => $teacher ? ($teacher->department ?? 'N/A') : 'N/A',
                 'role' => $teacher ? ($teacher->role ?? 'N/A') : 'N/A',
+                'gender' => $teacher ? ($teacher->gender ?? 'N/A') : 'N/A',
                 'activity' => $attendance->activity,
                 'time_in' => $attendance->login ? Carbon::parse($attendance->login)->setTimezone('Asia/Manila')->format('h:i A') : 'N/A',
                 'time_out' => $attendance->logout ? Carbon::parse($attendance->logout)->setTimezone('Asia/Manila')->format('h:i A') : '',
                 'status' => $status
             ];
         });
+    }
+
+    /**
+     * Initiate logout process by generating and emailing verification code
+     */
+    public function initiateLogout(Request $request)
+    {
+        try {
+            $request->validate([
+                'qr_code' => 'required|string',
+            ]);
+
+            // Find student by QR code
+            $student = Student::where('qr_code_path', $request->qr_code)->first();
+
+            if (!$student) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid QR code. Student not found.'
+                ], 404);
+            }
+
+            // Check if student has an active session today
+            $startOfDay = Carbon::today()->startOfDay();
+            $endOfDay = Carbon::today()->endOfDay();
+
+            $activeAttendance = Attendance::where('student_id', $student->student_id)
+                ->where('user_type', 'student')
+                ->whereBetween('login', [$startOfDay, $endOfDay])
+                ->whereNull('logout')
+                ->first();
+
+            if (!$activeAttendance) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No active attendance session found for today.'
+                ], 400);
+            }
+
+            // Check if logout code already exists and is not expired
+            $cacheKey = 'logout_code_' . $student->id;
+            $existingCode = Cache::get($cacheKey);
+
+            if ($existingCode && $existingCode['attempts'] < 3) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'A verification code has already been sent. Please check your email.'
+                ], 400);
+            }
+
+            // Generate 6-digit code
+            $code = str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
+
+            // Store code in cache with attempts counter (expires in 5 minutes)
+            Cache::put($cacheKey, [
+                'code' => $code,
+                'attempts' => 0,
+                'attendance_id' => $activeAttendance->id
+            ], now()->addMinutes(5));
+
+            // Send email
+            try {
+                Mail::to($student->email)->send(new LogoutCodeMail($student, $code));
+            } catch (\Exception $e) {
+                Log::error('Failed to send logout code email: ' . $e->getMessage());
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to send verification code. Please try again.'
+                ], 500);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Verification code sent to your email. Please enter it below to confirm logout.',
+                'student_name' => $student->fname . ' ' . $student->lname
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid request data.',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error in initiateLogout: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Server error occurred.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Confirm logout by verifying the code and updating attendance
+     */
+    public function confirmLogout(Request $request)
+    {
+        try {
+            $request->validate([
+                'qr_code' => 'required|string',
+                'code' => 'required|string|size:6',
+            ]);
+
+            // Find student by QR code
+            $student = Student::where('qr_code_path', $request->qr_code)->first();
+
+            if (!$student) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid QR code. Student not found.'
+                ], 404);
+            }
+
+            $cacheKey = 'logout_code_' . $student->id;
+            $cachedData = Cache::get($cacheKey);
+
+            if (!$cachedData) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Verification code has expired. Please request a new one.'
+                ], 400);
+            }
+
+            // Check attempts
+            if ($cachedData['attempts'] >= 3) {
+                Cache::forget($cacheKey); // Clear the cache
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Too many failed attempts. Please request a new verification code.'
+                ], 429);
+            }
+
+            // Verify code
+            if ($cachedData['code'] !== $request->code) {
+                $cachedData['attempts']++;
+                Cache::put($cacheKey, $cachedData, now()->addMinutes(5));
+
+                $remainingAttempts = 3 - $cachedData['attempts'];
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid verification code. ' . $remainingAttempts . ' attempts remaining.'
+                ], 400);
+            }
+
+            // Code is correct, proceed with logout
+            $attendance = Attendance::find($cachedData['attendance_id']);
+
+            if (!$attendance) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Attendance record not found.'
+                ], 404);
+            }
+
+            // Update logout time
+            $now = now();
+            $attendance->logout = $now;
+            $attendance->save();
+
+            // Clear cache
+            Cache::forget($cacheKey);
+
+            // If the activity was study-related, increment available study slots
+            if (StudyAreaHelper::isStudyActivity($attendance->activity)) {
+                StudyAreaHelper::updateAvailability(null, 'increment', 1);
+            }
+
+            // Handle book returns if applicable
+            if (str_contains($attendance->activity, 'Borrow')) {
+                $parts = explode(':', $attendance->activity);
+                if (count($parts) > 1) {
+                    $bookCode = trim($parts[1]);
+                    \App\Models\BorrowedBook::where('book_id', $bookCode)
+                        ->where('status', 'approved')
+                        ->update([
+                            'status' => 'returned',
+                            'returned_at' => $now
+                        ]);
+                }
+            }
+
+            // Send logout notification email
+            try {
+                $duration = $attendance->login->diffForHumans($now, ['parts' => 2]);
+                Mail::to($student->email)->queue(new AttendanceNotification($student, 'student', 'logout', $now, $attendance->activity, $duration));
+            } catch (\Exception $e) {
+                Log::error('Failed to send logout notification email: ' . $e->getMessage());
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Logout confirmed successfully.',
+                'logout_time' => $now->setTimezone('Asia/Manila')->format('h:i A')
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid request data.',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error in confirmLogout: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Server error occurred.'
+            ], 500);
+        }
     }
 }

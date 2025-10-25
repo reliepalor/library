@@ -513,9 +513,11 @@
                     :active="request()->routeIs('admin.campus-news.index')"
                     class="flex items-center px-4 py-3 group relative rounded-xl hover:bg-gradient-to-r hover:from-blue-100/60 hover:to-indigo-100/60 transition-all duration-300 hover:shadow-md hover:scale-105 active:scale-95">
                 <div class="relative">
-                    <svg class="h-5 w-5 text-gray-600 group-hover:text-blue-600 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
-                    </svg>
+                  <svg class=" h-5 w-5 text-gray-600 group-hover:text-blue-600 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V7a2 2 0 012-2h10l4 4v9a2 2 0 01-2 2z" />
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m-6-8h3" />
+</svg>
+
                     <div class="absolute inset-0 bg-blue-400/20 rounded-full scale-0 group-hover:scale-150 transition-transform duration-300 -z-10"></div>
                 </div>
                 <span x-show="sidebarExpanded"

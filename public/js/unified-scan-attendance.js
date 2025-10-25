@@ -1300,6 +1300,9 @@ function updateStudentTable(attendance) {
                     ? (window.assetBaseUrl + 'storage/' + record.profile_picture)
                     : AvatarService.getPlaceholderAvatar(studentName, 100);
 
+                // Get gender information
+                const studentGender = studentInfo.gender || record.gender || 'N/A';
+
                 row.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" title="Student ID: ${studentId}">
                         ${studentId || '<span class="text-gray-400">N/A</span>'}
@@ -1325,6 +1328,9 @@ function updateStudentTable(attendance) {
                         ${studentCourse ? `
                         <div class="mt-1 text-xs text-gray-500">${escapeHtml(studentCourse)}</div>
                         ` : ''}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${studentGender !== 'N/A' ? escapeHtml(studentGender) : '<span class="text-gray-400">N/A</span>'}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         ${record.activity ? escapeHtml(record.activity) : '<span class="text-gray-400">N/A</span>'}
@@ -1517,7 +1523,10 @@ function updateTeacherTable(attendance) {
                 const profilePic = record.profile_picture ||
                                  teacherInfo.profile_picture ||
                                  AvatarService.getPlaceholderAvatar(teacherName, 100);
-                
+
+                // Get gender information for teachers (if available)
+                const teacherGender = teacherInfo.gender || record.gender || 'N/A';
+
                 row.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                         ${teacherType ? `
@@ -1531,13 +1540,13 @@ function updateTeacherTable(attendance) {
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center">
-                            <img class="h-10 w-10 rounded-full object-cover mr-3" 
-                                 src="${profilePic}" 
-                                 alt="${escapeHtml(teacherName)}" 
+                            <img class="h-10 w-10 rounded-full object-cover mr-3"
+                                 src="${profilePic}"
+                                 alt="${escapeHtml(teacherName)}"
                                  onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(teacherName || 'User')}&background=random&size=100'">
                             <div>
                                 <div class="text-sm font-medium text-gray-900">${escapeHtml(teacherName || 'N/A')}</div>
-                                ${teacherDepartment ? `<div class="text-xs text-gray-500">${escapeHtml(teacherDepartment)}</div>` : 
+                                ${teacherDepartment ? `<div class="text-xs text-gray-500">${escapeHtml(teacherDepartment)}</div>` :
                                     `<div class="text-xs text-gray-400">No department</div>`}
                             </div>
                         </div>
@@ -1551,6 +1560,9 @@ function updateTeacherTable(attendance) {
                             ${escapeHtml(teacherDepartment)}
                         </span>
                         ` : '<span class="px-2 py-1 text-xs text-gray-500">No department</span>'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${teacherGender !== 'N/A' ? escapeHtml(teacherGender) : '<span class="text-gray-400">N/A</span>'}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                         ${record.activity ? escapeHtml(record.activity) : '<span class="text-gray-400">N/A</span>'}
@@ -2328,6 +2340,9 @@ function loadInitialStudentRecords() {
                                  studentInfo.profile_picture ||
                                  `https://ui-avatars.com/api/?name=${encodeURIComponent(studentName)}&background=random&size=100`;
 
+                // Get gender information
+                const studentGender = studentInfo.gender || record.gender || 'N/A';
+
                 row.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" title="Student ID: ${studentId}" style="min-width: 100px;">
                         ${studentId || '<span class="text-gray-400">N/A</span>'}
@@ -2343,6 +2358,9 @@ function loadInitialStudentRecords() {
                             ${escapeHtml(studentCollege)}
                         </span>
                         ` : '<span class="text-gray-400">N/A</span>'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" style="min-width: 80px;">
+                        ${studentGender !== 'N/A' ? escapeHtml(studentGender) : '<span class="text-gray-400">N/A</span>'}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" style="min-width: 150px;">
                         ${(() => {
@@ -2451,6 +2469,9 @@ function loadMoreStudentRecords() {
                 ? (window.assetBaseUrl + 'storage/' + record.profile_picture)
                 : AvatarService.getPlaceholderAvatar(studentName, 100);
 
+            // Get gender information
+            const studentGender = studentInfo.gender || record.gender || 'N/A';
+
             row.innerHTML = `
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" title="Student ID: ${studentId}">
                     ${studentId || '<span class="text-gray-400">N/A</span>'}
@@ -2466,6 +2487,9 @@ function loadMoreStudentRecords() {
                         ${escapeHtml(studentCollege)}
                     </span>
                     ` : '<span class="text-gray-400">N/A</span>'}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    ${studentGender !== 'N/A' ? escapeHtml(studentGender) : '<span class="text-gray-400">N/A</span>'}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     ${(() => {

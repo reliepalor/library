@@ -96,7 +96,7 @@
                 </div>
 
                 {{-- Department --}}
-                <div class="md:col-span-2">
+                <div>
                     <label for="department" class="block text-sm font-medium text-gray-700 mb-1">Department</label>
                     <select id="department" name="department" required
                         class="form-select w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition @error('department') border-red-500 @enderror">
@@ -110,6 +110,22 @@
                         <option value="Guest" {{ old('department') == 'Guest' ? 'selected' : '' }}>Guest</option>
                     </select>
                     @error('department')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                {{-- Gender --}}
+                <div>
+                    <label for="gender" class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                    <select id="gender" name="gender"
+                        class="form-select w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition @error('gender') border-red-500 @enderror">
+                        <option value="" disabled {{ old('gender') ? '' : 'selected' }}>Choose Gender</option>
+                        <option value="Male" {{ old('gender') == 'Male' ? 'selected' : '' }}>Male</option>
+                        <option value="Female" {{ old('gender') == 'Female' ? 'selected' : '' }}>Female</option>
+                        <option value="Prefer not to say" {{ old('gender') == 'Prefer not to say' ? 'selected' : '' }}>Prefer not to say</option>
+                        <option value="Other" {{ old('gender') == 'Other' ? 'selected' : '' }}>Other</option>
+                    </select>
+                    @error('gender')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>

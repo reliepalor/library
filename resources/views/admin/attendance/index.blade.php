@@ -206,6 +206,7 @@
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 100px;">Student ID</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 150px;">Name</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 120px;">College</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 80px;">Gender</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 150px;">Activity</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 80px;">Time In</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 80px;">Time Out</th>
@@ -243,6 +244,7 @@
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Profile</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Department</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gender</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Activity</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time In</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time Out</th>
@@ -278,9 +280,7 @@
                                                 </span>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                <span class="px-2 py-1 text-xs font-medium rounded {{ $attendance['role'] === 'teacher' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
-                                                    {{ ucfirst($attendance['role']) }}
-                                                </span>
+                                                {{ $attendance['gender'] ?? 'N/A' }}
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $attendance['activity'] }}</td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $attendance['time_in'] }}</td>
@@ -300,6 +300,39 @@
                                     @endforelse
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+
+                    <!-- Logout Confirmation Modal -->
+                    <div id="logout-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+                        <div class="bg-white rounded-lg shadow-lg p-6 w-96 max-w-md">
+                            <div class="text-center">
+                                <h3 class="text-lg font-bold text-gray-900 mb-4">Confirm Logout</h3>
+                                <p class="text-sm text-gray-600 mb-4" id="logout-message">
+                                    A 6-digit verification code was sent to your email. Enter it below to complete logout.
+                                </p>
+
+                                <div class="mb-4">
+                                    <label for="logout-code" class="block mb-2 text-sm font-medium text-gray-700">Verification Code</label>
+                                    <input type="text" id="logout-code" maxlength="6" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center text-lg font-mono" placeholder="000000">
+                                </div>
+
+                                <div id="logout-error-message" class="mb-4 text-sm text-red-600 hidden"></div>
+                                <div id="logout-success-message" class="mb-4 text-sm text-green-600 hidden"></div>
+
+                                <div class="flex justify-between space-x-2">
+                                    <button type="button" id="logout-modal-cancel" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">
+                                        Cancel
+                                    </button>
+                                    <button type="button" id="logout-modal-confirm" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                        Confirm Logout
+                                    </button>
+                                </div>
+
+                                <div class="mt-4 text-xs text-gray-500">
+                                    <p>Didn't receive the code? <button id="resend-code-btn" class="text-blue-600 hover:text-blue-800 underline">Resend</button></p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

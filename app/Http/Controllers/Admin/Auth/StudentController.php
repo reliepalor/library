@@ -10,15 +10,156 @@ use Illuminate\Support\Facades\File;
 use App\Mail\StudentQrMail;
 use Illuminate\Support\Facades\Mail;
 use Intervention\Image\Facades\Image;
+use Maatwebsite\Excel\Facades\Excel;
+use Smalot\PdfParser\Parser;
 
 class StudentController extends \App\Http\Controllers\Controller
 {
+    /**
+     * Show the form for bulk creating students.
+     */
+    public function bulkCreate()
+    {
+        return view('admin.students.bulk_create');
+    }
+
+    /**
+     * Store bulk students from uploaded file.
+     */
+    public function bulkStore(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:pdf,xlsx,xls,csv|max:10240', // 10MB max
+        ]);
+
+        $file = $request->file('file');
+        $extension = $file->getClientOriginalExtension();
+
+        $studentsData = [];
+
+        try {
+            if (in_array($extension, ['xlsx', 'xls', 'csv'])) {
+                // Handle Excel files
+                $data = Excel::toArray([], $file)[0]; // Get first sheet
+                $headers = array_shift($data); // Remove header row
+
+                foreach ($data as $row) {
+                    if (count($row) >= 8) { // Ensure we have all required columns
+                        $studentsData[] = [
+                            'student_id' => trim($row[0] ?? ''),
+                            'lname' => trim($row[1] ?? ''),
+                            'fname' => trim($row[2] ?? ''),
+                            'MI' => trim($row[3] ?? ''),
+                            'gender' => trim($row[4] ?? ''),
+                            'college' => trim($row[5] ?? ''),
+                            'year' => trim($row[6] ?? ''),
+                            'email' => strtolower(trim($row[7] ?? '')),
+                        ];
+                    }
+                }
+            } elseif ($extension === 'pdf') {
+                // Handle PDF files
+                $parser = new Parser();
+                $pdf = $parser->parseFile($file->getPathname());
+                $text = $pdf->getText();
+
+                // Parse PDF text - assuming tab or space separated data
+                $lines = explode("\n", $text);
+                foreach ($lines as $line) {
+                    $parts = preg_split('/\s+/', trim($line));
+                    if (count($parts) >= 8) {
+                        $studentsData[] = [
+                            'student_id' => trim($parts[0] ?? ''),
+                            'lname' => trim($parts[1] ?? ''),
+                            'fname' => trim($parts[2] ?? ''),
+                            'MI' => trim($parts[3] ?? ''),
+                            'gender' => trim($parts[4] ?? ''),
+                            'college' => trim($parts[5] ?? ''),
+                            'year' => trim($parts[6] ?? ''),
+                            'email' => strtolower(trim($parts[7] ?? '')),
+                        ];
+                    }
+                }
+            }
+
+            $successCount = 0;
+            $errors = [];
+
+            foreach ($studentsData as $index => $studentData) {
+                try {
+                    // Validate each student data
+                    $validator = \Illuminate\Support\Facades\Validator::make($studentData, [
+                        'student_id' => 'required|string|min:5|max:20|unique:students,student_id',
+                        'lname' => 'required|string|max:155',
+                        'fname' => 'required|string|max:155',
+                        'MI' => 'nullable|string|max:155',
+                        'gender' => 'nullable|string|in:Male,Female',
+                        'college' => 'required|string|max:155',
+                        'year' => 'required|string|max:155',
+                        'email' => 'required|string|email|max:155',
+                    ]);
+
+                    if ($validator->fails()) {
+                        $errors[] = "Row " . ($index + 2) . ": " . implode(', ', $validator->errors()->all());
+                        continue;
+                    }
+
+                    // Create student
+                    $student = Student::create($studentData);
+
+                    // Generate QR code
+                    $data = "{$student->student_id} | {$student->lname} {$student->fname} | {$student->college} | Year: {$student->year}";
+                    $directory = 'qrcodes';
+                    if (!Storage::disk('public')->exists($directory)) {
+                        Storage::disk('public')->makeDirectory($directory);
+                    }
+                    $fileName = "qrcodes/student_{$student->student_id}.png";
+                    Storage::disk('public')->put($fileName, QrCode::format('png')
+                        ->size(300)
+                        ->backgroundColor(255, 255, 255)
+                        ->color(0, 0, 0)
+                        ->generate($data));
+                    $student->update(['qr_code_path' => $fileName]);
+
+                    // Send email
+                    try {
+                        $qrCodeBase64 = base64_encode(Storage::disk('public')->get($fileName));
+                        Mail::to($student->email)->send(new StudentQrMail($student, $qrCodeBase64));
+                    } catch (\Throwable $mailException) {
+                        \Log::error('Failed to send bulk student QR email', [
+                            'student_id' => $student->student_id,
+                            'email' => $student->email,
+                            'error' => $mailException->getMessage(),
+                        ]);
+                    }
+
+                    $successCount++;
+                } catch (\Throwable $e) {
+                    $errors[] = "Row " . ($index + 2) . ": " . $e->getMessage();
+                }
+            }
+
+            $message = "Successfully registered {$successCount} students.";
+            if (!empty($errors)) {
+                $message .= " Errors: " . implode('; ', array_slice($errors, 0, 5)); // Show first 5 errors
+                if (count($errors) > 5) {
+                    $message .= " and " . (count($errors) - 5) . " more errors.";
+                }
+            }
+
+            return redirect()->route('admin.students.index')->with('success', $message);
+
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', 'Failed to process file: ' . $e->getMessage());
+        }
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $students = Student::active()->get();
+        $students = Student::active()->orderBy('created_at', 'desc')->get();
         $archivedStudents = Student::archived()->get();
         return view('admin.students.index', [
             "students" => $students,
@@ -56,6 +197,7 @@ class StudentController extends \App\Http\Controllers\Controller
                 "lname"      => "required|string|max:155",
                 "fname"      => "required|string|max:155",
                 "MI"         => "nullable|string|max:155",
+                "gender"     => "nullable|string|in:Male,Female,Prefer not to say,Other",
                 "college"    => "required|string|max:155",
                 // Limit year level to 1-4 as requested
                 "year"       => "required|integer|min:1|max:4",
@@ -203,6 +345,7 @@ class StudentController extends \App\Http\Controllers\Controller
             "lname"      => "required|string|max:155",
             "fname"      => "required|string|max:155",
             "MI"         => "nullable|string|max:155",
+            "gender"     => "nullable|string|in:Male,Female,Prefer not to say,Other",
             "college"    => "required|string|max:155",
             "year"       => "required|integer|min:1|max:4",
             "email"      => "required|string|email|max:155",

@@ -110,6 +110,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/students/{id}/archive', [AdminStudentController::class, 'archive'])->name('admin.students.archive');
     Route::patch('/admin/students/{id}/unarchive', [AdminStudentController::class, 'unarchive'])->name('admin.students.unarchive');
     Route::get('/admin/students/archived', [AdminStudentController::class, 'archived'])->name('admin.students.archived');
+    Route::get('/admin/students/bulk-create', [AdminStudentController::class, 'bulkCreate'])->name('admin.students.bulk-create');
+    Route::post('/admin/students/bulk-store', [AdminStudentController::class, 'bulkStore'])->name('admin.students.bulk-store');
 
     /*---------------------------ROUTE FOR ADMIN ---TEACHERS/VISITORS------------------------------*/
     Route::get('teachers_visitors/{id}/qr', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'generateTeacherVisitorQr'])->name('teachers_visitors.qr');

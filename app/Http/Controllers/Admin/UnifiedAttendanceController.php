@@ -66,7 +66,7 @@ class UnifiedAttendanceController extends Controller
     {
         return Attendance::students()
             ->with(['student' => function($query) {
-                $query->select('student_id', 'lname', 'fname', 'college', 'email')
+                $query->select('student_id', 'lname', 'fname', 'college', 'email', 'gender')
                       ->with('user:id,profile_picture');
             }])
             ->whereBetween('login', [$startOfDay, $endOfDay])
@@ -81,7 +81,7 @@ class UnifiedAttendanceController extends Controller
     {
         return Attendance::teachers()
             ->with(['teacherVisitor' => function($query) {
-                $query->select('id', 'lname', 'fname', 'department', 'role', 'email')
+                $query->select('id', 'lname', 'fname', 'department', 'role', 'email', 'gender')
                       ->with('user:id,profile_picture');
             }])
             ->whereBetween('login', [$startOfDay, $endOfDay])
@@ -135,6 +135,7 @@ class UnifiedAttendanceController extends Controller
                 'fname' => $student?->fname,
                 'lname' => $student?->lname,
                 'college_or_dept' => $student ? ($student->college ?? '') : '',
+                'gender' => $student ? ($student->gender ?? 'N/A') : 'N/A',
                 'activity' => $activity,
                 'time_in' => $record->login ? Carbon::parse($record->login)->format('h:i A') : 'N/A',
                 'time_out' => $record->logout ? Carbon::parse($record->logout)->format('h:i A') : ''
@@ -176,6 +177,7 @@ class UnifiedAttendanceController extends Controller
                 'lname' => $teacher?->lname,
                 'college_or_dept' => $teacher ? ($teacher->department ?? '') : '',
                 'role' => $teacher ? ($teacher->role ?? '') : '',
+                'gender' => $teacher ? ($teacher->gender ?? 'N/A') : 'N/A',
                 'activity' => $record->activity,
                 'time_in' => $record->login ? Carbon::parse($record->login)->format('h:i A') : 'N/A',
                 'time_out' => $record->logout ? Carbon::parse($record->logout)->format('h:i A') : ''
@@ -687,6 +689,7 @@ class UnifiedAttendanceController extends Controller
                 'user_type' => 'student',
                 'student_id' => $record->student_id,
                 'college' => $record->student->college,
+                'gender' => $record->student->gender,
                 'activity' => $activity,
                 'time_in' => $record->login,
                 'time_out' => $record->logout,
@@ -708,6 +711,7 @@ class UnifiedAttendanceController extends Controller
                 'teacher_visitor_id' => $record->teacher_visitor_id,
                 'department' => $record->teacherVisitor->department,
                 'role' => $record->teacherVisitor->role,
+                'gender' => $record->teacherVisitor->gender,
                 'activity' => $record->activity,
                 'time_in' => $record->login,
                 'time_out' => $record->logout,
@@ -829,6 +833,7 @@ class UnifiedAttendanceController extends Controller
                         'course' => $student ? ($student->course ?? null) : null,
                     ],
                     'profile_picture' => $student?->user?->profile_picture,
+                    'gender' => $student ? ($student->gender ?? 'N/A') : 'N/A',
                     'time_in' => $record->login,
                     'time_out' => $record->logout,
                     'activity' => $record->activity,
@@ -856,6 +861,7 @@ class UnifiedAttendanceController extends Controller
                         'department_name' => $teacher ? ($teacher->department ?? null) : null, // Alias for compatibility
                     ],
                     'profile_picture' => $teacher?->user?->profile_picture,
+                    'gender' => $teacher ? ($teacher->gender ?? 'N/A') : 'N/A',
                     'time_in' => $record->login,
                     'time_out' => $record->logout,
                     'activity' => $activity, // Use the processed activity

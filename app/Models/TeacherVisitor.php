@@ -15,6 +15,7 @@ class TeacherVisitor extends Model
         'lname',
         'fname',
         'MI',
+        'gender',
         'email',
         'department',
         'role',

@@ -14,6 +14,7 @@ class Student extends Model
         'lname',
         'fname',
         'MI',
+        'gender',
         'college',
         'year',
         'email',

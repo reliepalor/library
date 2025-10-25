@@ -908,7 +908,7 @@
             if (!attendanceData || attendanceData.length === 0) {
                 const emptyRow = document.createElement('tr');
                 emptyRow.innerHTML = `
-                    <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">
+                    <td colspan="8" class="px-6 py-4 text-center text-sm text-gray-500">
                         No attendance records for today
                     </td>
                 `;
@@ -931,6 +931,9 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full college-${attendance.college}">${attendance.college}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${attendance.gender ?? 'N/A'}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         ${getActivityDisplay(attendance.activity)}
@@ -1069,10 +1072,11 @@
         const existingRow = tableBody.querySelector(`tr[data-student-id="${row.student_id}"]`);
         if (existingRow) {
             // Update existing row instead of adding new one
-            existingRow.querySelector('td:nth-child(4)').textContent = row.activity;
-            existingRow.querySelector('td:nth-child(5)').textContent = row.time_in;
-            existingRow.querySelector('td:nth-child(6)').textContent = row.time_out;
-            const statusSpan = existingRow.querySelector('td:nth-child(7) span');
+            existingRow.querySelector('td:nth-child(4)').textContent = row.gender ?? 'N/A';
+            existingRow.querySelector('td:nth-child(5)').innerHTML = getActivityDisplay(row.activity);
+            existingRow.querySelector('td:nth-child(6)').textContent = row.time_in;
+            existingRow.querySelector('td:nth-child(7)').textContent = row.time_out;
+            const statusSpan = existingRow.querySelector('td:nth-child(8) span');
             if (statusSpan) {
                 statusSpan.textContent = row.status;
                 statusSpan.className = 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800';
@@ -1093,9 +1097,12 @@
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full college-${row.college}">${row.college}</span></td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                ${row.gender ?? 'N/A'}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 ${getActivityDisplay(row.activity)}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm tresources\views\admin\attendance\index.blade.phpext-gray-900">${row.time_in}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${row.time_in}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${row.time_out}</td>
             <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">${row.status}</span></td>
         `;
