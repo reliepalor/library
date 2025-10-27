@@ -971,6 +971,45 @@ public function initiateLogout(Request $request)
             ], 400);
         }
 
+        // If 2FA is disabled, immediately logout and return success
+        $twoFaEnabled = \Illuminate\Support\Facades\Cache::get('logout_2fa_enabled', true);
+        if (!$twoFaEnabled) {
+            $now = now();
+            $activeAttendance->logout = $now;
+            $activeAttendance->save();
+
+            // Study area availability and borrow return handling remain the same as confirm
+            if (StudyAreaHelper::isStudyActivity($activeAttendance->activity)) {
+                StudyAreaHelper::updateAvailability(null, 'increment', 1);
+            }
+
+            if (str_contains($activeAttendance->activity, 'Borrow')) {
+                $parts = explode(':', $activeAttendance->activity);
+                if (count($parts) > 1) {
+                    $bookCode = trim($parts[1]);
+                    BorrowedBook::where('book_id', $bookCode)
+                        ->where('status', 'approved')
+                        ->update([
+                            'status' => 'returned',
+                            'returned_at' => $now
+                        ]);
+                }
+            }
+
+            try {
+                $duration = $activeAttendance->login->diffForHumans($now, ['parts' => 2]);
+                Mail::to($attendee->email)->queue(new AttendanceNotification($attendee, $userType, 'logout', $now, $activeAttendance->activity, $duration));
+            } catch (\Exception $e) {
+                \Log::error('Failed to send logout notification (2FA off): ' . $e->getMessage());
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Logout completed successfully (2FA disabled).',
+                'logout_time' => $now->setTimezone('Asia/Manila')->format('h:i A')
+            ]);
+        }
+
         $cacheKey = 'logout_code_' . $userType . '_' . $attendee->id;
         $existingCode = Cache::get($cacheKey);
         if ($existingCode && ($existingCode['attempts'] ?? 0) < 3) {
@@ -1190,6 +1229,13 @@ private function maskEmail($email)
     public function verifyLogout(Request $request)
     {
         try {
+            // If 2FA is disabled, do not accept verification
+            if (\Illuminate\Support\Facades\Cache::get('logout_2fa_enabled', true) === false) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Logout 2FA is disabled.'
+                ], 400);
+            }
             $request->validate([
                 'student_id' => 'nullable|string',
                 'user_type' => 'nullable|in:student,teacher',
@@ -1324,6 +1370,13 @@ private function maskEmail($email)
     public function resendLogoutCode(Request $request)
     {
         try {
+            // If 2FA is disabled, block resend
+            if (\Illuminate\Support\Facades\Cache::get('logout_2fa_enabled', true) === false) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Logout 2FA is disabled.'
+                ], 400);
+            }
             $request->validate([
                 'student_id' => 'nullable|string',
                 'user_type' => 'nullable|in:student,teacher',

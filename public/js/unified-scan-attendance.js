@@ -28,15 +28,43 @@ async function initiateLogoutProcess(studentId) {
         const data = await response.json();
 
         if (response.ok && data.success) {
-            // Show the modal after successful code sending
-            document.getElementById('logout-modal').classList.remove('hidden');
-            document.getElementById('logout-code').focus();
-            // Clear any previous messages
-            document.getElementById('logout-error-message').classList.add('hidden');
-            document.getElementById('logout-success-message').classList.add('hidden');
+            // If backend already completed logout (2FA disabled), it returns logout_time
+            if (data.logout_time) {
+                // Close modal if open and show success
+                const modal = document.getElementById('logout-modal');
+                if (modal) modal.classList.add('hidden');
+                const codeInput = document.getElementById('logout-code');
+                if (codeInput) codeInput.value = '';
+                document.getElementById('logout-error-message')?.classList.add('hidden');
+                document.getElementById('logout-success-message')?.classList.add('hidden');
+
+                showNotification('Logout successful!', 'success');
+                await refreshAttendanceTable();
+                logoutStudentId = null;
+            } else {
+                // Show the modal after successful code sending
+                document.getElementById('logout-modal').classList.remove('hidden');
+                document.getElementById('logout-code').focus();
+                // Clear any previous messages
+                document.getElementById('logout-error-message').classList.add('hidden');
+                document.getElementById('logout-success-message').classList.add('hidden');
+            }
         } else {
             // Check if the error is because a code was already sent
             const message = data.message || 'Failed to send verification code.';
+            // If server indicates 2FA is disabled, treat as immediate success path safeguard
+            if (message.toLowerCase().includes('2fa') && message.toLowerCase().includes('disabled')) {
+                const modal = document.getElementById('logout-modal');
+                if (modal) modal.classList.add('hidden');
+                const codeInput = document.getElementById('logout-code');
+                if (codeInput) codeInput.value = '';
+                document.getElementById('logout-error-message')?.classList.add('hidden');
+                document.getElementById('logout-success-message')?.classList.add('hidden');
+                showNotification('Logout successful!', 'success');
+                await refreshAttendanceTable();
+                logoutStudentId = null;
+                return;
+            }
             if (message.includes('already been sent') || message.includes('check your email')) {
                 // Show the modal anyway since a code exists
                 document.getElementById('logout-modal').classList.remove('hidden');

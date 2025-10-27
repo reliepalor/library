@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\Auth\LoginController;
 use App\Http\Controllers\Admin\Auth\RegisteredUserController;
 use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\UnifiedAttendanceController;
+use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\Auth\OverdueBookController;
 use App\Http\Controllers\Admin\TeachersVisitorsAttendanceController;
 use Illuminate\Support\Facades\Route;
@@ -33,6 +34,10 @@ Route::prefix('admin')->group(function () {
             Route::post('/logout/verify', [UnifiedAttendanceController::class, 'verifyLogout'])->name('logout.verify');
             Route::post('/logout/resend', [UnifiedAttendanceController::class, 'resendLogoutCode'])->name('logout.resend');
         });
+
+        // Settings: Logout 2FA toggle (outside attendance group)
+        Route::get('settings/logout-2fa', [SettingsController::class, 'getTwoFactor'])->name('admin.settings.logout2fa.get');
+        Route::post('settings/logout-2fa', [SettingsController::class, 'setTwoFactor'])->name('admin.settings.logout2fa.set');
 
         // Added route for attendance analytics
         Route::get('overdue/check-emails', [OverdueBookController::class, 'checkOverdueEmails'])->name('admin.overdue.check-emails');
