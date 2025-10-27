@@ -28,8 +28,10 @@ Route::prefix('admin')->group(function () {
             Route::get('/realtime', [UnifiedAttendanceController::class, 'realtime'])->name('realtime');
             Route::get('/available-books', [UnifiedAttendanceController::class, 'availableBooks'])->name('available-books');
             Route::get('/books/colleges', [UnifiedAttendanceController::class, 'colleges'])->name('books.colleges');
-            Route::post('/logout/initiate', [AttendanceController::class, 'initiateLogout'])->name('logout.initiate');
-            Route::post('/logout/confirm', [AttendanceController::class, 'confirmLogout'])->name('logout.confirm');
+            Route::post('/logout/initiate', [UnifiedAttendanceController::class, 'initiateLogout'])->name('logout.initiate');
+            Route::post('/logout/confirm', [UnifiedAttendanceController::class, 'confirmLogout'])->name('logout.confirm');
+            Route::post('/logout/verify', [UnifiedAttendanceController::class, 'verifyLogout'])->name('logout.verify');
+            Route::post('/logout/resend', [UnifiedAttendanceController::class, 'resendLogoutCode'])->name('logout.resend');
         });
 
         // Added route for attendance analytics

@@ -86,6 +86,7 @@
         let justLoggedOut = false;
         let logoutInProgress = false;
         let borrowProcessing = false;
+        let logoutStudentId = null;
 
         // Add transition classes for smooth fade
         webcamContainer.classList.add('transition-opacity', 'duration-500', 'ease-in-out');
@@ -521,8 +522,9 @@
             const checkData = await checkResponse.json();
 
             if (checkData.hasActiveSession) {
-                // Rescan while active => perform logout with confirmation UI (modal already implemented in handleLogout)
-                await handleLogout(studentId, checkData.activity);
+                // Rescan while active => show logout confirmation modal
+                logoutStudentId = studentId;
+                document.getElementById('logout-modal').classList.remove('hidden');
                 return;
             }
 

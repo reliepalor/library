@@ -5,6 +5,61 @@ let isScanning = false;
 let lastScannedQR = null;
 let lastScanTime = 0;
 const SCAN_COOLDOWN = 3000; // 3 seconds cooldown between scans
+let logoutStudentId = null;
+
+// Initiate logout process function
+async function initiateLogoutProcess(studentId) {
+    showLoadingOverlay("Sending verification code...");
+
+    try {
+        const response = await fetch('/admin/attendance/logout/initiate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                student_id: studentId
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            // Show the modal after successful code sending
+            document.getElementById('logout-modal').classList.remove('hidden');
+            document.getElementById('logout-code').focus();
+            // Clear any previous messages
+            document.getElementById('logout-error-message').classList.add('hidden');
+            document.getElementById('logout-success-message').classList.add('hidden');
+        } else {
+            // Check if the error is because a code was already sent
+            const message = data.message || 'Failed to send verification code.';
+            if (message.includes('already been sent') || message.includes('check your email')) {
+                // Show the modal anyway since a code exists
+                document.getElementById('logout-modal').classList.remove('hidden');
+                document.getElementById('logout-code').focus();
+                // Clear any previous messages
+                document.getElementById('logout-error-message').classList.add('hidden');
+                document.getElementById('logout-success-message').classList.add('hidden');
+                // Show info notification
+                showNotification(message, 'info');
+            } else {
+                // Real error - show notification and reset
+                showNotification(message, 'error');
+                logoutStudentId = null; // Reset on failure
+            }
+        }
+    } catch (error) {
+        console.error('Error initiating logout:', error);
+        showNotification('Network error. Please try again.', 'error');
+        logoutStudentId = null; // Reset on failure
+    } finally {
+        hideLoadingOverlay();
+    }
+}
 
 // AvatarService utility for generating placeholder avatars
 const AvatarService = {
@@ -409,6 +464,107 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     });
 
+    // Logout modal event listeners
+    document.getElementById('logout-modal-cancel').addEventListener('click', function() {
+        document.getElementById('logout-modal').classList.add('hidden');
+        logoutStudentId = null;
+    });
+
+    document.getElementById('logout-modal-confirm').addEventListener('click', async function() {
+        const code = document.getElementById('logout-code').value.trim();
+        if (!code || code.length !== 6) {
+            document.getElementById('logout-error-message').textContent = 'Please enter a valid 6-digit code.';
+            document.getElementById('logout-error-message').classList.remove('hidden');
+            document.getElementById('logout-success-message').classList.add('hidden');
+            return;
+        }
+
+        showLoadingOverlay("Verifying code...");
+
+        try {
+            const response = await fetch('/admin/attendance/logout/verify', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    student_id: logoutStudentId,
+                    code: code
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                document.getElementById('logout-modal').classList.add('hidden');
+                document.getElementById('logout-code').value = '';
+                document.getElementById('logout-error-message').classList.add('hidden');
+                document.getElementById('logout-success-message').classList.add('hidden');
+
+                showNotification('Logout successful!', 'success');
+                await refreshAttendanceTable();
+                logoutStudentId = null;
+            } else {
+                document.getElementById('logout-error-message').textContent = data.message || 'Invalid verification code.';
+                document.getElementById('logout-error-message').classList.remove('hidden');
+                document.getElementById('logout-success-message').classList.add('hidden');
+            }
+        } catch (error) {
+            console.error('Error verifying logout code:', error);
+            document.getElementById('logout-error-message').textContent = 'Network error. Please try again.';
+            document.getElementById('logout-error-message').classList.remove('hidden');
+            document.getElementById('logout-success-message').classList.add('hidden');
+        } finally {
+            hideLoadingOverlay();
+        }
+    });
+
+    document.getElementById('resend-code-btn').addEventListener('click', async function() {
+        if (!logoutStudentId) return;
+
+        showLoadingOverlay("Resending code...");
+
+        try {
+            const response = await fetch('/admin/attendance/logout/resend', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    student_id: logoutStudentId
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                showNotification('Verification code resent to your email.', 'success');
+                // Clear any previous error messages
+                document.getElementById('logout-error-message').classList.add('hidden');
+                document.getElementById('logout-success-message').classList.add('hidden');
+            } else {
+                document.getElementById('logout-error-message').textContent = data.message || 'Failed to resend code.';
+                document.getElementById('logout-error-message').classList.remove('hidden');
+                document.getElementById('logout-success-message').classList.add('hidden');
+            }
+        } catch (error) {
+            console.error('Error resending code:', error);
+            document.getElementById('logout-error-message').textContent = 'Network error. Please try again.';
+            document.getElementById('logout-error-message').classList.remove('hidden');
+            document.getElementById('logout-success-message').classList.add('hidden');
+        } finally {
+            hideLoadingOverlay();
+        }
+    });
+
+
+
     // Study area full modal OK button
     const studyAreaFullOkBtn = document.getElementById('study-area-full-ok');
     if (studyAreaFullOkBtn) {
@@ -737,9 +893,10 @@ async function onScanSuccess(decodedText) {
         console.log("[SCAN] Has active session:", hasActiveSession);
         
         if (hasActiveSession) {
-            // Logout
-            console.log("[SCAN] User has active session - logging out");
-            await handleLogout(userData.userType, userData.identifier);
+            // Show logout confirmation modal and initiate logout process
+            console.log("[SCAN] User has active session - showing logout confirmation");
+            logoutStudentId = userData.identifier;
+            await initiateLogoutProcess(userData.identifier);
         } else {
             // Show activity modal for login
             console.log("[SCAN] No active session - showing activity modal");

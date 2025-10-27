@@ -169,7 +169,7 @@
             </div>
 
             <!-- Actions -->
-            <div class="flex justify-end col-span-1 sm:col-span-2 lg:col-span-1">
+            <div class="flex justify-end col-span-1 sm:col-span-2 lg:col-span-1 not-fullscreen">
                 <form action="{{ route('admin.attendance.save-reset') }}" method="POST" class="inline">
                     @csrf
                     <button type="submit"

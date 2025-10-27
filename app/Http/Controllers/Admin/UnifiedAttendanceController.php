@@ -18,6 +18,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Response;
 use App\Events\AttendanceUpdated;
+use App\Mail\LogoutCodeMail;
+use Illuminate\Support\Facades\Cache;
+use App\Helpers\StudyAreaHelper;
 
 class UnifiedAttendanceController extends Controller
 {
@@ -564,10 +567,14 @@ class UnifiedAttendanceController extends Controller
         $userType = $request->query('user_type');
         $identifier = $request->query('identifier');
 
-        // If student_id is provided (old format), use it
-        if ($studentId) {
-            $userType = 'student';
+        // If only student_id is provided (legacy), auto-detect user type
+        if ($studentId && !$userType) {
             $identifier = $studentId;
+            if (\App\Models\Student::where('student_id', $identifier)->exists()) {
+                $userType = 'student';
+            } else if (\App\Models\TeacherVisitor::find($identifier)) {
+                $userType = 'teacher';
+            }
         }
 
         if (!$userType || !$identifier) {
@@ -597,10 +604,14 @@ class UnifiedAttendanceController extends Controller
         $userType = $request->query('user_type');
         $identifier = $request->query('identifier');
 
-        // If student_id is provided (old format), use it
-        if ($studentId) {
-            $userType = 'student';
+        // If only student_id is provided (legacy), auto-detect user type
+        if ($studentId && !$userType) {
             $identifier = $studentId;
+            if (\App\Models\Student::where('student_id', $identifier)->exists()) {
+                $userType = 'student';
+            } else if (\App\Models\TeacherVisitor::find($identifier)) {
+                $userType = 'teacher';
+            }
         }
 
         if (!$userType || !$identifier) {
@@ -610,11 +621,9 @@ class UnifiedAttendanceController extends Controller
         try {
             if ($userType === 'student') {
                 $user = Student::with('user')->where('student_id', $identifier)->first();
-                
                 if (!$user) {
-                    return response()->json(['error' => 'Student not found'], 404);
+                    return response()->json(['error' => 'User not found'], 404);
                 }
-
                 return response()->json([
                     'students' => $user, // Keep for compatibility
                     'user_type' => 'student',
@@ -626,11 +635,9 @@ class UnifiedAttendanceController extends Controller
                 ]);
             } else {
                 $user = TeacherVisitor::with('user')->find($identifier);
-
                 if (!$user) {
-                    return response()->json(['error' => 'Teacher/Visitor not found'], 404);
+                    return response()->json(['error' => 'User not found'], 404);
                 }
-
                 return response()->json([
                     'user_type' => 'teacher',
                     'user' => $user,
@@ -808,7 +815,7 @@ class UnifiedAttendanceController extends Controller
             // Get attendance records for both students and teachers
             $studentAttendance = $this->getStudentAttendance($startOfDay, $endOfDay);
             $teacherAttendance = $this->getTeacherAttendance($startOfDay, $endOfDay);
-            
+
             // Get borrow requests
             $borrowRequests = $this->getTodayBorrowRequests();
 
@@ -884,6 +891,581 @@ class UnifiedAttendanceController extends Controller
                 'success' => false,
                 'message' => 'Failed to fetch attendance data',
                 'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Initiate logout process by generating and emailing verification code
+     */
+public function initiateLogout(Request $request)
+{
+    try {
+        $request->validate([
+            'student_id' => 'nullable|string',
+            'user_type' => 'nullable|in:student,teacher',
+            'identifier' => 'nullable|string',
+        ]);
+
+        $userType = $request->input('user_type');
+        $identifier = $request->input('identifier');
+
+        if ($request->filled('student_id') && !$userType) {
+            $identifier = $request->input('student_id');
+            // Auto-detect: prefer student match; if not found, try teacher/visitor
+            $existsStudent = Student::where('student_id', $identifier)->exists();
+            if ($existsStudent) {
+                $userType = 'student';
+            } else {
+                $maybeTeacher = \App\Models\TeacherVisitor::find($identifier);
+                if ($maybeTeacher) {
+                    $userType = 'teacher';
+                }
+            }
+        }
+
+        if (!$userType || !$identifier) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Missing user information.'
+            ], 422);
+        }
+
+        if ($userType === 'student') {
+            $attendee = Student::where('student_id', $identifier)->first();
+        } else {
+            $attendee = \App\Models\TeacherVisitor::find($identifier);
+        }
+
+        if (!$attendee) {
+            return response()->json([
+                'success' => false,
+                'message' => ucfirst($userType) . ' not found.'
+            ], 404);
+        }
+
+        if (!$attendee->email || !filter_var($attendee->email, FILTER_VALIDATE_EMAIL)) {
+            return response()->json([
+                'success' => false,
+                'message' => ucfirst($userType) . ' does not have a valid email address. Please contact library staff.'
+            ], 400);
+        }
+
+        $startOfDay = Carbon::today()->startOfDay();
+        $endOfDay = Carbon::today()->endOfDay();
+
+        $query = Attendance::where('user_type', $userType)
+            ->whereBetween('login', [$startOfDay, $endOfDay])
+            ->whereNull('logout');
+        if ($userType === 'student') {
+            $query->where('student_id', $identifier);
+        } else {
+            $query->where('teacher_visitor_id', $identifier);
+        }
+        $activeAttendance = $query->first();
+
+        if (!$activeAttendance) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No active attendance session found for today.'
+            ], 400);
+        }
+
+        $cacheKey = 'logout_code_' . $userType . '_' . $attendee->id;
+        $existingCode = Cache::get($cacheKey);
+        if ($existingCode && ($existingCode['attempts'] ?? 0) < 3) {
+            return response()->json([
+                'success' => false,
+                'message' => 'A verification code has already been sent. Please check your email.'
+            ], 400);
+        }
+
+        $code = str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        Cache::put($cacheKey, [
+            'code' => $code,
+            'attempts' => 0,
+            'attendance_id' => $activeAttendance->id,
+            'user_type' => $userType,
+            'attendee_id' => $attendee->id,
+        ], now()->addMinutes(2));
+
+        try {
+            Mail::to($attendee->email)->send(new \App\Mail\LogoutVerificationCode($attendee, $code));
+        } catch (\Throwable $e1) {
+            try {
+                \Mail::raw(
+                    "Your " . config('app.name') . " logout verification code is: {$code}\nThis code expires in 2 minutes.",
+                    function($message) use ($attendee) {
+                        $message->to($attendee->email)
+                                ->subject('Your Logout Verification Code - ' . config('app.name'));
+                    }
+                );
+            } catch (\Throwable $e2) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to send verification code. Please try again or contact library staff.'
+                ], 500);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Verification code has been sent to your email.',
+            'email' => $this->maskEmail($attendee->email),
+        ]);
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid request data.',
+            'errors' => $e->errors()
+        ], 422);
+    } catch (\Exception $e) {
+        Log::error('Error in initiateLogout: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Server error occurred.'
+        ], 500);
+    }
+}
+
+// Add this helper method to mask email for security
+private function maskEmail($email)
+{
+    $parts = explode('@', $email);
+    if (count($parts) != 2) {
+        return $email;
+    }
+    
+    $username = $parts[0];
+    $domain = $parts[1];
+    
+    $maskedUsername = substr($username, 0, 2) . str_repeat('*', max(0, strlen($username) - 4)) . substr($username, -2);
+    
+    return $maskedUsername . '@' . $domain;
+}
+
+    /**
+     * Confirm logout by verifying the code and updating attendance
+     */
+    public function confirmLogout(Request $request)
+    {
+        try {
+            $request->validate([
+                'student_id' => 'nullable|string',
+                'user_type' => 'nullable|in:student,teacher',
+                'identifier' => 'nullable|string',
+                'code' => 'required|string|size:6',
+            ]);
+
+            $userType = $request->input('user_type');
+            $identifier = $request->input('identifier');
+            if ($request->filled('student_id') && !$userType) {
+                $identifier = $request->input('student_id');
+                $existsStudent = Student::where('student_id', $identifier)->exists();
+                if ($existsStudent) {
+                    $userType = 'student';
+                } else {
+                    $maybeTeacher = \App\Models\TeacherVisitor::find($identifier);
+                    if ($maybeTeacher) {
+                        $userType = 'teacher';
+                    }
+                }
+            }
+
+            if ($userType === 'student') {
+                $attendee = Student::where('student_id', $identifier)->first();
+            } else {
+                $attendee = \App\Models\TeacherVisitor::find($identifier);
+            }
+
+            if (!$attendee) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found.'
+                ], 404);
+            }
+
+            $cacheKey = 'logout_code_' . $userType . '_' . $attendee->id;
+            $cachedData = Cache::get($cacheKey);
+
+            if (!$cachedData) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Verification code has expired. Please request a new one.'
+                ], 400);
+            }
+
+            // Check attempts
+            if ($cachedData['attempts'] >= 3) {
+                Cache::forget($cacheKey); // Clear the cache
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Too many failed attempts. Please request a new verification code.'
+                ], 429);
+            }
+
+            // Verify code
+            if ($cachedData['code'] !== $request->code) {
+                $cachedData['attempts']++;
+                Cache::put($cacheKey, $cachedData, now()->addMinutes(2));
+
+                $remainingAttempts = 3 - $cachedData['attempts'];
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid verification code. ' . $remainingAttempts . ' attempts remaining.'
+                ], 400);
+            }
+
+            // Code is correct, proceed with logout
+            $attendance = Attendance::find($cachedData['attendance_id']);
+
+            if (!$attendance) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Attendance record not found.'
+                ], 404);
+            }
+
+            // Update logout time
+            $now = now();
+            $attendance->logout = $now;
+            $attendance->save();
+
+            // Clear cache
+            Cache::forget($cacheKey);
+
+            // If the activity was study-related, increment available study slots
+            if (StudyAreaHelper::isStudyActivity($attendance->activity)) {
+                StudyAreaHelper::updateAvailability(null, 'increment', 1);
+            }
+
+            // Handle book returns if applicable
+            if (str_contains($attendance->activity, 'Borrow')) {
+                $parts = explode(':', $attendance->activity);
+                if (count($parts) > 1) {
+                    $bookCode = trim($parts[1]);
+                    BorrowedBook::where('book_id', $bookCode)
+                        ->where('status', 'approved')
+                        ->update([
+                            'status' => 'returned',
+                            'returned_at' => $now
+                        ]);
+                }
+            }
+
+            // Send logout notification email
+            try {
+                $duration = $attendance->login->diffForHumans($now, ['parts' => 2]);
+                Mail::to($attendee->email)->queue(new AttendanceNotification($attendee, $userType, 'logout', $now, $attendance->activity, $duration));
+            } catch (\Exception $e) {
+                Log::error('Failed to send logout notification email: ' . $e->getMessage());
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Logout confirmed successfully.',
+                'logout_time' => $now->setTimezone('Asia/Manila')->format('h:i A')
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid request data.',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error in confirmLogout: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Server error occurred.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Verify logout code (used by frontend modal)
+     */
+    public function verifyLogout(Request $request)
+    {
+        try {
+            $request->validate([
+                'student_id' => 'nullable|string',
+                'user_type' => 'nullable|in:student,teacher',
+                'identifier' => 'nullable|string',
+                'code' => 'required|string|size:6',
+            ]);
+
+            $userType = $request->input('user_type');
+            $identifier = $request->input('identifier');
+            if ($request->filled('student_id') && !$userType) {
+                $identifier = $request->input('student_id');
+                if (Student::where('student_id', $identifier)->exists()) {
+                    $userType = 'student';
+                } else if (\App\Models\TeacherVisitor::find($identifier)) {
+                    $userType = 'teacher';
+                }
+            }
+
+            if ($userType === 'student') {
+                $attendee = Student::where('student_id', $identifier)->first();
+            } else {
+                $attendee = \App\Models\TeacherVisitor::find($identifier);
+            }
+
+            if (!$attendee) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found.'
+                ], 404);
+            }
+
+            $cacheKey = 'logout_code_' . $userType . '_' . $attendee->id;
+            $cachedData = Cache::get($cacheKey);
+
+            if (!$cachedData) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Verification code has expired. Please request a new one.'
+                ], 400);
+            }
+
+            // Check attempts
+            if ($cachedData['attempts'] >= 3) {
+                Cache::forget($cacheKey); // Clear the cache
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Too many failed attempts. Please request a new verification code.'
+                ], 429);
+            }
+
+            // Verify code
+            if ($cachedData['code'] !== $request->code) {
+                $cachedData['attempts']++;
+                Cache::put($cacheKey, $cachedData, now()->addMinutes(2));
+
+                $remainingAttempts = 3 - $cachedData['attempts'];
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid verification code. ' . $remainingAttempts . ' attempts remaining.'
+                ], 400);
+            }
+
+            // Code is correct, proceed with logout
+            $attendance = Attendance::find($cachedData['attendance_id']);
+
+            if (!$attendance) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Attendance record not found.'
+                ], 404);
+            }
+
+            // Update logout time
+            $now = now();
+            $attendance->logout = $now;
+            $attendance->save();
+
+            // Clear cache
+            Cache::forget($cacheKey);
+
+            // If the activity was study-related, increment available study slots
+            if (StudyAreaHelper::isStudyActivity($attendance->activity)) {
+                StudyAreaHelper::updateAvailability(null, 'increment', 1);
+            }
+
+            // Handle book returns if applicable
+            if (str_contains($attendance->activity, 'Borrow')) {
+                $parts = explode(':', $attendance->activity);
+                if (count($parts) > 1) {
+                    $bookCode = trim($parts[1]);
+                    BorrowedBook::where('book_id', $bookCode)
+                        ->where('status', 'approved')
+                        ->update([
+                            'status' => 'returned',
+                            'returned_at' => $now
+                        ]);
+                }
+            }
+
+            // Send logout notification email
+            try {
+                $duration = $attendance->login->diffForHumans($now, ['parts' => 2]);
+                Mail::to($student->email)->queue(new AttendanceNotification($student, 'student', 'logout', $now, $attendance->activity, $duration));
+            } catch (\Exception $e) {
+                Log::error('Failed to send logout notification email: ' . $e->getMessage());
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Logout confirmed successfully.',
+                'logout_time' => $now->setTimezone('Asia/Manila')->format('h:i A')
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid request data.',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error in verifyLogout: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Server error occurred.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Resend logout verification code
+     */
+    public function resendLogoutCode(Request $request)
+    {
+        try {
+            $request->validate([
+                'student_id' => 'nullable|string',
+                'user_type' => 'nullable|in:student,teacher',
+                'identifier' => 'nullable|string',
+            ]);
+
+            // Resolve attendee (student or teacher)
+            $userType = $request->input('user_type');
+            $identifier = $request->input('identifier');
+            if ($request->filled('student_id')) {
+                $userType = 'student';
+                $identifier = $request->input('student_id');
+            }
+
+            if (!$userType || !$identifier) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Missing user information.'
+                ], 422);
+            }
+
+            if ($userType === 'student') {
+                $attendee = Student::where('student_id', $identifier)->first();
+            } else {
+                $attendee = \App\Models\TeacherVisitor::find($identifier);
+            }
+
+            if (!$attendee) {
+                return response()->json([
+                    'success' => false,
+                    'message' => ucfirst($userType) . ' not found.'
+                ], 404);
+            }
+
+            // Check if user has an active session today
+            $startOfDay = Carbon::today()->startOfDay();
+            $endOfDay = Carbon::today()->endOfDay();
+
+            $activeAttendanceQuery = Attendance::where('user_type', $userType)
+                ->whereBetween('login', [$startOfDay, $endOfDay])
+                ->whereNull('logout');
+            if ($userType === 'student') {
+                $activeAttendanceQuery->where('student_id', $identifier);
+            } else {
+                $activeAttendanceQuery->where('teacher_visitor_id', $identifier);
+            }
+            $activeAttendance = $activeAttendanceQuery->first();
+
+            if (!$activeAttendance) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No active attendance session found for today.'
+                ], 400);
+            }
+
+            // Generate new 6-digit code
+            $code = str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
+
+            Log::info('Generated new logout code for resend', [
+                'student_id' => $student->student_id,
+                'code' => $code,
+                'timestamp' => now()
+            ]);
+
+            // Store code in cache with attempts counter (expires in 2 minutes)
+            $cacheKey = 'logout_code_' . $userType . '_' . $attendee->id;
+            Cache::put($cacheKey, [
+                'code' => $code,
+                'attempts' => 0,
+                'attendance_id' => $activeAttendance->id,
+                'user_type' => $userType,
+                'attendee_id' => $attendee->id
+            ], now()->addMinutes(2));
+
+            // Ensure email is valid
+            if (!$attendee->email || !filter_var($attendee->email, FILTER_VALIDATE_EMAIL)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => ucfirst($userType) . ' does not have a valid email address.'
+                ], 400);
+            }
+
+            // Send email synchronously with mailable and raw fallback
+            try {
+                Mail::to($attendee->email)->send(new \App\Mail\LogoutVerificationCode($attendee, $code));
+                Log::info('Logout code email sent successfully for resend', [
+                    'user_type' => $userType,
+                    'attendee_id' => $attendee->id,
+                    'email' => $attendee->email,
+                ]);
+            } catch (\Throwable $e1) {
+                Log::warning('Resend mailable failed, attempting raw fallback', [
+                    'user_type' => $userType,
+                    'attendee_id' => $attendee->id,
+                    'email' => $attendee->email,
+                    'error' => $e1->getMessage(),
+                ]);
+                try {
+                    \Mail::raw(
+                        "Your CSU Library logout verification code is: {$code}\nThis code expires in 2 minutes.",
+                        function ($message) use ($attendee) {
+                            $message->to($attendee->email)
+                                    ->subject('Your Logout Verification Code - ' . config('app.name'));
+                        }
+                    );
+                    Log::info('Raw logout code email sent as fallback for resend', [
+                        'user_type' => $userType,
+                        'attendee_id' => $attendee->id,
+                        'email' => $attendee->email
+                    ]);
+                } catch (\Throwable $e2) {
+                    Log::error('Failed to send logout code email for resend after fallback', [
+                        'user_type' => $userType,
+                        'attendee_id' => $attendee->id,
+                        'email' => $attendee->email,
+                        'mailable_error' => $e1->getMessage(),
+                        'raw_error' => $e2->getMessage(),
+                    ]);
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Failed to resend verification code. Please contact library staff.'
+                    ], 500);
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Verification code resent to your email. The code will expire in 2 minutes.',
+                'email_sent_to' => $this->maskEmail($attendee->email)
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid request data.',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error in resendLogoutCode: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Server error occurred.'
             ], 500);
         }
     }

@@ -3,26 +3,22 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Mail\Mailable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class LogoutCodeMail extends Mailable implements ShouldQueue
+class TestEmail extends Mailable
 {
     use Queueable, SerializesModels;
-
-    public $student;
-    public $code;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($student, $code)
+    public function __construct()
     {
-        $this->student = $student;
-        $this->code = $code;
+        //
     }
 
     /**
@@ -31,8 +27,7 @@ class LogoutCodeMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Confirm Your Logout – ' . config('app.name'),
-            from: config('mail.from.address'),
+            subject: 'Test Email',
         );
     }
 
@@ -42,11 +37,7 @@ class LogoutCodeMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            markdown: 'emails.logout-code',
-            with: [
-                'student' => $this->student,
-                'code' => $this->code,
-            ],
+            markdown: 'emails.test',
         );
     }
 
