@@ -129,7 +129,7 @@
                 
                 <!-- Subtitle -->
                 <p class="text-responsive text-slate-300 max-w-2xl mx-auto animate-on-scroll font-light leading-relaxed">
-                    Take the first step today. Find your ideal book, build knowledge, and join thousands of avid readers.
+                    Take the first step today. Find your ideal book, build knowledge, and enjoy staying in the library.
                 </p>
                 
                 <!-- Action Buttons -->
@@ -149,23 +149,23 @@
                     <div class="flex items-center text-slate-400 hover:text-white transition-colors duration-300">
                         <div class="w-2 h-2 bg-indigo-400 rounded-full mr-3 animate-pulse"></div>
                         <i class="fas fa-users mr-2"></i>
-                        <span class="stat-number font-medium">5,000+</span>
-                        <span class="ml-1 font-light">Members</span>
+                        <span class="stat-number font-medium">Open to </span>
+                        <span class="ml-1 font-light">All Users</span>
                     </div>
                     
                     <div class="flex items-center text-slate-400 hover:text-white transition-colors duration-300">
                         <div class="w-2 h-2 bg-purple-400 rounded-full mr-3 animate-pulse" style="animation-delay: 0.5s;"></div>
                         <i class="fas fa-book-open mr-2"></i>
-                        <span class="stat-number font-medium">50+</span>
-                        <span class="ml-1 font-light">Categories</span>
+                        <span class="stat-number font-medium">Books &</span>
+                        <span class="ml-1 font-light">E-Books</span>
                     </div>
                     
                     
                     <div class="flex items-center text-slate-400 hover:text-white transition-colors duration-300">
                         <div class="w-2 h-2 bg-emerald-400 rounded-full mr-3 animate-pulse" style="animation-delay: 1s;"></div>
                         <i class="fas fa-check-circle mr-2"></i>
-                        <span class="stat-number font-medium">98%</span>
-                        <span class="ml-1 font-light">Satisfaction</span>
+                        <span class="stat-number font-medium">QR Code</span>
+                        <span class="ml-1 font-light">Book Loans</span>
                     </div>
                 </div>
                 

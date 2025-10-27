@@ -18,6 +18,10 @@ class BorrowedBook extends Model
         'original_activity',
     ];
 
+    protected $casts = [
+        'user_type' => 'string',
+    ];
+
     public function book()
     {
         return $this->belongsTo(Books::class, 'book_id', 'book_code');
@@ -26,5 +30,10 @@ class BorrowedBook extends Model
     public function student()
     {
         return $this->belongsTo(Student::class, 'student_id', 'student_id');
+    }
+
+    public function teacherVisitor()
+    {
+        return $this->belongsTo(TeacherVisitor::class, 'student_id', 'email');
     }
 }

@@ -166,7 +166,7 @@
                                                     </li>
                                                     <li>
                                                         <button class="department-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-department="CBEA">CBEA</button>
-                                                    </li>
+                                                    </li>   
                                                     <li>
                                                         <button class="department-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-department="CA">CA</button>
                                                     </li>

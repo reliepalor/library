@@ -26,4 +26,9 @@ class BorrowRequest extends Model
     {
         return $this->belongsTo(Books::class, 'book_id', 'book_code');
     }
+
+    public function teacherVisitor()
+    {
+        return $this->belongsTo(TeacherVisitor::class, 'student_id', 'email');
+    }
 }

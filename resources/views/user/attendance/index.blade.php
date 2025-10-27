@@ -308,42 +308,40 @@
             <!-- Desktop Table -->
             <div class="hidden lg:block">
                 <div class="overflow-x-auto relative">
-                    <table class="w-full">
-                        <thead class="table-header">
-                            <tr>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Student ID</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    <button id="college-filter-btn" class="flex items-center space-x-1 hover:text-gray-800 transition-colors duration-200">
-                                        <span>College</span>
-                                        <svg class="w-3 h-3 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                        </svg>
-                                    </button>
-                                </th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    <button id="year-filter-btn" class="flex items-center space-x-1 hover:text-gray-800 transition-colors duration-200">
-                                        <span>Year</span>
-                                        <svg class="w-3 h-3 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                        </svg>
-                                    </button>
-                                </th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    <button id="activity-filter-btn" class="flex items-center space-x-1 hover:text-gray-800 transition-colors duration-200">
-                                        <span>Activity</span>
-                                        <svg class="w-3 h-3 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                        </svg>
-                                    </button>
-                                </th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Login</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Logout</th>
-                            </tr>
-                        </thead>
-                    </table>
-                    <div class="max-h-[400px] overflow-y-auto">
+                    <div class="max-h-[400px] overflow-auto">
                         <table class="w-full">
+                            <thead class="table-header sticky top-0 bg-white z-10">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Student ID</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                        <button id="college-filter-btn" class="flex items-center space-x-1 hover:text-gray-800 transition-colors duration-200">
+                                            <span>College</span>
+                                            <svg class="w-3 h-3 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                            </svg>
+                                        </button>
+                                    </th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                        <button id="year-filter-btn" class="flex items-center space-x-1 hover:text-gray-800 transition-colors duration-200">
+                                            <span>Year</span>
+                                            <svg class="w-3 h-3 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                            </svg>
+                                        </button>
+                                    </th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                        <button id="activity-filter-btn" class="flex items-center space-x-1 hover:text-gray-800 transition-colors duration-200">
+                                            <span>Activity</span>
+                                            <svg class="w-3 h-3 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                            </svg>
+                                        </button>
+                                    </th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Login</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Logout</th>
+                                </tr>
+                            </thead>
                             <tbody id="attendance-table-body">
                             @forelse($attendances as $attendance)
                                 <tr class="table-row attendance-row" data-college="{{ $attendance->student->college ?? '' }}" data-year="{{ $attendance->student->year ?? '' }}" data-activity="{{ $attendance->activity ?? '' }}">
@@ -509,20 +507,18 @@
             <!-- Desktop Table -->
              <div class="hidden lg:block">
                  <div class="overflow-x-auto">
-                     <table class="w-full">
-                         <thead class="table-header">
-                             <tr>
-                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Role</th>
-                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
-                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Department</th>
-                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Activity</th>
-                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Login</th>
-                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Logout</th>
-                             </tr>
-                         </thead>
-                     </table>
-                     <div class="max-h-[400px] overflow-y-auto">
+                     <div class="max-h-[400px] overflow-auto">
                          <table class="w-full">
+                             <thead class="table-header sticky top-0 bg-white z-10">
+                                 <tr>
+                                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Role</th>
+                                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
+                                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Department</th>
+                                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Activity</th>
+                                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Login</th>
+                                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Logout</th>
+                                 </tr>
+                             </thead>
                              <tbody id="teacher-attendance-table-body">
                                  @forelse($teacherAttendances as $attendance)
                                      <tr class="table-row">
@@ -607,11 +603,11 @@
                                          </td>
                                      </tr>
                                  @endforelse
-                             </tbody>
-                         </table>
-                     </div>
-                 </div>
-             </div>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
             <!-- Mobile/Tablet Cards -->
             <div class="block lg:hidden space-y-1 px-3 pb-3">

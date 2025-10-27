@@ -38,7 +38,7 @@
     <div id="home" class="main mt-16">
 
         <main id="home" class="mt-1">
-            <section class="big-hero" style="font-size: 65px;">The Future of <br> Cagayan State University</section>
+            <section class="big-hero" style="font-size: 65px;">The Future of <br> CSU-Gonzaga Library.</section>
             <section class="small-hero">Discover our new technology! It’s simple, smart, and designed to help you learn better. </section>
         </main>
 
@@ -46,24 +46,24 @@
     <div class="flex justify-center">
         <div class="container items-center">
             <div class="item item-1">
-                <img src="images/library-images/books2.jpg" alt="Stack of colorful books on a shelf">
+                <img src="images/library-images/books1.jpg" alt="Stack of colorful books on a shelf">
             </div>
             <div class="item item-2">
-                <img src="images/library-images/books1.jpg" alt="Open book with pages turning">
+                <img src="images/library-images/book1.jpg" alt="Open book with pages turning">
             </div>
             <div class="item item-3">
                 <div class="hero-btn">
                     <a href="#" class="explore">Explore</a>
                 </div>
                 <div class="" >
-                    <img src="images/library-images/books4.jpg" alt="Cozy reading nook with books " class="mt-20flex justify-end items-end">
+                    <img src="images/library-images/book4.jpg" alt="Cozy reading nook with books " class="mt-20flex justify-end items-end">
                 </div>
             </div>
             <div class="item item-4">
-                <img src="images/library-images/books5.jpg" alt="Vintage library interior" style="aspect-ratio: 1/4;">
+                <img src="images/library-images/book5.jpg" alt="Vintage library interior" style="aspect-ratio: 1/4;">
             </div>
             <div class="item item-5">
-                <img src="images/library-images/books3.jpg" alt="Books arranged in a artistic pattern">
+                <img src="images/library-images/books5.jpg" alt="Books arranged in a artistic pattern">
             </div>
         </div>
         <!-- Carousel Dots Indicator (Hidden on Desktop) -->

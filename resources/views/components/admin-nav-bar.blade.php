@@ -23,7 +23,7 @@
                 <div class="absolute inset-0 bg-blue-400/20 rounded-full scale-0 group-hover:scale-110 transition-transform duration-300"></div>
             </div>
             <span x-show="sidebarExpanded"
-                  x-transition:enter="transition-all duration-300 delay-100c
+                  x-transition:enter="transition-all duration-300 delay-100"
                   x-transition:enter-start="opacity-0 transform translate-x-4"
                   x-transition:enter-end="opacity-100 transform translate-x-0"
                   class="ml-3 text-gray-800 font-bold text-lg tracking-tight">
@@ -356,25 +356,25 @@
                 @click.away="minimizedOpen = false">
 
                 <div class="px-3 py-2 border-b border-blue-100/50">
-                    <h3 class="font-semibold text-gray-800 text-sm">Students</h3>
+                    <h3 class="font-semibold text-gray-800 text-sm">Teachers / Visitors</h3>
                 </div>
 
-                <x-nav-link :href="route('admin.students.index')"
-                        :active="request()->routeIs('admin.students.index')"
+                <x-nav-link :href="route('admin.teachers_visitors.index')"
+                        :active="request()->routeIs('admin.teachers_visitors.index')"
                         class="flex items-center px-4 py-2.5 hover:bg-blue-50/80 transition-all duration-200 group mx-2 my-1 rounded-lg">
                     <svg class="h-4 w-4 text-blue-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                     </svg>
-                    <span class="text-sm font-medium text-gray-700">All Students</span>
+                    <span class="text-sm font-medium text-gray-700">All Teachers / Visitors</span>
                 </x-nav-link>
 
-                <x-nav-link :href="route('admin.students.create')"
-                        :active="request()->routeIs('admin.students.create')" 
+                <x-nav-link :href="route('admin.teachers_visitors.create')"
+                        :active="request()->routeIs('admin.teachers_visitors.create')"
                         class="flex items-center px-4 py-2.5 hover:bg-blue-50/80 transition-all duration-200 group mx-2 my-1 rounded-lg">
                     <svg class="h-4 w-4 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
                     </svg>
-                    <span class="text-sm font-medium text-gray-700">Register Student</span>
+                    <span class="text-sm font-medium text-gray-700">Register Teacher / Visitor</span>
                 </x-nav-link>
 
                 <div class="absolute left-0 top-6 transform -translate-x-1 w-2 h-2 bg-white rotate-45 border-l border-t border-blue-200/50"></div>

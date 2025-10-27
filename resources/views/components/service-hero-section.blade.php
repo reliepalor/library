@@ -123,11 +123,12 @@
                             </div>
                             <!-- Visual -->
                             <div class="flex justify-center animate-on-scroll">
-                                <div class="w-80 h-80 bg-gradient-to-br from-blue-50 to-blue-100 rounded-3xl flex items-center justify-center">
-                                    <div class="w-40 h-40 bg-white rounded-2xl shadow-lg flex items-center justify-center">
-                                        <svg class="w-20 h-20 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01"/>
+                                <div class="w-80 h-80 rounded-3xl overflow-hidden shadow-lg bg-gray-200 flex items-center justify-center">
+                                    <div class="text-center">
+                                        <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
                                         </svg>
+                                        <p class="text-gray-500 text-sm">QR Code Attendance</p>
                                     </div>
                                 </div>
                             </div>
@@ -175,11 +176,12 @@
                             </div>
                             <!-- Visual -->
                             <div class="flex justify-center animate-on-scroll">
-                                <div class="w-80 h-80 bg-gradient-to-br from-green-50 to-green-100 rounded-3xl flex items-center justify-center">
-                                    <div class="w-40 h-40 bg-white rounded-2xl shadow-lg flex items-center justify-center">
-                                        <svg class="w-20 h-20 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253"/>
+                                <div class="w-80 h-80 rounded-3xl overflow-hidden shadow-lg bg-gray-200 flex items-center justify-center">
+                                    <div class="text-center">
+                                        <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                                         </svg>
+                                        <p class="text-gray-500 text-sm">Smart Book Management</p>
                                     </div>
                                 </div>
                             </div>
@@ -227,11 +229,12 @@
                             </div>
                             <!-- Visual -->
                             <div class="flex justify-center animate-on-scroll">
-                                <div class="w-80 h-80 bg-gradient-to-br from-purple-50 to-purple-100 rounded-3xl flex items-center justify-center">
-                                    <div class="w-40 h-40 bg-white rounded-2xl shadow-lg flex items-center justify-center">
-                                        <svg class="w-20 h-20 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                <div class="w-80 h-80 rounded-3xl overflow-hidden shadow-lg bg-gray-200 flex items-center justify-center">
+                                    <div class="text-center">
+                                        <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                                         </svg>
+                                        <p class="text-gray-500 text-sm">Smart Notifications</p>
                                     </div>
                                 </div>
                             </div>

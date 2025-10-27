@@ -1068,7 +1068,7 @@ async function showActivityModal(userType, identifier) {
         }
     } catch (error) {
         console.error("Error fetching user details:", error);
-        showNotification("Failed to load user details", "error");
+        showNotification("QR CODE doesn't registered in the Library", "error");
         modal.classList.add('hidden');
     }
 }

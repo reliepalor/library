@@ -50,7 +50,8 @@
     <div class="w-full lg:w-1/2 gradient-bg flex items-center justify-center p-6 lg:p-12">
         <div class="text-center text-white fade-in">
             <img src="{{ asset('favicon/library.png') }}" alt="Library Logo" class="w-16 h-16 rounded-full shadow-md mx-auto mb-6">
-            <h2 class="text-3xl font-bold">CSU Library</h2>
+            
+            <h2 class="text-3xl font-bold">CSU-G Library</h2>
             <p class="mt-2 text-gray-300">Access your library account</p>
         </div>
     </div>

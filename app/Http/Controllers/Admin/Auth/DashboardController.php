@@ -29,7 +29,7 @@ class DashboardController extends Controller
         $todayAttendance = Attendance::whereDate('created_at', Carbon::today())->count();
         
         // Get recent borrow requests with student and book details
-        $recentBorrows = BorrowRequest::with(['student', 'book'])
+        $recentBorrows = BorrowRequest::with(['student', 'book', 'teacherVisitor'])
             ->latest()
             ->take(5)
             ->get();
