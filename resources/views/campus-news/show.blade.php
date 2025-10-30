@@ -37,7 +37,7 @@
 
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
     <!-- Breadcrumb -->
-    <nav class="flex mb-8" aria-label="Breadcrumb">
+    <nav class="flex mb-8 mt-10" aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-1 md:space-x-3">
             <li class="inline-flex items-center">
                 <a href="/" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-csu-blue">
@@ -90,31 +90,26 @@
     <!-- Article Content -->
     <article class="prose prose-lg max-w-none">
         <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-8">
-            {!! nl2br(e($campusNews->content)) !!}
+            <div id="article-content" class="relative">
+                <div id="cropped-content" class="overflow-hidden relative">
+                    {!! nl2br(e(Str::limit($campusNews->content, 500))) !!}
+                    @if(strlen($campusNews->content) > 500)
+                        <div class="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+                    @endif
+                </div>
+                <div id="full-content" class="hidden">
+                    {!! nl2br(e($campusNews->content)) !!}
+                </div>
+                @if(strlen($campusNews->content) > 500)
+                    <div class="text-center mt-4">
+                        <button id="see-more-btn" onclick="toggleContent()" class="text-csu-blue hover:text-csu-light-blue font-medium transition-colors duration-200">
+                            See more <i class="fas fa-chevron-down ml-1"></i>
+                        </button>
+                    </div>
+                @endif
+            </div>
         </div>
     </article>
-
-    <!-- Article Footer -->
-    <footer class="mt-12 pt-8 border-t border-gray-200">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-            <div class="flex items-center text-sm text-gray-500 mb-4 sm:mb-0">
-                <i class="fas fa-eye mr-2"></i>
-                {{ $campusNews->views_count }} views
-            </div>
-
-            <div class="flex space-x-4">
-                <button onclick="window.print()" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                    <i class="fas fa-print mr-2"></i>
-                    Print
-                </button>
-
-                <button onclick="shareArticle()" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-csu-blue hover:bg-csu-light-blue">
-                    <i class="fas fa-share mr-2"></i>
-                    Share
-                </button>
-            </div>
-        </div>
-    </footer>
 
     <!-- Related News -->
     @php
@@ -157,18 +152,22 @@
 <x-footer />
 
 <script>
-    function shareArticle() {
-        if (navigator.share) {
-            navigator.share({
-                title: '{{ $campusNews->title }}',
-                text: '{{ $campusNews->excerpt }}',
-                url: window.location.href
-            });
+    function toggleContent() {
+        const croppedContent = document.getElementById('cropped-content');
+        const fullContent = document.getElementById('full-content');
+        const seeMoreBtn = document.getElementById('see-more-btn');
+        const icon = seeMoreBtn.querySelector('i');
+
+        if (fullContent.classList.contains('hidden')) {
+            // Show full content
+            croppedContent.classList.add('hidden');
+            fullContent.classList.remove('hidden');
+            seeMoreBtn.innerHTML = 'See less <i class="fas fa-chevron-up ml-1"></i>';
         } else {
-            // Fallback: copy to clipboard
-            navigator.clipboard.writeText(window.location.href).then(function() {
-                alert('Link copied to clipboard!');
-            });
+            // Show cropped content
+            fullContent.classList.add('hidden');
+            croppedContent.classList.remove('hidden');
+            seeMoreBtn.innerHTML = 'See more <i class="fas fa-chevron-down ml-1"></i>';
         }
     }
 </script>

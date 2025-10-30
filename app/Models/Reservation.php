@@ -23,7 +23,7 @@ class Reservation extends Model
 
     public function book()
     {
-        return $this->belongsTo(Books::class, 'book_id', 'id');
+        return $this->belongsTo(Books::class, 'book_id', 'book_code');
     }
 
     public function student()

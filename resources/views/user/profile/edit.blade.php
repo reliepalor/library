@@ -314,6 +314,104 @@
             @endif
         </div>
 
+        <!-- Reserved Books Section -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 lg:p-8 mt-6 sm:mt-8 w-full max-w-4xl mx-auto">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg sm:text-xl font-semibold text-gray-800 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                    Reserved Books
+                </h3>
+                <span class="text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-full">
+                    {{ $reservations->count() }} books
+                </span>
+            </div>
+
+            @if ($reservations->isEmpty())
+                <div class="text-center py-12">
+                    <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                    <p class="text-gray-500 text-lg mb-2">No reserved books yet</p>
+                    <p class="text-gray-400 text-sm mb-4">Start exploring our collection and reserve your favorite books</p>
+                    <a href="{{ route('user.books.index') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        Browse Books
+                    </a>
+                </div>
+            @else
+                <div class="grid gap-4 sm:gap-6">
+                    @foreach ($reservations as $reservation)
+                        <div class="bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-xl p-4 sm:p-6 hover:shadow-md transition-all duration-200 group">
+                            <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                                <!-- Book Image -->
+                                <div class="flex-shrink-0">
+                                    @if($reservation->book && $reservation->book->image1)
+                                        <img src="{{ asset('storage/' . $reservation->book->image1) }}"
+                                             alt="{{ $reservation->book->name }}"
+                                             class="w-16 h-20 sm:w-20 sm:h-24 object-cover rounded-lg shadow-sm group-hover:scale-105 transition-transform duration-200" />
+                                    @else
+                                        <div class="w-16 h-20 sm:w-20 sm:h-24 bg-gray-200 rounded-lg flex items-center justify-center">
+                                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                            </svg>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <!-- Book Details -->
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                                        <div class="flex-1">
+                                            <h4 class="text-base sm:text-lg font-semibold text-gray-900 mb-1 line-clamp-1">
+                                                {{ $reservation->book ? $reservation->book->name : 'Book not found' }}
+                                            </h4>
+                                            <p class="text-sm text-gray-600 mb-1">
+                                                by {{ $reservation->book ? $reservation->book->author : 'Unknown' }}
+                                            </p>
+                                            <p class="text-xs text-gray-500">
+                                                Book Code: {{ $reservation->book ? $reservation->book->book_code : $reservation->book_id }}
+                                            </p>
+                                        </div>
+
+                                        <!-- Status and Date -->
+                                        <div class="flex flex-col items-end gap-2">
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
+                                                @if($reservation->status === 'active') bg-green-100 text-green-800
+                                                @elseif($reservation->status === 'cancelled') bg-red-100 text-red-800
+                                                @elseif($reservation->status === 'expired') bg-gray-100 text-gray-800
+                                                @else bg-gray-100 text-gray-800 @endif">
+                                                @if($reservation->status === 'active')
+                                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                    </svg>
+                                                @elseif($reservation->status === 'cancelled')
+                                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                    </svg>
+                                                @elseif($reservation->status === 'expired')
+                                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                                                    </svg>
+                                                @endif
+                                                {{ ucfirst($reservation->status) }}
+                                            </span>
+                                            <p class="text-xs text-gray-500">
+                                                {{ $reservation->reserved_at->format('M j, Y') }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+
         <!-- Attendance History Section -->
         @if ($user->student)
             <div class="bg-gray-50 rounded-xl shadow p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 mt-6 sm:mt-8 w-full max-w-4xl mx-auto">

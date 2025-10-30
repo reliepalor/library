@@ -20,13 +20,13 @@ document.addEventListener('DOMContentLoaded', function () {
     if (libraryBtn && ebookBtn && libraryContainer && ebookContainer) {
         libraryBtn.addEventListener('click', function () {
             setActiveButton(libraryBtn, ebookBtn);
-            libraryContainer.style.display = '';
+            libraryContainer.style.display = 'block';
             ebookContainer.style.display = 'none';
         });
         ebookBtn.addEventListener('click', function () {
             setActiveButton(ebookBtn, libraryBtn);
             libraryContainer.style.display = 'none';
-            ebookContainer.style.display = '';
+            ebookContainer.style.display = 'block';
             if (!ebookTabLoaded) {
                 // Auto-search a default term on first open
                 ebookTabLoaded = true;

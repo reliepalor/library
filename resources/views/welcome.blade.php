@@ -35,98 +35,129 @@
 
 <x-header />
 
-    <div id="home" class="main mt-16">
-
-        <main id="home" class="mt-1">
-            <section class="big-hero" style="font-size: 65px;">The Future of <br> CSU-Gonzaga Library.</section>
-            <section class="small-hero">Discover our new technology! It’s simple, smart, and designed to help you learn better. </section>
+    <div id="home" class="mt-20">
+        <main id="home" class="mt-8 sm:mt-6 md:mt-1 text-center opacity-0 animate-[slideIn_1s_ease-out_0.5s_forwards] flex flex-col items-center">
+            <section class="text-[rgb(53,53,53)] text-[6vw] mb-[1%] lg:text-[6vw] md:text-[clamp(2rem,8vw,4rem)] md:leading-[1.1] md:mt-[0px]">
+                The Future of <br> CSU-Gonzaga Library.
+            </section>
+            <section class="text-center w-[21rem] mx-auto leading-[25px] p-[5px] md:w-full md:max-w-[90vw] md:p-[10px] md:text-[clamp(0.9rem,4vw,1.2rem)]">
+                Discover our new technology! It's simple, smart, and designed to help you learn better.
+            </section>
         </main>
 
         <!--IMAGES-->
-    <div class="flex justify-center">
-        <div class="container items-center">
-            <div class="item item-1">
-                <img src="images/library-images/books1.jpg" alt="Stack of colorful books on a shelf">
-            </div>
-            <div class="item item-2">
-                <img src="images/library-images/book1.jpg" alt="Open book with pages turning">
-            </div>
-            <div class="item item-3">
-                <div class="hero-btn">
-                    <a href="#" class="explore">Explore</a>
+        <div class="flex justify-center ">
+            <!-- Desktop Layout -->
+            <div class="hidden w-full md:flex justify-center items-center flex-wrap gap-[1%] mb-[5%] relative desktop-layout">
+                <!-- Item 1 -->
+                <div class="w-[10%] opacity-0 animate-[fadeInUp_1s_ease-out_1s_forwards] relative h-[22rem] min-w-[18rem]">
+                    <img src="images/library-images/books1.jpg" 
+                        alt="Stack of colorful books on a shelf"
+                        class="rounded-[30px] w-full aspect-[2/3] object-cover transition-all duration-400 ease-in-out block hover:scale-105 hover:shadow-[0_10px_30px_rgba(0,0,0,0.15)] h-[22rem]">
                 </div>
-                <div class="" >
-                    <img src="images/library-images/book4.jpg" alt="Cozy reading nook with books " class="mt-20flex justify-end items-end">
+
+                <!-- Item 2 -->
+                <div class="w-[10%] opacity-0 animate-[fadeInUp_1s_ease-out_1s_forwards] relative mt-[3.3%] h-[18rem] min-w-[12rem]">
+                    <img src="images/library-images/book1.jpg" 
+                        alt="Open book with pages turning"
+                        class="rounded-[30px] w-full aspect-[2/3] object-cover transition-all duration-400 ease-in-out block hover:scale-105 hover:shadow-[0_10px_30px_rgba(0,0,0,0.15)] h-[18rem]">
+                </div>
+
+                <!-- Item 3 -->
+                <div class="w-[10%] opacity-0 animate-[fadeInUp_1s_ease-out_1s_forwards] relative mt-[2.7%] h-[18rem] min-w-[13rem]">
+                    <div class="absolute top-[10px] left-1/2 -translate-x-1/2 z-[2] flex flex-col gap-[5px] h-auto justify-center items-center">
+                        <a href="#" class="text-center w-[100px] bg-black text-white rounded-[20px] py-[10px] px-[10px] no-underline inline-block transition-all duration-300 ease-in-out text-[0.9rem] hover:bg-[rgb(53,53,53)] hover:-translate-y-[3px] hover:scale-[1.02] focus:bg-[rgb(53,53,53)] focus:-translate-y-[3px] focus:scale-[1.02]">
+                            Explore
+                        </a>
+                    </div>
+                    <div>
+                        <img src="images/library-images/book4.jpg" 
+                            alt="Cozy reading nook with books" 
+                            class="shadow-md border border-gray-200 mt-[140px] flex justify-end items-end rounded-[30px] h-[10rem] w-full">
+                    </div>
+                </div>
+
+                <!-- Item 4 -->
+                <div class="w-[10%] opacity-0 animate-[fadeInUp_1s_ease-out_1s_forwards] relative mt-[3.3%] h-[18rem] min-w-[12rem]">
+                    <img src="images/library-images/book5.jpg" 
+                        alt="Vintage library interior"
+                        class="rounded-[30px] w-full aspect-[2/3] object-cover transition-all duration-400 ease-in-out block hover:scale-105 hover:shadow-[0_10px_30px_rgba(0,0,0,0.15)] h-[18rem]"
+                        style="aspect-ratio: 1/4;">
+                </div>
+
+                <!-- Item 5 -->
+                <div class="w-[10%] opacity-0 animate-[fadeInUp_1s_ease-out_1s_forwards] relative h-[22rem] min-w-[18rem]">
+                    <img src="images/library-images/books5.jpg" 
+                        alt="Books arranged in a artistic pattern"
+                        class="rounded-[30px] w-full aspect-[2/3] object-cover transition-all duration-400 ease-in-out block hover:scale-105 hover:shadow-[0_10px_30px_rgba(0,0,0,0.15)] h-[22rem]">
                 </div>
             </div>
-            <div class="item item-4">
-                <img src="images/library-images/book5.jpg" alt="Vintage library interior" style="aspect-ratio: 1/4;">
-            </div>
-            <div class="item item-5">
-                <img src="images/library-images/books5.jpg" alt="Books arranged in a artistic pattern">
+
+            <!-- Mobile/Tablet Carousel -->
+            <div class="md:hidden w-full max-w-7xl px-4 mobile-carousel">
+                <div class="flex overflow-x-auto snap-x snap-mandatory scroll-smooth [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" 
+                    id="carousel">
+                    <!-- Carousel Item 1 -->
+                    <div class="w-full flex-shrink-0 snap-start">
+                        <div class="px-2">
+                            <img src="images/library-images/books1.jpg" 
+                                alt="Stack of colorful books on a shelf" 
+                                class="w-full h-96 object-cover rounded-lg">
+                        </div>
+                    </div>
+
+                    <!-- Carousel Item 2 -->
+                    <div class="w-full flex-shrink-0 snap-start">
+                        <div class="px-2">
+                            <img src="images/library-images/book1.jpg" 
+                                alt="Open book with pages turning" 
+                                class="w-full h-96 object-cover rounded-lg">
+                        </div>
+                    </div>
+
+                    <!-- Carousel Item 3 -->
+                    <div class="w-full flex-shrink-0 snap-start">
+                        <div class="px-2 flex flex-col justify-center items-center h-96 bg-white rounded-lg">
+                            <div class="mb-8">
+                                <a href="#" class="text-center w-[80px] bg-black text-white rounded-[20px] py-[10px] px-[10px] no-underline inline-block transition-all duration-300 ease-in-out text-base mt-[70px] hover:bg-[rgb(53,53,53)] hover:-translate-y-[3px] hover:scale-[1.02]">
+                                    Explore
+                                </a>
+                            </div>
+                            <img src="images/library-images/book4.jpg" 
+                                alt="Cozy reading nook with books" 
+                                class="shadow-md border border-gray-200 rounded max-w-xs">
+                        </div>
+                    </div>
+
+                    <!-- Carousel Item 4 -->
+                    <div class="w-full flex-shrink-0 snap-start">
+                        <div class="px-2">
+                            <img src="images/library-images/book5.jpg" 
+                                alt="Vintage library interior" 
+                                class="w-full h-96 object-cover rounded-lg">
+                        </div>
+                    </div>
+
+                    <!-- Carousel Item 5 -->
+                    <div class="w-full flex-shrink-0 snap-start">
+                        <div class="px-2">
+                            <img src="images/library-images/books5.jpg" 
+                                alt="Books arranged in a artistic pattern" 
+                                class="w-full h-96 object-cover rounded-lg">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Carousel Dots Indicator -->
+                <div class="flex justify-center gap-2 mt-4">
+                    <span class="dot w-2 h-2 rounded-full bg-gray-300 cursor-pointer transition-all duration-300 active:bg-blue-500 active:w-6 active:rounded" data-slide="0"></span>
+                    <span class="dot w-2 h-2 rounded-full bg-gray-300 cursor-pointer transition-all duration-300" data-slide="1"></span>
+                    <span class="dot w-2 h-2 rounded-full bg-gray-300 cursor-pointer transition-all duration-300" data-slide="2"></span>
+                    <span class="dot w-2 h-2 rounded-full bg-gray-300 cursor-pointer transition-all duration-300" data-slide="3"></span>
+                    <span class="dot w-2 h-2 rounded-full bg-gray-300 cursor-pointer transition-all duration-300" data-slide="4"></span>
+                </div>
             </div>
         </div>
-        <!-- Carousel Dots Indicator (Hidden on Desktop) -->
-        <div class="carousel-indicators">
-            <span class="dot active" data-slide="0"></span>
-            <span class="dot" data-slide="1"></span>
-            <span class="dot" data-slide="2"></span>
-            <span class="dot" data-slide="3"></span>
-            <span class="dot" data-slide="4"></span>
-        </div>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-    const container = document.querySelector('.container');
-    const dots = document.querySelectorAll('.dot');
-    const indicators = document.querySelector('.carousel-indicators');
-    let currentIndex = 0;
-    let scrollTimeout;
-
-    // Show/hide carousel based on screen size (for dynamic resize)
-    function toggleCarousel() {
-        if (window.innerWidth <= 1024) {
-            indicators.style.display = 'flex';
-            container.classList.add('carousel-mode'); // Optional class for JS tweaks
-        } else {
-            indicators.style.display = 'none';
-            container.classList.remove('carousel-mode');
-        }
-    }
-
-    toggleCarousel();
-    window.addEventListener('resize', toggleCarousel);
-
-    // Update active dot on scroll
-    container.addEventListener('scroll', () => {
-        clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-            const scrollLeft = container.scrollLeft;
-            const slideWidth = window.innerWidth;
-            currentIndex = Math.round(scrollLeft / slideWidth);
-            dots.forEach((dot, index) => {
-                dot.classList.toggle('active', index === currentIndex);
-            });
-            container.classList.add('scrolled'); // Fade swipe hint
-        }, 50); // Debounce for smooth performance
-    });
-
-    // Click dots to scroll to slide
-    dots.forEach((dot, index) => {
-        dot.addEventListener('click', () => {
-            const scrollTo = index * window.innerWidth;
-            container.scrollTo({
-                left: scrollTo,
-                behavior: 'smooth'
-            });
-        });
-    });
-
-    // Initial active dot
-    dots[0].classList.add('active');
-});
-    </script>
     </div>
 
     <x-books-component/>
@@ -151,8 +182,8 @@
                             @if($campusNews[0]->featured_image)
                                 <div class="flex-shrink-0 bg-gray-100 h-64 lg:h-80">
                                     <img src="{{ asset('storage/' . $campusNews[0]->featured_image) }}" 
-                                         alt="{{ $campusNews[0]->title }}" 
-                                         class="w-full h-full object-contain transition-transform duration-700 ease-out rounded-xl">
+                                        alt="{{ $campusNews[0]->title }}" 
+                                        class="w-full h-full object-contain transition-transform duration-700 ease-out rounded-xl">
                                 </div>
                             @endif
                             <div class="p-4 lg:p-6 flex-1 flex flex-col">
@@ -176,7 +207,7 @@
                                 </div>
                                 <div class="mt-auto">
                                     <a href="{{ route('campus-news.show', $campusNews[0]) }}" 
-                                       class="bg-white inline-flex items-center text-csu-blue hover:text-csu-light-blue font-medium transition-all duration-200 hover:translate-x-1">
+                                    class="bg-white inline-flex items-center text-csu-blue hover:text-csu-light-blue font-medium transition-all duration-200 hover:translate-x-1">
                                         Read full article
                                         <i class="fas fa-arrow-right ml-2 text-sm"></i>
                                     </a>
@@ -204,22 +235,22 @@
                     <div class="overflow-y-auto h-[calc(100%-80px)] custom-scrollbar">
                         @forelse($campusNews ?? [] as $index => $news)
                             <div class="news-item border-b border-gray-50 hover:bg-gray-50/50 transition-all duration-200 cursor-pointer {{ $index === 0 ? 'bg-blue-50/30 border-l-2 border-l-csu-blue' : '' }}"
-                                 onclick="showFeaturedNews({{ $index }}, this)"
-                                 data-news-index="{{ $index }}"
-                                 data-title="{{ $news->title }}"
-                                 data-excerpt="{{ $news->excerpt }}"
-                                 data-date="{{ $news->created_at->format('M d, Y') }}"
-                                 data-image="{{ $news->featured_image ? asset('storage/' . $news->featured_image) : '' }}"
-                                 data-url="{{ route('campus-news.show', $news) }}"
-                                 data-category="{{ $news->category }}"
-                                 data-is_featured="{{ $news->is_featured ? 'true' : 'false' }}">
+                                onclick="showFeaturedNews({{ $index }}, this)"
+                                data-news-index="{{ $index }}"
+                                data-title="{{ $news->title }}"
+                                data-excerpt="{{ $news->excerpt }}"
+                                data-date="{{ $news->created_at->format('M d, Y') }}"
+                                data-image="{{ $news->featured_image ? asset('storage/' . $news->featured_image) : '' }}"
+                                data-url="{{ route('campus-news.show', $news) }}"
+                                data-category="{{ $news->category }}"
+                                data-is_featured="{{ $news->is_featured ? 'true' : 'false' }}">
                                 <div class="p-3 lg:p-4">
                                     <div class="flex gap-3">
                                         @if($news->featured_image)
                                             <div class="w-12 h-12 lg:w-16 lg:h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                                                 <img src="{{ asset('storage/' . $news->featured_image) }}" 
-                                                     alt="{{ $news->title }}" 
-                                                     class="w-full h-full object-cover">
+                                                    alt="{{ $news->title }}" 
+                                                    class="w-full h-full object-cover">
                                             </div>
                                         @else
                                             <div class="w-12 h-12 lg:w-16 lg:h-16 rounded-lg bg-gray-100 flex-shrink-0 flex items-center justify-center">
@@ -245,70 +276,121 @@
             </div>
         </div>
 
-        <!-- Mobile Layout (sm and below) -->
-        <div class="md:hidden space-y-6">
-            <!-- Featured Article -->
+        <!-- Mobile Layout - Apple-Inspired Card Carousel -->
+        <div class="md:hidden">
+            <!-- Featured Article with Blur Background -->
             @if(isset($campusNews) && count($campusNews) > 0)
-                <div class="bg-white rounded-2xl border border-gray-200/60 overflow-hidden shadow-sm">
+                <div class="relative mb-6 overflow-hidden rounded-3xl">
+                    <!-- Blurred Background Image -->
                     @if($campusNews[0]->featured_image)
-                        <div class="aspect-w-16 aspect-h-9 bg-gray-100">
+                        <div class="absolute inset-0 opacity-30 blur-2xl scale-110">
                             <img src="{{ asset('storage/' . $campusNews[0]->featured_image) }}" 
-                                 alt="{{ $campusNews[0]->title }}" 
-                                 class="w-full h-48 object-cover">
+                                alt="" 
+                                class="w-full h-full object-cover">
                         </div>
                     @endif
-                    <div class="p-4">
-                        <div class="flex items-center text-sm text-gray-500 mb-2">
-                            <i class="far fa-calendar-alt mr-2 text-gray-400"></i>
-                            <span class="font-medium">{{ $campusNews[0]->created_at->format('M d, Y') }}</span>
+                    
+                    <!-- Main Card -->
+                    <div class="relative bg-white/95 backdrop-blur-xl rounded-3xl overflow-hidden shadow-2xl border border-white/20 transform transition-all duration-500 hover:scale-[1.02]">
+                        @if($campusNews[0]->featured_image)
+                            <div class="relative overflow-hidden">
+                                <img src="{{ asset('storage/' . $campusNews[0]->featured_image) }}" 
+                                    alt="{{ $campusNews[0]->title }}" 
+                                    class="w-full h-56 object-cover transform transition-transform duration-700 hover:scale-105">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+                                
+                                <!-- Floating Badges -->
+                                <div class="absolute top-4 left-4 flex flex-wrap gap-2">
+                                    <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-white/90 backdrop-blur-md text-gray-900 shadow-lg">
+                                        {{ ucfirst($campusNews[0]->category ?? 'Announcement') }}
+                                    </span>
+                                    @if($campusNews[0]->is_featured)
+                                        <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-yellow-400/90 backdrop-blur-md text-yellow-900 shadow-lg">
+                                            <i class="fas fa-star mr-1"></i>Featured
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+                        
+                        <div class="p-5">
+                            <div class="flex items-center text-xs text-gray-500 mb-3">
+                                <div class="flex items-center bg-gray-100 rounded-full px-3 py-1">
+                                    <i class="far fa-calendar-alt mr-1.5 text-gray-400"></i>
+                                    <span class="font-medium">{{ $campusNews[0]->created_at->format('M d, Y') }}</span>
+                                </div>
+                            </div>
+                            
+                            <h3 class="text-xl font-bold text-gray-900 mb-3 leading-tight tracking-tight">{{ $campusNews[0]->title }}</h3>
+                            <p class="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3">{{ $campusNews[0]->excerpt }}</p>
+                            
+                            <a href="{{ route('campus-news.show', $campusNews[0]) }}" 
+                                class="inline-flex items-center justify-center w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/30 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/40 hover:-translate-y-0.5 active:scale-95">
+                                <span>Read Full Story</span>
+                                <i class="fas fa-arrow-right ml-2 text-sm transition-transform duration-300 group-hover:translate-x-1"></i>
+                            </a>
                         </div>
-                        <div class="flex flex-wrap gap-2 mb-3">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                {{ ucfirst($campusNews[0]->category ?? 'Announcement') }}
-                            </span>
-                            @if($campusNews[0]->is_featured)
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                    <i class="fas fa-star mr-1"></i>Featured
-                                </span>
-                            @endif
-                        </div>
-                        <h3 class="text-lg font-semibold text-gray-900 mb-2 leading-tight">{{ $campusNews[0]->title }}</h3>
-                        <p class="text-gray-600 text-sm leading-relaxed mb-4">{{ $campusNews[0]->excerpt }}</p>
-                        <a href="{{ route('campus-news.show', $campusNews[0]) }}" 
-                           class="bg-white inline-flex items-center text-csu-blue hover:text-csu-light-blue font-medium text-sm transition-all duration-200">
-                            Read full article
-                            <i class="fas fa-arrow-right ml-2 text-xs"></i>
-                        </a>
                     </div>
                 </div>
             @endif
 
-            <!-- Other News Grid -->
+            <!-- Horizontal Scrolling News Cards -->
             @if(isset($campusNews) && count($campusNews) > 1)
-                <div>
-                    <h4 class="font-semibold text-gray-900 mb-4 px-1">More News</h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="mb-6">
+                    <div class="flex items-center justify-between mb-4 px-1">
+                        <h4 class="text-lg font-bold text-gray-900">More Stories</h4>
+                        <div class="flex gap-2">
+                            <button onclick="scrollNewsLeft()" class="w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-all active:scale-90">
+                                <i class="fas fa-chevron-left text-xs"></i>
+                            </button>
+                            <button onclick="scrollNewsRight()" class="w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-all active:scale-90">
+                                <i class="fas fa-chevron-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="news-scroll-container" class="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4 -mx-4 px-4 scroll-smooth">
                         @foreach(array_slice($campusNews->toArray(), 1) as $news)
-                            <div class="bg-white rounded-xl border border-gray-200/60 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
-                                @if($news['featured_image'])
-                                    <div class="aspect-w-16 aspect-h-9">
-                                        <img src="{{ asset('storage/' . $news['featured_image']) }}" 
-                                             alt="{{ $news['title'] }}" 
-                                             class="w-full h-32 object-cover">
+                            <div class="flex-shrink-0 w-[280px] snap-start group">
+                                <div class="bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-100 h-full transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
+                                    @if($news['featured_image'])
+                                        <div class="relative overflow-hidden h-40">
+                                            <img src="{{ asset('storage/' . $news['featured_image']) }}" 
+                                                alt="{{ $news['title'] }}" 
+                                                class="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-110">
+                                            <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                        </div>
+                                    @else
+                                        <div class="h-40 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                                            <i class="fas fa-newspaper text-3xl text-gray-400"></i>
+                                        </div>
+                                    @endif
+                                    
+                                    <div class="p-4">
+                                        <div class="flex items-center text-xs text-gray-500 mb-2">
+                                            <i class="far fa-clock mr-1.5 text-gray-400"></i>
+                                            <span>{{ \Carbon\Carbon::parse($news['created_at'])->format('M d, Y') }}</span>
+                                        </div>
+                                        
+                                        <h5 class="font-semibold text-gray-900 text-sm line-clamp-2 mb-2 leading-snug min-h-[2.5rem]">{{ $news['title'] }}</h5>
+                                        <p class="text-gray-600 text-xs line-clamp-2 mb-3 leading-relaxed">{{ $news['excerpt'] }}</p>
+                                        
+                                        <a href="{{ route('campus-news.show', $news['id']) }}" 
+                                            class="inline-flex items-center text-blue-600 hover:text-blue-700 font-semibold text-xs transition-all duration-200 group-hover:translate-x-1">
+                                            <span>Read More</span>
+                                            <i class="fas fa-arrow-right ml-1.5 text-[10px]"></i>
+                                        </a>
                                     </div>
-                                @endif
-                                <div class="p-4">
-                                    <div class="flex items-center text-xs text-gray-500 mb-2">
-                                        <i class="far fa-calendar-alt mr-1 text-gray-400"></i>
-                                        <span>{{ \Carbon\Carbon::parse($news['created_at'])->format('M d, Y') }}</span>
-                                    </div>
-                                    <h5 class="font-medium text-gray-900 text-sm line-clamp-2 mb-2">{{ $news['title'] }}</h5>
-                                    <p class="text-gray-600 text-xs line-clamp-3 mb-3">{{ $news['excerpt'] }}</p>
-                                    <a href="{{ route('campus-news.show', $news['id']) }}" 
-                                       class="text-csu-blue hover:text-csu-light-blue font-medium text-xs transition-colors duration-200">
-                                        Read more <i class="fas fa-arrow-right ml-1"></i>
-                                    </a>
                                 </div>
+                            </div>
+                        @endforeach
+                    </div>
+                    
+                    <!-- Scroll Progress Indicator -->
+                    <div class="flex justify-center gap-1.5 mt-4">
+                        @foreach(array_slice($campusNews->toArray(), 1) as $index => $news)
+                            <div class="h-1 w-8 rounded-full bg-gray-200 overflow-hidden">
+                                <div class="scroll-indicator h-full bg-blue-600 rounded-full w-0 transition-all duration-300"></div>
                             </div>
                         @endforeach
                     </div>
@@ -318,68 +400,42 @@
     </div>
 </section>
 
-<style>
-    .line-clamp-2 {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-    .line-clamp-3 {
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-    .aspect-w-16 {
-        position: relative;
-        width: 100%;
-    }
-    .aspect-w-16::before {
-        content: "";
-        display: block;
-        padding-top: 56.25%;
-    }
-    .aspect-h-9 > * {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    
-    /* Apple-inspired scrollbar */
-    .custom-scrollbar::-webkit-scrollbar {
-        width: 4px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(0, 0, 0, 0.1);
-        border-radius: 10px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: rgba(0, 0, 0, 0.2);
-    }
 
-    /* Mobile touch optimization */
-    @media (max-width: 768px) {
-        .news-item {
-            min-height: 44px; /* iOS touch target minimum */
-        }
-        
-        /* Improve mobile scrolling */
-        .custom-scrollbar {
-            -webkit-overflow-scrolling: touch;
-        }
-    }
-</style>
  <x-library-policy />
 @stack('scripts')
 
 <script>
+    //-------------------------------------------------------------------------------CHERO Section
+   const carousel = document.getElementById('carousel');
+    const dots = document.querySelectorAll('.dot');
+    
+    // Update active dot based on scroll position
+    carousel.addEventListener('scroll', () => {
+        const scrollPosition = carousel.scrollLeft;
+        const itemWidth = carousel.offsetWidth;
+        const currentIndex = Math.round(scrollPosition / itemWidth);
+        
+        dots.forEach((dot, index) => {
+            if (index === currentIndex) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+    });
+    
+    // Click on dots to navigate
+    dots.forEach((dot, index) => {
+        dot.addEventListener('click', () => {
+            const itemWidth = carousel.offsetWidth;
+            carousel.scrollTo({
+                left: itemWidth * index,
+                behavior: 'smooth'
+            });
+        });
+    });
+  //-------------------------------------------------------------------------------CAMPUS NEWSS
+  // Desktop/Tablet Featured News Function
 function showFeaturedNews(index, clickedElement) {
     // Only run on desktop/tablet view
     if (window.innerWidth < 768) return;
@@ -439,7 +495,7 @@ function showFeaturedNews(index, clickedElement) {
                     <p class="text-gray-600 leading-relaxed mb-4 flex-1">${excerpt}</p>
                 </div>
                 <div class="mt-auto">
-                    <a href="${url}" class="bg-white inline-flex items-center bg-purple-600 text-csu-blue hover:text-csu-light-blue font-medium transition-all duration-200 hover:translate-x-1">
+                    <a href="${url}" class="bg-white inline-flex items-center text-csu-blue hover:text-csu-light-blue font-medium transition-all duration-200 hover:translate-x-1">
                         Read full article
                         <i class="fas fa-arrow-right ml-2 text-sm"></i>
                     </a>
@@ -452,6 +508,46 @@ function showFeaturedNews(index, clickedElement) {
         featuredContent.style.transform = 'translateY(0)';
     }, 150);
 }
+
+// Mobile horizontal scroll functions
+function scrollNewsLeft() {
+    const container = document.getElementById('news-scroll-container');
+    container.scrollBy({ left: -300, behavior: 'smooth' });
+}
+
+function scrollNewsRight() {
+    const container = document.getElementById('news-scroll-container');
+    container.scrollBy({ left: 300, behavior: 'smooth' });
+}
+
+// Scroll progress indicator
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('news-scroll-container');
+    const indicators = document.querySelectorAll('.scroll-indicator');
+    
+    if (container && indicators.length > 0) {
+        container.addEventListener('scroll', function() {
+            const scrollLeft = container.scrollLeft;
+            const scrollWidth = container.scrollWidth - container.clientWidth;
+            const scrollPercent = (scrollLeft / scrollWidth) * 100;
+            
+            // Update each indicator based on scroll position
+            indicators.forEach((indicator, index) => {
+                const itemPercent = (index / indicators.length) * 100;
+                const nextItemPercent = ((index + 1) / indicators.length) * 100;
+                
+                if (scrollPercent >= itemPercent && scrollPercent < nextItemPercent) {
+                    const progress = ((scrollPercent - itemPercent) / (nextItemPercent - itemPercent)) * 100;
+                    indicator.style.width = progress + '%';
+                } else if (scrollPercent >= nextItemPercent) {
+                    indicator.style.width = '100%';
+                } else {
+                    indicator.style.width = '0%';
+                }
+            });
+        });
+    }
+});
 
 // Handle window resize
 window.addEventListener('resize', function() {

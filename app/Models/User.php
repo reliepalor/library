@@ -57,5 +57,20 @@ class User extends Authenticatable
     {
         return $this->hasOne(TeacherVisitor::class, 'email', 'email');
     }
+
+    public function reservations()
+    {
+        $query = Reservation::query();
+
+        if ($this->student) {
+            $query->where('student_id', $this->student->student_id);
+        }
+
+        if ($this->teacherVisitor) {
+            $query->where('teacher_visitor_email', $this->teacherVisitor->email);
+        }
+
+        return $query->where('status', 'active');
+    }
 }
 

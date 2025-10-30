@@ -134,11 +134,6 @@ class BorrowRequestController extends Controller
             'original_activity' => $request->input('activity', 'Borrow'), // Store the original activity type
         ]);
 
-        // If user had a reservation for this book, cancel it since they're now borrowing it
-        if ($activeReservation) {
-            $activeReservation->cancel();
-        }
-
         if ($request->expectsJson()) {
             return response()->json(['message' => 'Borrow request submitted and waiting for admin approval.']);
         }
@@ -421,6 +416,8 @@ class BorrowRequestController extends Controller
             $borrowRequest = BorrowedBook::findOrFail($id);
             $attendanceId = $borrowRequest->attendance_id;
             $studentId = $borrowRequest->student_id;
+            $bookCode = $borrowRequest->book_id;
+            $userType = $borrowRequest->user_type;
 
             $borrowRequest->update([
                 'status' => 'returned',
@@ -445,6 +442,20 @@ class BorrowRequestController extends Controller
                         Log::info("Updated attendance activity to 'Book returned' for student {$studentId}");
                     }
                 }
+            }
+
+            // Cancel any active reservation for this book by this user
+            if ($userType === 'student') {
+                \App\Models\Reservation::where('book_id', $bookCode)
+                    ->where('status', 'active')
+                    ->where('student_id', $studentId)
+                    ->whereNull('teacher_visitor_email')
+                    ->update(['status' => 'cancelled']);
+            } elseif (in_array($userType, ['teacher', 'teacher_visitor'])) {
+                \App\Models\Reservation::where('book_id', $bookCode)
+                    ->where('status', 'active')
+                    ->where('teacher_visitor_email', $studentId)
+                    ->update(['status' => 'cancelled']);
             }
 
             return response()->json([

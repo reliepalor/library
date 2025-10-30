@@ -148,7 +148,7 @@
                                         $reservation = \App\Models\Reservation::where('book_id', $request->book_id)
                                             ->where('student_id', $request->student_id)
                                             ->whereNull('teacher_visitor_email')
-                                            ->whereIn('status', ['active', 'cancelled'])
+                                            ->where('status', 'active')
                                             ->latest('reserved_at')
                                             ->first();
                                     } elseif (in_array($request->user_type, ['teacher', 'teacher_visitor'])) {
@@ -163,7 +163,7 @@
                                                     }
                                                 }
                                             })
-                                            ->whereIn('status', ['active', 'cancelled'])
+                                            ->where('status', 'active')
                                             ->latest('reserved_at')
                                             ->first();
                                     }
@@ -318,6 +318,7 @@
                                         $borrowedReservation = \App\Models\Reservation::where('book_id', $book->book_id)
                                             ->where('student_id', $book->student_id)
                                             ->whereNull('teacher_visitor_email')
+                                            ->where('status', 'active')
                                             ->latest('reserved_at')
                                             ->first();
                                     } elseif (in_array($book->user_type, ['teacher', 'teacher_visitor'])) {
@@ -332,6 +333,7 @@
                                                     }
                                                 }
                                             })
+                                            ->where('status', 'active')
                                             ->latest('reserved_at')
                                             ->first();
                                     }

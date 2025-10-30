@@ -1,385 +1,72 @@
-/* Main Hero Section */
-.main {
-    text-align: center;
-    opacity: 0;
-    animation: slideIn 1s ease-out forwards 0.5s;
-    align-items: center;
-}
-
-.main .big-hero {
-    color: rgb(53, 53, 53);
-    font-size: 6vw;
-    margin-bottom: 1%;
-}
-
-.main .small-hero {
-    text-align: center;
-    width: 21rem;
-    margin: auto;
-    line-height: 25px;
-    padding: 5px;
-}
-
-/* Container for Images */
-.container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1%;
-    margin-bottom: 5%;
-    position: relative;
-}
-
-/* Image Items (Desktop Base) */
-.item {
-    width: 10%;
-    opacity: 0;
-    animation: fadeInUp 1s ease-out forwards 1s;
-    position: relative;
-}
-
-/* Image Styling */
-.item img {
-    border-radius: 30px;
-    width: 100%;
-    aspect-ratio: 2/3;
-    object-fit: cover;
-    transition: transform 0.4s ease-in-out, box-shadow 0.4s ease-in-out;
-    display: block;
-}
-
-/* Image Hover Effect */
-.item img:hover {
-    transform: scale(1.05);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-}
-
-/* Button Animations */
-.hero-btn {
-    position: absolute;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.hero-btn a {
-    text-align: center;
-    width: 100px;
-    background-color: black;
-    color: white;
-    border-radius: 20px;
-    padding: 10px;
-    text-decoration: none;
-    display: inline-block;
-    transition: all 0.3s ease-in-out;
-    font-size: 0.9rem;
-}
-
-.hero-btn .know {
-    background-color: rgb(238, 238, 238);
-    color: black;
-}
-
-/* Button Hover/Focus Effect */
-.hero-btn a:hover,
-.hero-btn a:focus {
-    background-color: rgb(53, 53, 53);
-    color: white;
-    transform: translateY(-3px) scale(1.02);
-}
-
-.hero-btn .know:hover,
-.hero-btn .know:focus {
-    background-color: #ddd;
-    color: black;
-    transform: translateY(-3px) scale(1.02);
-}
-
-/* Image Positions (Desktop) */
-.item-1, .item-5, .item-1 img, .item-5 img {
-    height: 22rem;
-    width: 18rem;
-}
-
-.item-2, .item-4, .item-2 img, .item-4 img {
-    margin-top: 3.3%;
-    height: 18rem;
-    width: 12rem;
-}
-
-.item-3 {
-    margin-top: 2.7%;
-    height: 18rem;
-    width: 13rem;
-}
-
-.item-3 img {
-    height: 10rem;
-    width: 100%;
-    margin-top: 140px;
-}
-
-/* Centering Hero Buttons */
-.item-3 > .hero-btn {
-    height: auto;
-    display: flex;
-    justify-content: center;
-    flex-direction: column;
-    align-items: center;
-}
-
-/* Animations */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Fade-in animation for page load */
-.animate-on-load {
-    animation: fadeIn 1s ease-out;
-}
-
-@keyframes fadeIn {
-    0% { opacity: 0; }
-    100% { opacity: 1; }
-}
-
-/* Scroll animations */
-.animate-on-scroll {
-    opacity: 0;
-    transition: all 0.8s ease-out;
-}
-
-.animate-on-scroll.slideInLeft {
-    transform: translateX(-50px);
-}
-
-.animate-on-scroll.slideInRight {
-    transform: translateX(50px);
-}
-
-.animate-on-scroll.fadeInUp {
-    transform: translateY(50px);
-}
-
-.animate-on-scroll.visible {
-    opacity: 1;
-    transform: translateX(0) translateY(0);
-}
-
-/* Styles for mobile menu icon toggle */
-#menu-toggle.is-open .hamburger-icon {
-    display: none;
-}
-
-#menu-toggle.is-open .x-icon {
-    display: block;
-}
-
-/* Smooth rotation for chevron icon */
-.chevron-icon {
-    transition: transform 0.3s ease;
-}
-
-.scroll-reveal {
-    transition: opacity 0.7s ease-out, transform 0.7s ease-out;
-}
-
-/* Carousel Dots (Hidden on Desktop) */
-.carousel-indicators {
-display: none; /* Hidden by default */
-    flex-direction: row;
-    justify-content: center;
-    gap: 8px;
-    padding: 10px 0;
-    position: absolute;
-    bottom: -40px; /* Positions below the container */
-    left: 50%;
-    transform: translateX(-50%); /* Centers horizontally */
-    z-index: 4;
-}
-
-.dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: rgba(53, 53, 53, 0.3);
-    transition: all 0.3s ease-in-out;
-    cursor: pointer;
-}
-.flex {
-    position: relative; /* Allows absolute positioning of indicators */
-}
-.dot.active {
-    background: rgb(53, 53, 53);
-    transform: scale(1.2);
-}
-
-/* Tablet & Mobile Styles - Horizontal Swipe Carousel (≤1024px) */
-@media (max-width: 1024px) {
-    .carousel-indicators {
-        display: flex;
+  /*---------------------------- HERO SECTION---------------------------------*/
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
-    .container {
-        flex-direction: row;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        overflow-y: hidden;
-        gap: 0; /* No gaps in carousel for seamless snaps */
-        scroll-snap-type: x mandatory;
-        scroll-behavior: smooth;
-        padding: 0;
-        -webkit-overflow-scrolling: touch; /* Smooth iOS momentum */
-        width: 100vw; /* Full width to prevent clipping */
-        margin-left: calc(50% - 50vw); /* Center the full-width container */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
-    .item {
-        flex: 0 0 100vw; /* Full viewport width per slide */
-        width: 100vw;
-        max-width: none;
-        min-width: 100vw;
-        opacity: 1; /* Always visible */
-        animation: none; /* Disable grid animations */
-        scroll-snap-align: start;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 20px 0; /* Vertical padding for breathing room */
-        box-sizing: border-box;
+    /* Active dot styling */
+    .dot.active {
+        @apply bg-blue-500 w-6 rounded;
+    }
+  /*---------------------------- CAMPUS NEWS--------------------------------*/
+
+     /* Custom scrollbar hiding */
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
     }
 
-    .item img {
-        width: 90%; /* Slight inset to avoid edge cropping */
-        max-width: 90%;
-        height: 60vh; /* Consistent height, like TikTok */
-        max-height: 60vh;
-        aspect-ratio: auto; /* Let image dictate, but cap height */
-        object-fit: cover;
-        border-radius: 25px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Subtle lift */
-        margin: 0 auto; /* Center the image horizontally */
+    /* Apple-inspired scrollbar for desktop */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.2);
     }
 
-    /* Reposition buttons for carousel slide */
-    .hero-btn {
-        position: static;
-        transform: none;
-        margin-bottom: 15px;
-        width: 100%;
-        flex-direction: row;
-        justify-content: center;
-        gap: 15px;
-        z-index: 3;
+    /* Smooth scroll progress animation */
+    @keyframes slideProgress {
+        from { width: 0%; }
+        to { width: 100%; }
     }
 
-    .hero-btn a {
-        width: 80px;
-        font-size: 1rem;
-        margin-top: 70px;
+    /* Line clamp utilities */
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
     }
-
-    .item-3 {
-        flex-direction: column;
-        text-align: center;
+    .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
     }
-
-    .item-3 img {
-        margin-top: 0;
-        height: 50vh; /* Shorter for button space */
-    }
-
-    /* Hide scrollbar but keep functionality */
-    .container::-webkit-scrollbar {
-        display: none; /* Clean look */
-    }
-
-    /* Swipe hint (fades out after 3s) */
-    .container::after {
-        content: '👆 Swipe to explore';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        font-size: 1.2rem;
-        opacity: 0.7;
-        transition: opacity 0.5s ease;
-        pointer-events: none;
-        z-index: 1;
-    }
-
-    /* Hint fades on first scroll */
-    .container.scrolled::after {
-        opacity: 0;
-    }
-
-    /* Normalize specific items */
-    .item-1 img, .item-2 img, .item-4 img, .item-5 img {
-        aspect-ratio: 2/3;
-    }
-
-    .item-4 img {
-        aspect-ratio: 2/3 !important; /* Override inline */
-    }
-}
-
-/* Extra Mobile Tweaks (≤767px) */
-@media (max-width: 767px) {
-    .item {
-        padding: 10px 0;
-    }
-
-    .item img {
-        height: 50vh;
-        border-radius: 30px;
-    }
-
-    .hero-btn {
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .hero-btn a {
-        width: 100%;
-        max-width: none;
-    }
-
-    .dot {
-        width: 8px;
-        height: 8px;
-    }
-}

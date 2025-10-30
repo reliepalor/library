@@ -19,7 +19,8 @@ class ProfileController extends Controller
     public function edit(Request $request)
     {
         $user = $request->user()->load(['student.attendanceHistories', 'teacherVisitor']);
-        return view('user.profile.edit', compact('user'));
+        $reservations = $user->reservations()->with('book')->get();
+        return view('user.profile.edit', compact('user', 'reservations'));
     }
 
     public function update(ProfileUpdateRequest $request): RedirectResponse
