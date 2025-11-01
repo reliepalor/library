@@ -191,6 +191,51 @@
                 display: block;
                 margin-bottom: 0.25rem;
             }
+
+            /* Enhanced responsive table for small screens */
+            .table-container {
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .table-container th,
+            .table-container td {
+                padding: 0.5rem 0.25rem;
+                font-size: 0.75rem;
+                white-space: nowrap;
+            }
+
+            .profile-img {
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+            }
+
+            /* Abbreviate long content on mobile */
+            .activity-tag span {
+                font-size: 0.7rem;
+                max-width: 100px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .college-badge {
+                font-size: 0.65rem;
+                padding: 0.2rem 0.3rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .table-container th,
+            .table-container td {
+                padding: 0.25rem 0.125rem;
+                font-size: 0.7rem;
+            }
+
+            .profile-img {
+                width: 28px;
+                height: 28px;
+            }
         }
 
         /* Filter dropdown styles */
@@ -200,6 +245,17 @@
 
         .rotate-180 {
             transform: rotate(180deg);
+        }
+
+        /* Add class for college badges to make them responsive */
+        .college-badge {
+            padding: 0.3rem 0.45rem;
+            font-size: 0.72rem;
+            border-radius: 50px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.2s ease;
         }
     </style>
 </head>
@@ -270,9 +326,11 @@
 
         <!-- Attendance Table -->
         <div class="modern-table bg-white relative">
-            <div class="flex flex-col sm:flex-row justify-between items-center p-6 border-b border-gray-100 bg-blue-50">
+            <div class="bg-purple-50 flex flex-col sm:flex-row justify-between items-center p-6 border-b border-gray-100">
                 <h3 class="text-xl font-medium text-gray-800">Students Attendance</h3>
             </div>
+
+
 
             <!-- Filter Dropdowns Container (positioned relative to table) -->
             <div id="college-dropdown" class="fixed bg-white border border-gray-200 rounded-md shadow-lg z-50 hidden opacity-0 scale-y-95 transition-all duration-200 w-32">
@@ -305,39 +363,18 @@
                 </div>
             </div>
 
-            <!-- Desktop Table -->
-            <div class="hidden lg:block">
-                <div class="overflow-x-auto relative">
+            <!-- Responsive Table -->
+            <div class="block">
+                <div class="overflow-x-auto relative table-container">
                     <div class="max-h-[400px] overflow-auto">
                         <table class="w-full">
                             <thead class="table-header sticky top-0 bg-white z-10">
                                 <tr>
                                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Student ID</th>
                                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        <button id="college-filter-btn" class="flex items-center space-x-1 hover:text-gray-800 transition-colors duration-200">
-                                            <span>College</span>
-                                            <svg class="w-3 h-3 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                            </svg>
-                                        </button>
-                                    </th>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        <button id="year-filter-btn" class="flex items-center space-x-1 hover:text-gray-800 transition-colors duration-200">
-                                            <span>Year</span>
-                                            <svg class="w-3 h-3 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                            </svg>
-                                        </button>
-                                    </th>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        <button id="activity-filter-btn" class="flex items-center space-x-1 hover:text-gray-800 transition-colors duration-200">
-                                            <span>Activity</span>
-                                            <svg class="w-3 h-3 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                            </svg>
-                                        </button>
-                                    </th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">College</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Year</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Activity</th>
                                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Login</th>
                                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Logout</th>
                                 </tr>
@@ -358,7 +395,7 @@
                                         </div>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <span class="college-{{ $attendance->student->college ?? '' }}">{{ $attendance->student->college ?? '' }}</span>
+                                        <span class="college-{{ $attendance->student->college ?? '' }} college-badge">{{ $attendance->student->college ?? '' }}</span>
                                     </td>
                                     <td class="px-6 py-4 text-sm text-gray-600">{{ $attendance->student->year ?? '' }}</td>
                                     <td class="px-6 py-4">
@@ -367,25 +404,25 @@
                                             $lower = strtolower($activityText);
                                         @endphp
                                         @if(str_contains($lower, 'wait for approval'))
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">{{ $activityText }}</span>
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 activity-tag">{{ $activityText }}</span>
                                         @elseif(str_starts_with($lower, 'stay&borrow:'))
                                             @php
                                                 $parts = explode(':', $activityText);
                                                 $code = $parts[1] ?? '';
                                             @endphp
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Stay&Borrow: {{ trim($code) }}</span>
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 activity-tag">Stay&Borrow: {{ trim($code) }}</span>
                                         @elseif(str_contains($lower, 'borrow:'))
                                             @php
                                                 $parts = explode(':', $activityText);
                                                 $code = $parts[1] ?? '';
                                             @endphp
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Borrow: {{ trim($code) }}</span>
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 activity-tag">Borrow: {{ trim($code) }}</span>
                                         @elseif(str_contains($lower, 'borrow book rejected'))
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">{{ $activityText }}</span>
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 activity-tag">{{ $activityText }}</span>
                                         @elseif(str_contains($lower, 'book returned'))
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">{{ $activityText }}</span>
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 activity-tag">{{ $activityText }}</span>
                                         @else
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full text-gray-800">{{ $activityText }}</span>
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full text-gray-800 activity-tag">{{ $activityText }}</span>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4">
@@ -417,96 +454,17 @@
                     </table>
                 </div>
             </div>
-
-            <!-- Mobile/Tablet Cards -->
-            <div class="block lg:hidden space-y-1 px-3 pb-3">
-                @forelse($attendances as $attendance)
-                    <div class="bg-gray-50 rounded-md p-1 border border-gray-200">
-                        <div class="flex flex-wrap items-start justify-between gap-1 mb-0.5 text-xs leading-tight">
-                            <div class="flex items-start space-x-1 min-w-0 flex-1">
-                                <img src="{{ \App\Services\AvatarService::getProfilePictureUrl($attendance->student->user->profile_picture ?? null, ($attendance->student->fname ?? '') . ' ' . ($attendance->student->lname ?? ''), 44) }}"
-                                    alt="Profile Picture"
-                                    class="profile-img w-5 h-5 rounded-full flex-shrink-0 mt-0.5"
-                                    onerror="this.onerror=null; this.src='{{ asset('images/default-profile.png') }}'" />
-                                <div class="min-w-0 flex-1">
-                                    <div class="font-medium text-gray-900 break-words">{{ $attendance->student->lname ?? '' }}, {{ $attendance->student->fname ?? '' }}</div>
-                                    <div class="text-gray-500 break-words">{{ $attendance->student_id }}</div>
-                                </div>
-                            </div>
-                            <div class="flex-1 min-w-[60px] text-center">
-                                <span class="text-[10px] text-gray-600">College: </span><span class="college-{{ $attendance->student->college ?? '' }}">{{ $attendance->student->college ?? '' }}</span>
-                            </div>
-                            <div class="flex-1 min-w-[40px] text-center">
-                                <span class="text-[10px] text-gray-600">Year: </span>{{ $attendance->student->year ?? '' }}
-                            </div>
-                        </div>
-                        <div class="flex flex-wrap items-start justify-between gap-1 text-xs leading-tight">
-                            <div class="min-w-0 flex-1">
-                                <span class="block text-gray-600 text-[10px] mb-0.5">Activity:</span>
-                                @php
-                                    $activityText = $attendance->activity ?? '';
-                                    $lower = strtolower($activityText);
-                                @endphp
-                                @if(str_contains($lower, 'wait for approval'))
-                                    <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-yellow-100 text-yellow-800 block break-words w-full">{{ $activityText }}</span>
-                                @elseif(str_starts_with($lower, 'stay&borrow:'))
-                                    @php
-                                        $parts = explode(':', $activityText);
-                                        $code = $parts[1] ?? '';
-                                    @endphp
-                                    <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-green-100 text-green-800 block break-words w-full">Stay&Borrow: {{ trim($code) }}</span>
-                                @elseif(str_contains($lower, 'borrow:'))
-                                    @php
-                                        $parts = explode(':', $activityText);
-                                        $code = $parts[1] ?? '';
-                                    @endphp
-                                    <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-green-100 text-green-800 block break-words w-full">Borrow: {{ trim($code) }}</span>
-                                @elseif(str_contains($lower, 'borrow book rejected'))
-                                    <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-red-100 text-red-800 block break-words w-full">{{ $activityText }}</span>
-                                @elseif(str_contains($lower, 'book returned'))
-                                    <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-blue-100 text-blue-800 block break-words w-full">{{ $activityText }}</span>
-                                @else
-                                    <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full text-gray-800 block break-words w-full">{{ $activityText }}</span>
-                                @endif
-                            </div>
-                            <div class="text-center flex-1 min-w-[45px]">
-                                <span class="block text-gray-600 text-[10px] mb-0.5">Login:</span>
-                                <div class="font-medium text-gray-900">{{ \Carbon\Carbon::parse($attendance->login)->setTimezone('Asia/Manila')->format('h:i A') }}</div>
-                            </div>
-                            <div class="text-center flex-1 min-w-[60px]">
-                                <span class="block text-gray-600 text-[10px] mb-0.5">Logout:</span>
-                                <div class="font-medium text-gray-900">{{ $attendance->logout ? \Carbon\Carbon::parse($attendance->logout)->setTimezone('Asia/Manila')->format('h:i A') : '-' }}</div>
-                                @if($attendance->logout)
-                                    <div class="text-emerald-600 text-[10px] hidden">Completed</div>
-                                @else
-                                    <div class="text-blue-600 text-[10px] hidden">Active</div>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                @empty
-                    <div class="text-center py-6 px-3">
-                        <div class="text-gray-400">
-                            <svg class="mx-auto h-8 w-8 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                            </svg>
-                            <p class="text-sm font-medium">No attendance logs yet</p>
-                            <p class="text-xs">Student activities will appear here as they occur</p>
-                        </div>
-                    </div>
-                @endforelse
-            </div>
         </div>
 
         <!-- Teachers & Visitors Attendance Table -->
         <div class="modern-table bg-white overflow-hidden mt-8">
-            <div class="flex flex-col sm:flex-row justify-between items-center p-6 border-b border-gray-100 bg-purple-50">
+            <div class="bg-blue-50 flex flex-col sm:flex-row justify-between items-center p-6 border-b border-gray-100">
                 <h3 class="text-xl font-medium text-gray-800">Teachers & Visitors Attendance</h3>
             </div>
 
-            <!-- Desktop Table -->
-             <div class="hidden lg:block">
-                 <div class="overflow-x-auto">
+            <!-- Responsive Table -->
+             <div class="block">
+                 <div class="overflow-x-auto table-container">
                      <div class="max-h-[400px] overflow-auto">
                          <table class="w-full">
                              <thead class="table-header sticky top-0 bg-white z-10">
@@ -555,27 +513,27 @@
                                                  $lower = strtolower($activityText);
                                              @endphp
                                              @if(str_contains($lower, 'wait for approval'))
-                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">{{ $activityText }}</span>
+                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 activity-tag">{{ $activityText }}</span>
                                              @elseif(str_starts_with($lower, 'stay&borrow:'))
                                                  @php
                                                      $parts = explode(':', $activityText);
                                                      $code = $parts[1] ?? '';
                                                  @endphp
-                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Stay&Borrow: {{ trim($code) }}</span>
+                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 activity-tag">Stay&Borrow: {{ trim($code) }}</span>
                                              @elseif(str_contains($lower, 'borrow:'))
                                                  @php
                                                      $parts = explode(':', $activityText);
                                                      $code = $parts[1] ?? '';
                                                  @endphp
-                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Borrow: {{ trim($code) }}</span>
+                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 activity-tag">Borrow: {{ trim($code) }}</span>
                                              @elseif(str_contains($lower, 'borrow book rejected'))
-                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">{{ $activityText }}</span>
+                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 activity-tag">{{ $activityText }}</span>
                                              @elseif(str_contains($lower, 'book returned'))
-                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">{{ $activityText }}</span>
+                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 activity-tag">{{ $activityText }}</span>
                                              @elseif(str_contains($lower, 'study'))
-                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Stay to Study</span>
+                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 activity-tag">Stay to Study</span>
                                              @else
-                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">{{ $activityText }}</span>
+                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 activity-tag">{{ $activityText }}</span>
                                              @endif
                                          </td>
                                          <td class="px-6 py-4">
@@ -605,95 +563,9 @@
                                  @endforelse
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Mobile/Tablet Cards -->
-            <div class="block lg:hidden space-y-1 px-3 pb-3">
-                @forelse($teacherAttendances as $attendance)
-                    <div class="bg-gray-50 rounded-md p-1 border border-gray-200">
-                        <div class="flex flex-wrap items-start justify-between gap-1 mb-0.5 text-xs leading-tight">
-                            <div class="flex items-start space-x-1 min-w-0 flex-1">
-                                <img src="{{ \App\Services\AvatarService::getProfilePictureUrl($attendance->teacherVisitor->user->profile_picture ?? null, ($attendance->teacherVisitor->fname ?? '') . ' ' . ($attendance->teacherVisitor->lname ?? ''), 44) }}"
-                                    alt="Profile Picture"
-                                    class="profile-img w-5 h-5 rounded-full flex-shrink-0 mt-0.5"
-                                    onerror="this.onerror=null; this.src='{{ asset('images/default-profile.png') }}'" />
-                                <div class="min-w-0 flex-1">
-                                    <div class="font-medium text-gray-900 break-words">{{ $attendance->teacherVisitor->lname ?? '' }}, {{ $attendance->teacherVisitor->fname ?? '' }}</div>
-                                    <div class="text-gray-500 break-words">ID: {{ $attendance->teacher_visitor_id }}</div>
-                                </div>
-                            </div>
-                            <div class="flex-1 min-w-[50px] text-center">
-                                <span class="px-0.5 py-0.5 inline-flex items-center font-medium rounded bg-blue-100 text-blue-700 flex-shrink-0">
-                                    <svg class="h-1.5 w-1.5 text-blue-400" fill="currentColor" viewBox="0 0 8 8">
-                                        <circle cx="4" cy="4" r="3" />
-                                    </svg>
-                                    {{ $attendance->teacherVisitor->role ?? 'Staff' }}
-                                </span>
-                            </div>
-                            <div class="flex-1 min-w-[60px] text-center">
-                                <span class="text-[10px] text-gray-600">Dept: </span>{{ $attendance->teacherVisitor->department ?? 'N/A' }}
-                            </div>
-                        </div>
-                        <div class="flex flex-wrap items-start justify-between gap-1 text-xs leading-tight">
-                            <div class="min-w-0 flex-1">
-                                <span class="block text-gray-600 text-[10px] mb-0.5">Activity:</span>
-                                @php
-                                    $activityText = $attendance->activity ?? '';
-                                    $lower = strtolower($activityText);
-                                @endphp
-                                @if(str_contains($lower, 'wait for approval'))
-                                    <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-yellow-100 text-yellow-800 block break-words w-full">{{ $activityText }}</span>
-                                @elseif(str_starts_with($lower, 'stay&borrow:'))
-                                    @php
-                                        $parts = explode(':', $activityText);
-                                        $code = $parts[1] ?? '';
-                                    @endphp
-                                    <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-green-100 text-green-800 block break-words w-full">Stay&Borrow: {{ trim($code) }}</span>
-                                @elseif(str_contains($lower, 'borrow:'))
-                                    @php
-                                        $parts = explode(':', $activityText);
-                                        $code = $parts[1] ?? '';
-                                    @endphp
-                                    <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-green-100 text-green-800 block break-words w-full">Borrow: {{ trim($code) }}</span>
-                                @elseif(str_contains($lower, 'borrow book rejected'))
-                                    <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-red-100 text-red-800 block break-words w-full">{{ $activityText }}</span>
-                                @elseif(str_contains($lower, 'book returned'))
-                                    <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-blue-100 text-blue-800 block break-words w-full">{{ $activityText }}</span>
-                                @elseif(str_contains($lower, 'study'))
-                                    <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-blue-100 text-blue-800 block break-words w-full">Stay to Study</span>
-                                @else
-                                    <span class="px-1 inline-flex text-xs leading-3 font-semibold rounded-full bg-gray-100 text-gray-800 block break-words w-full">{{ $activityText }}</span>
-                                @endif
-                            </div>
-                            <div class="text-center flex-1 min-w-[45px]">
-                                <span class="block text-gray-600 text-[10px] mb-0.5">Login:</span>
-                                <div class="font-medium text-gray-900">{{ \Carbon\Carbon::parse($attendance->login)->setTimezone('Asia/Manila')->format('h:i A') }}</div>
-                            </div>
-                            <div class="text-center flex-1 min-w-[60px]">
-                                <span class="block text-gray-600 text-[10px] mb-0.5">Logout:</span>
-                                <div class="font-medium text-gray-900">{{ $attendance->logout ? \Carbon\Carbon::parse($attendance->logout)->setTimezone('Asia/Manila')->format('h:i A') : '-' }}</div>
-                                @if($attendance->logout)
-                                    <div class="text-emerald-600 text-[10px] hidden">Completed</div>
-                                @else
-                                    <div class="text-blue-600 text-[10px] hidden">Active</div>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                @empty
-                    <div class="text-center py-6 px-3">
-                        <div class="text-gray-400">
-                            <svg class="mx-auto h-8 w-8 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                            </svg>
-                            <p class="text-sm font-medium">No teacher attendance records yet</p>
-                            <p class="text-xs">Teacher activities will appear here as they occur</p>
-                        </div>
-                    </div>
-                @endforelse
-            </div>
+                     </div>
+                 </div>
+             </div>
         </div>
         </section>
     </div>
@@ -745,32 +617,32 @@
                     .replace(/'/g, "&#039;");
             }
 
-            const getActivityBadge = (text) => {
+            const getActivityTag = (text) => {
                 if (!text) return '';
                 const lower = String(text).toLowerCase();
                 if (lower.includes('wait for approval')) {
-                    return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">${escapeHtml(text)}</span>`;
+                    return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 activity-tag">${escapeHtml(text)}</span>`;
                 }
                 if (lower.startsWith('stay&borrow:')) {
                     const parts = String(text).split(':');
                     const code = (parts[1] || '').trim();
-                    return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Stay&Borrow: ${escapeHtml(code)}</span>`;
+                    return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 activity-tag">Stay&Borrow: ${escapeHtml(code)}</span>`;
                 }
                 if (lower.startsWith('borrow:')) {
                     const parts = String(text).split(':');
                     const code = (parts[1] || '').trim();
-                    return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Borrow: ${escapeHtml(code)}</span>`;
+                    return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 activity-tag">Borrow: ${escapeHtml(code)}</span>`;
                 }
                 if (lower.includes('borrow book rejected')) {
-                    return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">${escapeHtml(text)}</span>`;
+                    return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 activity-tag">${escapeHtml(text)}</span>`;
                 }
                 if (lower.includes('book returned')) {
-                    return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">${escapeHtml(text)}</span>`;
+                    return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 activity-tag">${escapeHtml(text)}</span>`;
                 }
                 if (lower.includes('study')) {
-                    return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Stay to Study</span>`;
+                    return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 activity-tag">Stay to Study</span>`;
                 }
-                return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">${escapeHtml(text)}</span>`;
+                return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 activity-tag">${escapeHtml(text)}</span>`;
             };
 
             // Update student table
@@ -810,7 +682,10 @@
                         const profilePic = record.profile_picture || defaultProfile;
 
                         const row = document.createElement('tr');
-                        row.className = 'table-row';
+                        row.className = 'table-row attendance-row';
+                        row.dataset.college = studentCollege;
+                        row.dataset.year = studentYear;
+                        row.dataset.activity = record.activity || '';
                         row.innerHTML = `
                             <td class="px-6 py-4 font-semibold text-gray-800 text-sm" title="Student ID: ${studentId}">${studentId || '<span class="text-gray-400">N/A</span>'}</td>
                             <td class="px-6 py-4">
@@ -822,10 +697,10 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4">
-                                ${studentCollege ? `<span class="college-${studentCollege}">${escapeHtml(studentCollege)}</span>` : '<span class="text-gray-400">N/A</span>'}
+                                ${studentCollege ? `<span class="college-${studentCollege} college-badge">${escapeHtml(studentCollege)}</span>` : '<span class="text-gray-400">N/A</span>'}
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-600">${studentYear || ''}</td>
-                            <td class="px-6 py-4">${getActivityBadge(record.activity)}</td>
+                            <td class="px-6 py-4">${getActivityTag(record.activity)}</td>
                             <td class="px-6 py-4">
                                 <div class="text-sm font-medium text-gray-900">${timeIn}</div>
                             </td>
@@ -905,7 +780,7 @@
                                     ${escapeHtml(teacherDepartment)}
                                 </span>
                             </td>
-                            <td class="px-6 py-4">${getActivityBadge(record.activity)}</td>
+                            <td class="px-6 py-4">${getActivityTag(record.activity)}</td>
                             <td class="px-6 py-4">
                                 <div class="text-sm font-medium text-gray-900">${timeIn}</div>
                             </td>
@@ -995,6 +870,7 @@
                         table.style.transition = 'opacity 0.3s ease';
                     });
 
+                    console.log('Updating tables with student data:', studentData.length, 'teacher data:', teacherData.length);
                     updateStudentTable(studentData);
                     updateTeacherTable(teacherData);
 
@@ -1013,6 +889,7 @@
             };
 
             // Initial load and poll every 2 seconds for smoother updates
+            console.log('Starting initial load and polling...');
             refreshAttendanceTable();
             setInterval(refreshAttendanceTable, 2000);
         })();

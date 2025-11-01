@@ -18,6 +18,10 @@
                 <span class="material-symbols-outlined">group</span>
                 <span class="ml-3">Students</span>
             </a>
+            <a href="{{ route('admin.profile') }}" class="flex items-center p-2 rounded-lg hover:bg-indigo-50 text-gray-800">
+                <span class="material-symbols-outlined">person</span>
+                <span class="ml-3">Profile</span>
+            </a>
             <a href="{{ route('admin.logout') }}" class="flex items-center p-2 rounded-lg hover:bg-red-50 text-red-600">
                 <span class="material-symbols-outlined">logout</span>
                 <span class="ml-3">Logout</span>

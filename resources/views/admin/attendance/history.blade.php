@@ -29,14 +29,14 @@
     </style>
 </head>
 <body class="bg-gray-50" x-data="{ sidebarExpanded: true }">
-    <div class="content-area flex-1" :class="{'ml-16': !sidebarExpanded, 'ml-64': sidebarExpanded}">
+    <div id="main-content" class="transition-all duration-500 ml-64 main-content">
         <x-admin-nav-bar />
 
 
         <!-- Main Content -->
-        <div class="container gap-2 mx-auto px-4 py-8">
+        <div class="min-h-screen">
             <!-- Header -->
-            <div class="flex justify-between items-center mb-8">
+            <div class="flex justify-between items-center mb-8 mx-10 mt-8">
                 <div>
                     <h1 class="text-2xl font-semibold text-gray-900">Attendance History</h1>
                 </div>
@@ -44,7 +44,7 @@
             </div>
 
             <!-- Filters -->
-            <div class="shadcn-card p-6 mb-8">
+            <div class="shadcn-card p-6 mb-8 mx-8">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
@@ -86,7 +86,7 @@
             </div>
 
             <!-- History Table -->
-            <div class="shadcn-card overflow-hidden">
+            <div class="shadcn-card overflow-hidden mx-8">
                 <div class="overflow-x-auto">
                     <table id="attendanceTable" class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">

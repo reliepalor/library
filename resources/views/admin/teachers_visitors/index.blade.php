@@ -67,12 +67,13 @@
             }
         </style>
     </head>
-    <body class="font-sans antialiased" x-data="{ sidebarExpanded: window.innerWidth > 768 }" @resize.window="sidebarExpanded = window.innerWidth > 768">
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-100 flex">
+    <body class="font-sans antialiased">
+        <div id="main-content" class="transition-all duration-500 ml-64 main-content">
+
             <x-admin-nav-bar />
             
             <!-- Content Area -->
-            <div class="content-area flex-1" :class="{'ml-16': !sidebarExpanded, 'ml-64': sidebarExpanded}">
+            <div class="min-h-screen">
                 <main class="max-w-full mx-auto py-6 px-4 sm:px-6 lg:px-8">
                     <div class="flex justify-center border border-gray-200 shadow-sm py-8 bg-white rounded-lg max-w-9xl mx-auto space-y-6 mt-6">
                         <div class="w-full max-w-7xl space-y-6">
@@ -224,7 +225,7 @@
                                         <tbody class="divide-y divide-gray-100" id="teacher-visitor-table-body">
                                             @foreach ($teachersVisitors as $teacherVisitor)
                                             <tr class="hover:bg-gray-50" data-department="{{ $teacherVisitor->department }}">
-                                                <td class="px-2 py-4 w-12"><input type="checkbox" class="select-teacher-visitor" value="{{ $teacherVisitor->id }}" data-name="{{ $teacherVisitor->last_name }}, {{ $teacherVisitor->first_name }}{{ $teacherVisitor->middle_name ? ' ' . $teacherVisitor->middle_name . '.' : '' }}" data-role="{{ $teacherVisitor->role }}" data-qr="{{ $teacherVisitor->qr_code_path ? asset('storage/' . $teacherVisitor->qr_code_path) : '' }}"></td>
+                                                <td class="px-2 py-4 w-12"><input type="checkbox" class="select-teacher-visitor" value="{{ $teacherVisitor->id }}" data-name="{{ $teacherVisitor->last_name }}, {{ $teacherVisitor->first_name }}{{ $teacherVisitor->middle_name ? ' ' . $teacherVisitor->middle_name . '.' : '' }}" data-role="{{ $teacherVisitor->role }}" data-department="{{ $teacherVisitor->department }}" data-qr="{{ $teacherVisitor->qr_code_path ? asset('storage/' . $teacherVisitor->qr_code_path) : '' }}"></td>
                                                 <td class="px-6 py-4">
                                                     <span class="px-3 py-1.5 inline-flex items-center text-xs font-medium rounded-full
                                                         @if($teacherVisitor->role === 'teacher') bg-blue-100 text-blue-800
@@ -618,6 +619,7 @@
                     let teachersVisitors = selected.map(cb => ({
                         name: cb.getAttribute('data-name') || '',
                         role: cb.getAttribute('data-role') || '',
+                        department: cb.getAttribute('data-department') || '',
                         qr: cb.getAttribute('data-qr') || '',
                     }));
 
@@ -648,7 +650,7 @@
 
                         const roleEl = document.createElement('div');
                         roleEl.className = 'role text-gray-700 text-sm mb-1 text-center';
-                        roleEl.textContent = tv.role ? tv.role.charAt(0).toUpperCase() + tv.role.slice(1) : '';
+                        roleEl.textContent = tv.department;
 
                         wrap.appendChild(img);
                         wrap.appendChild(nameEl);

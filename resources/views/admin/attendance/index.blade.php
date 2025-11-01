@@ -44,14 +44,14 @@
     <script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
     <script>window.assetBaseUrl = "{{ asset('') }}";</script>
 </head>
-<body class="bg-gray-50" data-attendance-page="unified">
-    <div class="flex h-screen" x-data="{ sidebarExpanded: window.innerWidth > 768 }" @resize.window="sidebarExpanded = window.innerWidth > 768">
+<body class="bg-gray-50 antialiased" data-attendance-page="unified">
+    <div id="main-content" class="transition-all duration-500 ml-64 main-content">
         <div class="not-fullscreen">
             <x-admin-nav-bar />
         </div>
         
         <!-- Main Content -->
-        <div class="main-content flex-1 overflow-auto" :class="sidebarExpanded ? 'sidebar-expanded' : 'sidebar-collapsed'">
+        <div class="min-h-screen ">
             <div class="container mx-auto px-4 py-8">
                 <div id="fullscreen-section" class="fullscreen transition-all duration-500 ease-in-out bg-white overflow-auto relative px-5 py-2 rounded-lg">
                     
@@ -204,7 +204,12 @@
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 100px;">Student ID</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 150px;">Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 200px;">
+                                            <div class="flex items-center space-x-3">
+                                                <div class="w-10 h-10"></div>
+                                                <span>Name</span>
+                                            </div>
+                                        </th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 120px;">College</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 80px;">Gender</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 150px;">Activity</th>
@@ -242,7 +247,12 @@
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Profile</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                            <div class="flex items-center space-x-3">
+                                                <div class="w-10 h-10"></div>
+                                                <span>Name</span>
+                                            </div>
+                                        </th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Department</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gender</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Activity</th>
@@ -262,22 +272,20 @@
                                                     {{ ucfirst($attendance['role'] ?? 'staff') }}
                                                 </span>
                                             </td>
-                                            <td class="px-6 py-4">
-                                                <div class="flex items-center">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex items-center space-x-3">
                                                 <img src="{{ \App\Services\AvatarService::getProfilePictureUrl($attendance['profile_picture'], $attendance['name'], 100) }}"
-                                                     class="h-10 w-10 rounded-full object-cover mr-3"
+                                                     class="w-10 h-10 rounded-full object-cover shadow-sm ring-1 ring-blue-100"
                                                      alt="{{ $attendance['name'] }}"
                                                      onerror="this.onerror=null; this.src='{{ asset('images/default-profile.png') }}'">
-                                                    <div>
-                                                        <div class="text-sm font-medium text-gray-900">{{ $attendance['name'] }}</div>
-                                                        <div class="text-xs text-gray-500">{{ $attendance['identifier'] ?? 'N/A' }}</div>
-                                                    </div>
-                                                </div>
+                                                <span class="font-medium">{{ $attendance['name'] }}</span>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
                                                     {{ $attendance['college_or_dept'] }}
                                                 </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {{ $attendance['gender'] ?? 'N/A' }}
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                 {{ $attendance['gender'] ?? 'N/A' }}
@@ -295,7 +303,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="8" class="px-6 py-4 text-center text-sm text-gray-500">No teacher attendance records for today</td>
+                                            <td colspan="9" class="px-6 py-4 text-center text-sm text-gray-500">No teacher attendance records for today</td>
                                         </tr>
                                     @endforelse
                                 </tbody>

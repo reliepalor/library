@@ -25,12 +25,12 @@
         }
     </style>
 </head>
-<body class="font-sans antialiased" x-data="{ sidebarExpanded: window.innerWidth > 768 }" @resize.window="sidebarExpanded = window.innerWidth > 768">
-    <div class="min-h-screen bg-gray-100 flex">
+<body class="font-sans antialiased">
+    <div id="main-content" class="transition-all duration-500 ml-64 main-content bg-gray-100 flex">
         <x-admin-nav-bar/>
 
         <!-- Content Area -->
-        <div class="content-area flex-1 ml-16" :class="{'ml-16': !sidebarExpanded, 'ml-64': sidebarExpanded}">
+        <div class="min-h-screen w-full">
             <main class="max-w-full mx-auto py-6 px-4 sm:px-6 lg:px-8">
                 <!-- Header -->
                 <div class="bg-white shadow-sm rounded-lg mb-6">
@@ -46,345 +46,345 @@
                                 </button>
                             </div>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="fixed top-4 right-4 z-[60] hidden">
-        <div id="toastInner" class="flex items-center gap-3 px-4 py-3 rounded shadow-lg bg-green-600 text-white min-w-[250px] relative overflow-hidden">
-            <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-            <span id="toastMessage" class="flex-1">Success</span>
-            <button onclick="hideToast()" class="ml-2 text-white hover:text-gray-200 flex-shrink-0">
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-            <!-- Progress Bar -->
-            <div id="toastProgress" class="absolute bottom-0 left-0 h-1 bg-white bg-opacity-30 w-full">
-                <div id="toastProgressBar" class="h-full bg-white w-full"></div>
-            </div>
-        </div>
-    </div>
+                            <!-- Toast Notification -->
+                            <div id="toast" class="fixed top-4 right-4 z-[60] hidden">
+                                <div id="toastInner" class="flex items-center gap-3 px-4 py-3 rounded shadow-lg bg-green-600 text-white min-w-[250px] relative overflow-hidden">
+                                    <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    <span id="toastMessage" class="flex-1">Success</span>
+                                    <button onclick="hideToast()" class="ml-2 text-white hover:text-gray-200 flex-shrink-0">
+                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                    <!-- Progress Bar -->
+                                    <div id="toastProgress" class="absolute bottom-0 left-0 h-1 bg-white bg-opacity-30 w-full">
+                                        <div id="toastProgressBar" class="h-full bg-white w-full"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-<!-- Main Content -->
-<div class="max-w-7xl mx-auto">
-    <!-- Borrow Requests Section -->
-    <div id="requestsSection" class="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div class="p-6 border-b border-gray-200">
-            <h2 class="text-xl font-semibold text-gray-800">Pending Borrow Requests</h2>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Borrower</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Book</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requested At</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($requests as $request)
-                        <tr class="hover:bg-gray-50 transition-colors duration-150">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center space-x-3">
-                                    <div>
-                                        <div class="text-sm font-medium text-gray-900">
-                                            @php
-                                                if ($request->user_type === 'student' && $request->student) {
-                                                    echo $request->student->fname . ' ' . $request->student->lname;
-                                                } elseif (in_array($request->user_type, ['teacher', 'teacher_visitor'])) {
-                                                    // Try to find by email first (new format), then by ID (old format)
-                                                    $tv = \App\Models\TeacherVisitor::where('email', $request->student_id)->first();
-                                                    if (!$tv && is_numeric($request->student_id)) {
-                                                        $tv = \App\Models\TeacherVisitor::find($request->student_id);
+                <!-- Main Content -->
+                <div class="w-full mx-auto">
+                    <!-- Borrow Requests Section -->
+                    <div id="requestsSection" class="bg-white rounded-xl shadow-sm overflow-hidden">
+                        <div class="p-6 border-b border-gray-200">
+                            <h2 class="text-xl font-semibold text-gray-800">Pending Borrow Requests</h2>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Borrower</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Book</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requested At</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @forelse($requests as $request)
+                                        <tr class="hover:bg-gray-50 transition-colors duration-150">
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center space-x-3">
+                                                    <div>
+                                                        <div class="text-sm font-medium text-gray-900">
+                                                            @php
+                                                                if ($request->user_type === 'student' && $request->student) {
+                                                                    echo $request->student->fname . ' ' . $request->student->lname;
+                                                                } elseif (in_array($request->user_type, ['teacher', 'teacher_visitor'])) {
+                                                                    // Try to find by email first (new format), then by ID (old format)
+                                                                    $tv = \App\Models\TeacherVisitor::where('email', $request->student_id)->first();
+                                                                    if (!$tv && is_numeric($request->student_id)) {
+                                                                        $tv = \App\Models\TeacherVisitor::find($request->student_id);
+                                                                    }
+                                                                    echo $tv ? $tv->fname . ' ' . $tv->lname : '<span class="text-red-500">Borrower not found</span>';
+                                                                } else {
+                                                                    echo '<span class="text-red-500">Borrower not found</span>';
+                                                                }
+                                                            @endphp
+                                                        </div>
+                                                        <div class="text-sm text-gray-500">
+                                                            @php
+                                                                if ($request->user_type === 'student' && $request->student) {
+                                                                    echo $request->student->student_id;
+                                                                } elseif (in_array($request->user_type, ['teacher', 'teacher_visitor'])) {
+                                                                    // Try to find by email first (new format), then by ID (old format)
+                                                                    $tv = \App\Models\TeacherVisitor::where('email', $request->student_id)->first();
+                                                                    if (!$tv && is_numeric($request->student_id)) {
+                                                                        $tv = \App\Models\TeacherVisitor::find($request->student_id);
+                                                                    }
+                                                                    echo $tv ? $tv->email : '<span class="text-red-500">ID: ' . $request->student_id . '</span>';
+                                                                } else {
+                                                                    echo '<span class="text-red-500">ID: ' . $request->student_id . '</span>';
+                                                                }
+                                                            @endphp
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="mt-1">
+                                                    @if($request->user_type === 'student')
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                            <svg class="mr-1.5 h-2 w-2 text-blue-400" fill="currentColor" viewBox="0 0 8 8">
+                                                                <circle cx="4" cy="4" r="3" />
+                                                            </svg>
+                                                            Student
+                                                        </span>
+                                                    @elseif(in_array($request->user_type, ['teacher', 'teacher_visitor']))
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                                            <svg class="mr-1.5 h-2 w-2 text-purple-400" fill="currentColor" viewBox="0 0 8 8">
+                                                                <circle cx="4" cy="4" r="3" />
+                                                            </svg>
+                                                            Teacher/Visitor
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                @php
+                                                    $reservation = null;
+                                                    if ($request->user_type === 'student') {
+                                                        $reservation = \App\Models\Reservation::where('book_id', $request->book_id)
+                                                            ->where('student_id', $request->student_id)
+                                                            ->whereNull('teacher_visitor_email')
+                                                            ->where('status', 'active')
+                                                            ->latest('reserved_at')
+                                                            ->first();
+                                                    } elseif (in_array($request->user_type, ['teacher', 'teacher_visitor'])) {
+                                                        // For teacher/visitor, check both email and ID formats
+                                                        $reservation = \App\Models\Reservation::where('book_id', $request->book_id)
+                                                            ->where(function($q) use ($request) {
+                                                                $q->where('teacher_visitor_email', $request->student_id);
+                                                                if (is_numeric($request->student_id)) {
+                                                                    $tv = \App\Models\TeacherVisitor::find($request->student_id);
+                                                                    if ($tv) {
+                                                                        $q->orWhere('teacher_visitor_email', $tv->email);
+                                                                    }
+                                                                }
+                                                            })
+                                                            ->where('status', 'active')
+                                                            ->latest('reserved_at')
+                                                            ->first();
                                                     }
-                                                    echo $tv ? $tv->fname . ' ' . $tv->lname : '<span class="text-red-500">Borrower not found</span>';
-                                                } else {
-                                                    echo '<span class="text-red-500">Borrower not found</span>';
-                                                }
-                                            @endphp
-                                        </div>
-                                        <div class="text-sm text-gray-500">
-                                            @php
-                                                if ($request->user_type === 'student' && $request->student) {
-                                                    echo $request->student->student_id;
-                                                } elseif (in_array($request->user_type, ['teacher', 'teacher_visitor'])) {
-                                                    // Try to find by email first (new format), then by ID (old format)
-                                                    $tv = \App\Models\TeacherVisitor::where('email', $request->student_id)->first();
-                                                    if (!$tv && is_numeric($request->student_id)) {
-                                                        $tv = \App\Models\TeacherVisitor::find($request->student_id);
+                                                @endphp
+                                                @if($reservation)
+                                                    <div class="mt-1">
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                            <svg class="mr-1.5 h-2 w-2 text-yellow-400" fill="currentColor" viewBox="0 0 8 8">
+                                                                <circle cx="4" cy="4" r="3" />
+                                                            </svg>
+                                                            Reserved at {{ $reservation->reserved_at->setTimezone('Asia/Manila')->format('M j, Y h:i A') }}
+                                                        </span>
+                                                    </div>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm font-medium text-gray-900">{{ $request->book->name }}</div>
+                                                <div class="text-sm text-gray-500">{{ $request->book->book_code }}</div>
+                                                @php
+                                                    $reservation2 = null;
+                                                    if ($request->user_type === 'student') {
+                                                        $reservation2 = \App\Models\Reservation::where('book_id', $request->book_id)
+                                                            ->where('student_id', $request->student_id)
+                                                            ->whereNull('teacher_visitor_email')
+                                                            ->where('status', 'active')
+                                                            ->latest('reserved_at')
+                                                            ->first();
+                                                    } elseif (in_array($request->user_type, ['teacher', 'teacher_visitor'])) {
+                                                        // For teacher/visitor, check both email and ID formats
+                                                        $reservation2 = \App\Models\Reservation::where('book_id', $request->book_id)
+                                                            ->where(function($q) use ($request) {
+                                                                $q->where('teacher_visitor_email', $request->student_id);
+                                                                if (is_numeric($request->student_id)) {
+                                                                    $tv = \App\Models\TeacherVisitor::find($request->student_id);
+                                                                    if ($tv) {
+                                                                        $q->orWhere('teacher_visitor_email', $tv->email);
+                                                                    }
+                                                                }
+                                                            })
+                                                            ->where('status', 'active')
+                                                            ->latest('reserved_at')
+                                                            ->first();
                                                     }
-                                                    echo $tv ? $tv->email : '<span class="text-red-500">ID: ' . $request->student_id . '</span>';
-                                                } else {
-                                                    echo '<span class="text-red-500">ID: ' . $request->student_id . '</span>';
-                                                }
-                                            @endphp
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="mt-1">
-                                    @if($request->user_type === 'student')
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                            <svg class="mr-1.5 h-2 w-2 text-blue-400" fill="currentColor" viewBox="0 0 8 8">
-                                                <circle cx="4" cy="4" r="3" />
-                                            </svg>
-                                            Student
-                                        </span>
-                                    @elseif(in_array($request->user_type, ['teacher', 'teacher_visitor']))
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
-                                            <svg class="mr-1.5 h-2 w-2 text-purple-400" fill="currentColor" viewBox="0 0 8 8">
-                                                <circle cx="4" cy="4" r="3" />
-                                            </svg>
-                                            Teacher/Visitor
-                                        </span>
-                                    @endif
-                                </div>
-                                @php
-                                    $reservation = null;
-                                    if ($request->user_type === 'student') {
-                                        $reservation = \App\Models\Reservation::where('book_id', $request->book_id)
-                                            ->where('student_id', $request->student_id)
-                                            ->whereNull('teacher_visitor_email')
-                                            ->where('status', 'active')
-                                            ->latest('reserved_at')
-                                            ->first();
-                                    } elseif (in_array($request->user_type, ['teacher', 'teacher_visitor'])) {
-                                        // For teacher/visitor, check both email and ID formats
-                                        $reservation = \App\Models\Reservation::where('book_id', $request->book_id)
-                                            ->where(function($q) use ($request) {
-                                                $q->where('teacher_visitor_email', $request->student_id);
-                                                if (is_numeric($request->student_id)) {
-                                                    $tv = \App\Models\TeacherVisitor::find($request->student_id);
-                                                    if ($tv) {
-                                                        $q->orWhere('teacher_visitor_email', $tv->email);
-                                                    }
-                                                }
-                                            })
-                                            ->where('status', 'active')
-                                            ->latest('reserved_at')
-                                            ->first();
-                                    }
-                                @endphp
-                                @if($reservation)
-                                    <div class="mt-1">
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                                            <svg class="mr-1.5 h-2 w-2 text-yellow-400" fill="currentColor" viewBox="0 0 8 8">
-                                                <circle cx="4" cy="4" r="3" />
-                                            </svg>
-                                            Reserved at {{ $reservation->reserved_at->setTimezone('Asia/Manila')->format('M j, Y h:i A') }}
-                                        </span>
-                                    </div>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">{{ $request->book->name }}</div>
-                                <div class="text-sm text-gray-500">{{ $request->book->book_code }}</div>
-                                @php
-                                    $reservation2 = null;
-                                    if ($request->user_type === 'student') {
-                                        $reservation2 = \App\Models\Reservation::where('book_id', $request->book_id)
-                                            ->where('student_id', $request->student_id)
-                                            ->whereNull('teacher_visitor_email')
-                                            ->where('status', 'active')
-                                            ->latest('reserved_at')
-                                            ->first();
-                                    } elseif (in_array($request->user_type, ['teacher', 'teacher_visitor'])) {
-                                        // For teacher/visitor, check both email and ID formats
-                                        $reservation2 = \App\Models\Reservation::where('book_id', $request->book_id)
-                                            ->where(function($q) use ($request) {
-                                                $q->where('teacher_visitor_email', $request->student_id);
-                                                if (is_numeric($request->student_id)) {
-                                                    $tv = \App\Models\TeacherVisitor::find($request->student_id);
-                                                    if ($tv) {
-                                                        $q->orWhere('teacher_visitor_email', $tv->email);
-                                                    }
-                                                }
-                                            })
-                                            ->where('status', 'active')
-                                            ->latest('reserved_at')
-                                            ->first();
-                                    }
-                                @endphp
-                                @if($reservation2)
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 mt-1">
-                                        <svg class="mr-1.5 h-2 w-2 text-yellow-400" fill="currentColor" viewBox="0 0 8 8">
-                                            <circle cx="4" cy="4" r="3" />
-                                        </svg>
-                                        Reserved at {{ $reservation2->reserved_at->setTimezone('Asia/Manila')->format('M j, Y h:i A') }}
-                                    </span>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ $request->created_at->setTimezone('Asia/Manila')->format('M d, Y h:i A') }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <div class="flex space-x-3">
-                                    <form action="{{ route('admin.borrow.requests.approve', $request->id) }}" method="POST" class="inline">
-                                        @csrf
-                                        <button type="submit" class="text-green-600 hover:text-green-900">Approve</button>
-                                    </form>
-                                    <button onclick="showRejectModal({{ $request->id }})" class="text-red-600 hover:text-red-900">Reject</button>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="4" class="px-6 py-4 text-center text-gray-500">No pending borrow requests</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
+                                                @endphp
+                                                @if($reservation2)
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 mt-1">
+                                                        <svg class="mr-1.5 h-2 w-2 text-yellow-400" fill="currentColor" viewBox="0 0 8 8">
+                                                            <circle cx="4" cy="4" r="3" />
+                                                        </svg>
+                                                        Reserved at {{ $reservation2->reserved_at->setTimezone('Asia/Manila')->format('M j, Y h:i A') }}
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {{ $request->created_at->setTimezone('Asia/Manila')->format('M d, Y h:i A') }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <div class="flex space-x-3">
+                                                    <form action="{{ route('admin.borrow.requests.approve', $request->id) }}" method="POST" class="inline">
+                                                        @csrf
+                                                        <button type="submit" class="text-green-600 hover:text-green-900">Approve</button>
+                                                    </form>
+                                                    <button onclick="showRejectModal({{ $request->id }})" class="text-red-600 hover:text-red-900">Reject</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="px-6 py-4 text-center text-gray-500">No pending borrow requests</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
-    <!-- Borrowed Books Section -->
-    <div id="borrowedSection" class="bg-white rounded-xl shadow-sm overflow-hidden hidden mt-6">
-        <div class="p-6 border-b border-gray-200">
-            <h2 class="text-xl font-semibold text-gray-800">Borrowed Books</h2>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Book</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Borrowed At</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($borrowedBooks as $book)
-                        <tr class="hover:bg-gray-50 transition-colors duration-150">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center space-x-3">
-                                    <div>
-                                        <div class="text-sm font-medium text-gray-900">
-                                            @if($book->user_type === 'student' && $book->student)
-                                                {{ $book->student->fname }} {{ $book->student->lname }}
-                                            @elseif(in_array($book->user_type, ['teacher', 'teacher_visitor']))
+                    <!-- Borrowed Books Section -->
+                    <div id="borrowedSection" class="bg-white rounded-xl shadow-sm overflow-hidden hidden mt-6">
+                        <div class="p-6 border-b border-gray-200">
+                            <h2 class="text-xl font-semibold text-gray-800">Borrowed Books</h2>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Book</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Borrowed At</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @forelse($borrowedBooks as $book)
+                                        <tr class="hover:bg-gray-50 transition-colors duration-150">
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center space-x-3">
+                                                    <div>
+                                                        <div class="text-sm font-medium text-gray-900">
+                                                            @if($book->user_type === 'student' && $book->student)
+                                                                {{ $book->student->fname }} {{ $book->student->lname }}
+                                                            @elseif(in_array($book->user_type, ['teacher', 'teacher_visitor']))
+                                                                @php
+                                                                    // Try to find by email first (new format), then by ID (old format)
+                                                                    $tvb = \App\Models\TeacherVisitor::where('email', $book->student_id)->first();
+                                                                    if (!$tvb && is_numeric($book->student_id)) {
+                                                                        $tvb = \App\Models\TeacherVisitor::find($book->student_id);
+                                                                    }
+                                                                @endphp
+                                                                {!! $tvb ? $tvb->fname . ' ' . $tvb->lname : '<span class="text-red-500">Unknown Borrower</span>' !!}
+                                                            @else
+                                                                <span class="text-red-500">Unknown Borrower</span>
+                                                            @endif
+                                                        </div>
+                                                        <div class="text-sm text-gray-500">
+                                                            @if($book->user_type === 'student' && $book->student)
+                                                                {{ $book->student->student_id }}
+                                                            @elseif(in_array($book->user_type, ['teacher', 'teacher_visitor']))
+                                                                @php
+                                                                    // Try to find by email first (new format), then by ID (old format)
+                                                                    $tvb = \App\Models\TeacherVisitor::where('email', $book->student_id)->first();
+                                                                    if (!$tvb && is_numeric($book->student_id)) {
+                                                                        $tvb = \App\Models\TeacherVisitor::find($book->student_id);
+                                                                    }
+                                                                @endphp
+                                                                {!! $tvb ? $tvb->email : '<span class="text-red-500">ID: ' . $book->student_id . '</span>' !!}
+                                                            @else
+                                                                <span class="text-red-500">ID: {{ $book->student_id }}</span>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="mt-1">
+                                                    @if($book->user_type === 'student')
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                            <svg class="mr-1.5 h-2 w-2 text-blue-400" fill="currentColor" viewBox="0 0 8 8">
+                                                                <circle cx="4" cy="4" r="3" />
+                                                            </svg>
+                                                            Student
+                                                        </span>
+                                                    @elseif(in_array($book->user_type, ['teacher', 'teacher_visitor']))
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                                            <svg class="mr-1.5 h-2 w-2 text-purple-400" fill="currentColor" viewBox="0 0 8 8">
+                                                                <circle cx="4" cy="4" r="3" />
+                                                            </svg>
+                                                            Teacher/Visitor
+                                                        </span>
+                                                    @endif
+                                                </div>
                                                 @php
-                                                    // Try to find by email first (new format), then by ID (old format)
-                                                    $tvb = \App\Models\TeacherVisitor::where('email', $book->student_id)->first();
-                                                    if (!$tvb && is_numeric($book->student_id)) {
-                                                        $tvb = \App\Models\TeacherVisitor::find($book->student_id);
+                                                    $borrowedReservation = null;
+                                                    if ($book->user_type === 'student') {
+                                                        $borrowedReservation = \App\Models\Reservation::where('book_id', $book->book_id)
+                                                            ->where('student_id', $book->student_id)
+                                                            ->whereNull('teacher_visitor_email')
+                                                            ->where('status', 'active')
+                                                            ->latest('reserved_at')
+                                                            ->first();
+                                                    } elseif (in_array($book->user_type, ['teacher', 'teacher_visitor'])) {
+                                                        // For teacher/visitor, check both email and ID formats
+                                                        $borrowedReservation = \App\Models\Reservation::where('book_id', $book->book_id)
+                                                            ->where(function($q) use ($book) {
+                                                                $q->where('teacher_visitor_email', $book->student_id);
+                                                                if (is_numeric($book->student_id)) {
+                                                                    $tv = \App\Models\TeacherVisitor::find($book->student_id);
+                                                                    if ($tv) {
+                                                                        $q->orWhere('teacher_visitor_email', $tv->email);
+                                                                    }
+                                                                }
+                                                            })
+                                                            ->where('status', 'active')
+                                                            ->latest('reserved_at')
+                                                            ->first();
                                                     }
                                                 @endphp
-                                                {!! $tvb ? $tvb->fname . ' ' . $tvb->lname : '<span class="text-red-500">Unknown Borrower</span>' !!}
-                                            @else
-                                                <span class="text-red-500">Unknown Borrower</span>
-                                            @endif
-                                        </div>
-                                        <div class="text-sm text-gray-500">
-                                            @if($book->user_type === 'student' && $book->student)
-                                                {{ $book->student->student_id }}
-                                            @elseif(in_array($book->user_type, ['teacher', 'teacher_visitor']))
-                                                @php
-                                                    // Try to find by email first (new format), then by ID (old format)
-                                                    $tvb = \App\Models\TeacherVisitor::where('email', $book->student_id)->first();
-                                                    if (!$tvb && is_numeric($book->student_id)) {
-                                                        $tvb = \App\Models\TeacherVisitor::find($book->student_id);
-                                                    }
-                                                @endphp
-                                                {!! $tvb ? $tvb->email : '<span class="text-red-500">ID: ' . $book->student_id . '</span>' !!}
-                                            @else
-                                                <span class="text-red-500">ID: {{ $book->student_id }}</span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="mt-1">
-                                    @if($book->user_type === 'student')
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                            <svg class="mr-1.5 h-2 w-2 text-blue-400" fill="currentColor" viewBox="0 0 8 8">
-                                                <circle cx="4" cy="4" r="3" />
-                                            </svg>
-                                            Student
-                                        </span>
-                                    @elseif(in_array($book->user_type, ['teacher', 'teacher_visitor']))
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
-                                            <svg class="mr-1.5 h-2 w-2 text-purple-400" fill="currentColor" viewBox="0 0 8 8">
-                                                <circle cx="4" cy="4" r="3" />
-                                            </svg>
-                                            Teacher/Visitor
-                                        </span>
-                                    @endif
-                                </div>
-                                @php
-                                    $borrowedReservation = null;
-                                    if ($book->user_type === 'student') {
-                                        $borrowedReservation = \App\Models\Reservation::where('book_id', $book->book_id)
-                                            ->where('student_id', $book->student_id)
-                                            ->whereNull('teacher_visitor_email')
-                                            ->where('status', 'active')
-                                            ->latest('reserved_at')
-                                            ->first();
-                                    } elseif (in_array($book->user_type, ['teacher', 'teacher_visitor'])) {
-                                        // For teacher/visitor, check both email and ID formats
-                                        $borrowedReservation = \App\Models\Reservation::where('book_id', $book->book_id)
-                                            ->where(function($q) use ($book) {
-                                                $q->where('teacher_visitor_email', $book->student_id);
-                                                if (is_numeric($book->student_id)) {
-                                                    $tv = \App\Models\TeacherVisitor::find($book->student_id);
-                                                    if ($tv) {
-                                                        $q->orWhere('teacher_visitor_email', $tv->email);
-                                                    }
-                                                }
-                                            })
-                                            ->where('status', 'active')
-                                            ->latest('reserved_at')
-                                            ->first();
-                                    }
-                                @endphp
-                                @if($borrowedReservation)
-                                    <div class="mt-1">
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                                            <svg class="mr-1.5 h-2 w-2 text-yellow-400" fill="currentColor" viewBox="0 0 8 8">
-                                                <circle cx="4" cy="4" r="3" />
-                                            </svg>
-                                            Reserved at {{ $borrowedReservation->reserved_at->setTimezone('Asia/Manila')->format('M j, Y h:i A') }}
-                                        </span>
-                                    </div>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <a href="#" onclick="showBookImage('{{ $book->book->image1 ?? '' }}', '{{ $book->book->name ?? 'Unknown Book' }}')" 
-                                   class="text-blue-600 hover:underline">
-                                    {{ $book->book->name ?? 'Unknown Book' }} ({{ $book->book_id }})
-                                </a>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                @if($book->status === 'approved')
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        {{ ucfirst($book->status) }}
-                                    </span>
-                                    <button onclick="markAsReturned({{ $book->id }})" 
-                                            class="ml-2 text-xs text-blue-600 hover:text-blue-800 underline">
-                                        Mark as Returned
-                                    </button>
-                                @else
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                        {{ $book->status === 'returned' ? 'bg-gray-100 text-gray-800' : 'bg-yellow-100 text-yellow-800' }}">
-                                        {{ ucfirst($book->status) }}
-                                    </span>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ $book->created_at->setTimezone('Asia/Manila')->format('M d, Y h:i A') }}
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="4" class="px-6 py-4 text-center text-gray-500">No borrowed books</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+                                                @if($borrowedReservation)
+                                                    <div class="mt-1">
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                            <svg class="mr-1.5 h-2 w-2 text-yellow-400" fill="currentColor" viewBox="0 0 8 8">
+                                                                <circle cx="4" cy="4" r="3" />
+                                                            </svg>
+                                                            Reserved at {{ $borrowedReservation->reserved_at->setTimezone('Asia/Manila')->format('M j, Y h:i A') }}
+                                                        </span>
+                                                    </div>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                <a href="#" onclick="showBookImage('{{ $book->book->image1 ?? '' }}', '{{ $book->book->name ?? 'Unknown Book' }}')" 
+                                                class="text-blue-600 hover:underline">
+                                                    {{ $book->book->name ?? 'Unknown Book' }} ({{ $book->book_id }})
+                                                </a>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                @if($book->status === 'approved')
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                        {{ ucfirst($book->status) }}
+                                                    </span>
+                                                    <button onclick="markAsReturned({{ $book->id }})" 
+                                                            class="ml-2 text-xs text-blue-600 hover:text-blue-800 underline">
+                                                        Mark as Returned
+                                                    </button>
+                                                @else
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                                        {{ $book->status === 'returned' ? 'bg-gray-100 text-gray-800' : 'bg-yellow-100 text-yellow-800' }}">
+                                                        {{ ucfirst($book->status) }}
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {{ $book->created_at->setTimezone('Asia/Manila')->format('M d, Y h:i A') }}
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="px-6 py-4 text-center text-gray-500">No borrowed books</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </main>
         </div>
     </div>
@@ -461,6 +461,18 @@
     </div>
 
     <script>
+        // Listen for sidebar toggle events and adjust main content margin
+        window.addEventListener('sidebarToggled', function(event) {
+            const mainContent = document.getElementById('main-content');
+            if (event.detail.expanded) {
+                mainContent.classList.remove('ml-16');
+                mainContent.classList.add('ml-64');
+            } else {
+                mainContent.classList.remove('ml-64');
+                mainContent.classList.add('ml-16');
+            }
+        });
+
         // Enhanced toast helper with progress bar
         let toastTimeout;
         let progressInterval;

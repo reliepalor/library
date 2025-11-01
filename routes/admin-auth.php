@@ -39,6 +39,11 @@ Route::prefix('admin')->group(function () {
         Route::get('settings/logout-2fa', [SettingsController::class, 'getTwoFactor'])->name('admin.settings.logout2fa.get');
         Route::post('settings/logout-2fa', [SettingsController::class, 'setTwoFactor'])->name('admin.settings.logout2fa.set');
 
+        // Admin Profile Settings
+        Route::get('profile', [SettingsController::class, 'profile'])->name('admin.profile');
+        Route::post('profile/update', [SettingsController::class, 'updateProfile'])->name('admin.profile.update');
+        Route::post('profile/change-password', [SettingsController::class, 'changePassword'])->name('admin.profile.change-password');
+
         // Added route for attendance analytics
         Route::get('overdue/check-emails', [OverdueBookController::class, 'checkOverdueEmails'])->name('admin.overdue.check-emails');
 

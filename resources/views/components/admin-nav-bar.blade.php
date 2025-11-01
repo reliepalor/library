@@ -1,15 +1,8 @@
- <nav
-    x-data="{
-        sidebarExpanded: $persist(true),
-        openMenu: null,
-        hoveredMenu: null,
-        showTooltip: null
-    }"
-    class="fixed inset-y-0 left-0 z-50 bg-white/95 backdrop-blur-lg transition-all duration-500 ease-in-out shadow-2xl border-r border-blue-200/30"
-    :class="{'w-16': !sidebarExpanded, 'w-64': sidebarExpanded}"
-    x-cloak
-    @mouseleave="hoveredMenu = null; showTooltip = null"
-    x-init="$watch('sidebarExpanded', value => $dispatch('sidebar-toggle', { expanded: value })); $watch('openMenu', value => console.log('openMenu:', value))"
+<nav
+    id="sidebar"
+    class="fixed inset-y-0 left-0 z-50 bg-white/95 backdrop-blur-lg transition-all duration-500 ease-in-out shadow-2xl border-r border-blue-200/30 w-64"
+    data-sidebar
+    onmouseleave="hideAllTooltips()"
 >
     <!-- Background Gradient -->
     <div class="absolute inset-0 bg-gradient-to-br from-blue-50/80 via-indigo-50/60 to-purple-50/40 -z-10"></div>
@@ -18,15 +11,12 @@
     <div class="flex items-center justify-center h-16 border-b border-blue-200/40 bg-white/50 backdrop-blur-sm">
         <a href="{{ route('admin.auth.dashboard') }}" class="flex items-center justify-center group relative">
             <div class="relative">
-                <img src="/images/library.png" alt="Library Logo" width="32" height="32"
+                <img src="{{ asset('images/library.png') }}" alt="Library Logo" width="32" height="32"
                      class="transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 drop-shadow-sm">
                 <div class="absolute inset-0 bg-blue-400/20 rounded-full scale-0 group-hover:scale-110 transition-transform duration-300"></div>
             </div>
-            <span x-show="sidebarExpanded"
-                  x-transition:enter="transition-all duration-300 delay-100"
-                  x-transition:enter-start="opacity-0 transform translate-x-4"
-                  x-transition:enter-end="opacity-100 transform translate-x-0"
-                  class="ml-3 text-gray-800 font-bold text-lg tracking-tight">
+            <span class="ml-3 text-gray-800 font-bold text-lg tracking-tight hidden data-text
+                  transition-all duration-300 delay-100 opacity-100 translate-x-0">
                 Library
             </span>
         </a>
@@ -36,43 +26,34 @@
     <div class="mt-6 px-2 space-y-2">
 
         <!-- Dashboard -->
-        <div class="relative"
-             @mouseenter="!sidebarExpanded ? showTooltip = 'dashboard' : null"
-             @mouseleave="showTooltip = null">
+        <div class="relative" data-tooltip-trigger="dashboard">
             <x-nav-link :href="route('admin.auth.dashboard')"
                        :active="request()->routeIs('admin.auth.dashboard')"
-                       class="flex items-center px-4 py-3 group relative rounded-xl hover:bg-gradient-to-r hover:from-blue-100/60 hover:to-indigo-100/60 transition-all duration-300 hover:shadow-md hover:scale-105 active:scale-95">
+                       class="flex items-center px-4 py-3 group relative rounded-xl hover:bg-gradient-to-r hover:from-blue-100/60 hover:to-indigo-100/60 transition-all duration-300 hover:shadow-md hover:scale-105 active:scale-95 w-full">
                 <div class="relative">
                     <svg class="h-5 w-5 text-gray-600 group-hover:text-blue-600 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                     </svg>
                     <div class="absolute inset-0 bg-blue-400/20 rounded-full scale-0 group-hover:scale-150 transition-transform duration-300 -z-10"></div>
                 </div>
-                <span x-show="sidebarExpanded"
-                      x-transition:enter="transition-all duration-200 delay-75"
-                      x-transition:enter-start="opacity-0 transform translate-x-2"
-                      x-transition:enter-end="opacity-100 transform translate-x-0"
-                      class="ml-3 text-gray-800 font-medium group-hover:text-gray-900">Dashboard</span>
+                <span class="ml-3 text-gray-800 font-medium group-hover:text-gray-900 hidden data-text
+                      transition-all duration-200 delay-75 opacity-100 translate-x-0">Dashboards</span>
             </x-nav-link>
 
             <!-- Tooltip for minimized state -->
-            <div x-show="showTooltip === 'dashboard' && !sidebarExpanded"
-                 x-transition:enter="transition-all duration-200"
-                 x-transition:enter-start="opacity-0 transform translate-x-2 scale-95"
-                 x-transition:enter-end="opacity-100 transform translate-x-0 scale-100"
-                 class="absolute left-16 top-1/2 transform -translate-y-1/2 bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap shadow-lg z-50">
+            <div class="hidden absolute left-16 top-1/2 transform -translate-y-1/2 bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap shadow-lg z-50 data-tooltip='dashboard'
+                 transition-all duration-200 opacity-100 translate-x-0 scale-100">
                 Dashboard
                 <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-900 rotate-45"></div>
             </div>
         </div>
 
         <!-- Students Dropdown -->
-        <div class="relative"
-            x-data="{ isOpen: false, minimizedOpen: false }">
+        <div class="relative" data-dropdown="students">
 
             <!-- Button -->
             <button type="button"
-                @click="if (sidebarExpanded) { isOpen = !isOpen } else { minimizedOpen = !minimizedOpen }"
+                data-dropdown-toggle="students"
                 class="flex items-center w-full px-4 py-3 group relative rounded-xl hover:bg-gradient-to-r hover:from-blue-100/60 hover:to-indigo-100/60 transition-all duration-300 hover:shadow-md hover:scale-105 active:scale-95"
             >
                 <div class="relative">
@@ -82,32 +63,21 @@
                     <div class="absolute inset-0 bg-blue-400/20 rounded-full scale-0 group-hover:scale-150 transition-transform duration-300 -z-10"></div>
                 </div>
 
-                <span x-show="sidebarExpanded"
-                    x-transition:enter="transition-all duration-200 delay-75"
-                    x-transition:enter-start="opacity-0 transform translate-x-2"
-                    x-transition:enter-end="opacity-100 transform translate-x-0"
-                    class="ml-3 text-gray-800 font-medium group-hover:text-gray-900 flex-1 text-left">
+                <span class="ml-3 text-gray-800 font-medium group-hover:text-gray-900 flex-1 text-left hidden data-text
+                      transition-all duration-200 delay-75 opacity-100 translate-x-0">
                     Students
                 </span>
 
-                <svg x-show="sidebarExpanded"
-                    class="ml-auto h-4 w-4 transform transition-all duration-300 text-gray-500 group-hover:text-blue-600"
-                    :class="{'rotate-180': isOpen}"
-                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="ml-auto h-4 w-4 transform transition-all duration-300 text-gray-500 group-hover:text-blue-600 chevron hidden data-text"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                 </svg>
             </button>
 
             <!-- Expanded Dropdown -->
-            <div x-show="isOpen && sidebarExpanded"
-                x-cloak
-                x-transition:enter="transition-all duration-300 ease-out"
-                x-transition:enter-start="opacity-0 transform -translate-y-2 scale-95"
-                x-transition:enter-end="opacity-100 transform translate-y-0 scale-100"
-                x-transition:leave="transition-all duration-200 ease-in"
-                x-transition:leave-start="opacity-100 transform translate-y-0 scale-100"
-                x-transition:leave-end="opacity-0 transform -translate-y-2 scale-95"
-                class="ml-4 mt-2 space-y-1 border-l-2 border-blue-200/50 pl-4">
+            <div data-dropdown-expanded="students"
+                 class="ml-4 mt-2 space-y-1 border-l-2 border-blue-200/50 pl-4 hidden
+                       transition-all duration-300 ease-out opacity-100 translate-y-0 scale-100">
 
                 <x-nav-link :href="route('admin.students.index')"
                         :active="request()->routeIs('admin.students.index')"
@@ -129,13 +99,10 @@
             </div>
 
             <!-- Hover Dropdown for Minimized State -->
-            <div x-show="minimizedOpen && !sidebarExpanded"
-                x-cloak
-                x-transition:enter="transition ease-out duration-200"
-                x-transition:enter-start="opacity-0 transform translate-x-4 scale-95"
-                x-transition:enter-end="opacity-100 transform translate-x-0 scale-100"
-                class="absolute left-16 top-0 bg-white/95 backdrop-blur-lg rounded-xl shadow-2xl border border-blue-200/50 py-2 min-w-48 z-50"
-                @click.away="minimizedOpen = false">
+            <div data-dropdown-minimized="students"
+                 class="absolute left-16 top-0 bg-white/95 backdrop-blur-lg rounded-xl shadow-2xl border border-blue-200/50 py-2 min-w-48 z-50 hidden
+                 transition ease-out duration-200 opacity-100 translate-x-0 scale-100"
+                 onclick="handleClickAway(event, 'students')">
 
                 <div class="px-3 py-2 border-b border-blue-100/50">
                     <h3 class="font-semibold text-gray-800 text-sm">Students</h3>
@@ -164,11 +131,10 @@
         </div>
 
         <!-- Attendance Dropdown -->
-        <div class="relative"
-            x-data="{ isOpen: false, minimizedOpen: false }">
+        <div class="relative" data-dropdown="attendance">
 
             <button type="button"
-                @click="if (sidebarExpanded) { isOpen = !isOpen } else { minimizedOpen = !minimizedOpen }"
+                data-dropdown-toggle="attendance"
                 class="flex items-center w-full px-4 py-3 group relative rounded-xl hover:bg-gradient-to-r hover:from-blue-100/60 hover:to-indigo-100/60 transition-all duration-300 hover:shadow-md hover:scale-105 active:scale-95"
             >
                 <div class="relative">
@@ -178,32 +144,21 @@
                     <div class="absolute inset-0 bg-blue-400/20 rounded-full scale-0 group-hover:scale-150 transition-transform duration-300 -z-10"></div>
                 </div>
 
-                <span x-show="sidebarExpanded"
-                    x-transition:enter="transition-all duration-200 delay-75"
-                    x-transition:enter-start="opacity-0 transform translate-x-2"
-                    x-transition:enter-end="opacity-100 transform translate-x-0"
-                    class="ml-3 text-gray-800 font-medium group-hover:text-gray-900 flex-1 text-left">
+                <span class="ml-3 text-gray-800 font-medium group-hover:text-gray-900 flex-1 text-left hidden data-text
+                      transition-all duration-200 delay-75 opacity-100 translate-x-0">
                     Attendance
                 </span>
 
-                <svg x-show="sidebarExpanded"
-                    class="ml-auto h-4 w-4 transform transition-all duration-300 text-gray-500 group-hover:text-blue-600"
-                    :class="{'rotate-180': isOpen}"
-                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="ml-auto h-4 w-4 transform transition-all duration-300 text-gray-500 group-hover:text-blue-600 chevron hidden data-text"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                 </svg>
             </button>
 
             <!-- Expanded Dropdown -->
-            <div x-show="isOpen && sidebarExpanded"
-                x-cloak
-                x-transition:enter="transition-all duration-300 ease-out"
-                x-transition:enter-start="opacity-0 transform -translate-y-2 scale-95"
-                x-transition:enter-end="opacity-100 transform translate-y-0 scale-100"
-                x-transition:leave="transition-all duration-200 ease-in"
-                x-transition:leave-start="opacity-100 transform translate-y-0 scale-100"
-                x-transition:leave-end="opacity-0 transform -translate-y-2 scale-95"
-                class="ml-4 mt-2 space-y-1 border-l-2 border-blue-200/50 pl-4">
+            <div data-dropdown-expanded="attendance"
+                 class="ml-4 mt-2 space-y-1 border-l-2 border-blue-200/50 pl-4 hidden
+                       transition-all duration-300 ease-out opacity-100 translate-y-0 scale-100">
 
                 <x-nav-link :href="route('admin.attendance.index')"
                         :active="request()->routeIs('admin.attendance.index')"
@@ -236,16 +191,10 @@
             </div>
 
             <!-- Hover Dropdown for Minimized State -->
-            <div x-show="minimizedOpen && !sidebarExpanded"
-                x-cloak
-                x-transition:enter="transition ease-out duration-200"
-                x-transition:enter-start="opacity-0 transform translate-x-4 scale-95"
-                x-transition:enter-end="opacity-100 transform translate-x-0 scale-100"
-                x-transition:leave="transition ease-in duration-150"
-                x-transition:leave-start="opacity-100 transform translate-x-0 scale-100"
-                x-transition:leave-end="opacity-0 transform translate-x-4 scale-95"
-                class="absolute left-16 top-0 bg-white/95 backdrop-blur-lg rounded-xl shadow-2xl border border-blue-200/50 py-2 min-w-52 z-50"
-                @click.away="minimizedOpen = false">
+            <div data-dropdown-minimized="attendance"
+                 class="absolute left-16 top-0 bg-white/95 backdrop-blur-lg rounded-xl shadow-2xl border border-blue-200/50 py-2 min-w-52 z-50 hidden
+                 transition ease-out duration-200 opacity-100 translate-x-0 scale-100"
+                 onclick="handleClickAway(event, 'attendance')">
 
                 <div class="px-3 py-2 border-b border-blue-100/50">
                     <h3 class="font-semibold text-gray-800 text-sm">Attendance</h3>
@@ -285,12 +234,11 @@
         </div>
 
         <!-- Teachers / Visitors Dropdown -->
-        <div class="relative"
-            x-data="{ isOpen: false, minimizedOpen: false }">
+        <div class="relative" data-dropdown="teachers_visitors">
 
             <!-- Button -->
             <button type="button"
-                @click="if (sidebarExpanded) { isOpen = !isOpen } else { minimizedOpen = !minimizedOpen }"
+                data-dropdown-toggle="teachers_visitors"
                 class="flex items-center w-full px-4 py-3 group relative rounded-xl hover:bg-gradient-to-r hover:from-blue-100/60 hover:to-indigo-100/60 transition-all duration-300 hover:shadow-md hover:scale-105 active:scale-95"
             >
                 <div class="relative">
@@ -300,32 +248,21 @@
                     <div class="absolute inset-0 bg-blue-400/20 rounded-full scale-0 group-hover:scale-150 transition-transform duration-300 -z-10"></div>
                 </div>
 
-                <span x-show="sidebarExpanded"
-                    x-transition:enter="transition-all duration-200 delay-75"
-                    x-transition:enter-start="opacity-0 transform translate-x-2"
-                    x-transition:enter-end="opacity-100 transform translate-x-0"
-                    class="ml-3 text-gray-800 font-medium group-hover:text-gray-900 flex-1 text-left">
+                <span class="ml-3 text-gray-800 font-medium group-hover:text-gray-900 flex-1 text-left hidden data-text
+                      transition-all duration-200 delay-75 opacity-100 translate-x-0">
                     Teachers / Visitors
                 </span>
 
-                <svg x-show="sidebarExpanded"
-                    class="ml-auto h-4 w-4 transform transition-all duration-300 text-gray-500 group-hover:text-blue-600"
-                    :class="{'rotate-180': isOpen}"
-                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="ml-auto h-4 w-4 transform transition-all duration-300 text-gray-500 group-hover:text-blue-600 chevron hidden data-text"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                 </svg>
             </button>
 
             <!-- Expanded Dropdown -->
-            <div x-show="isOpen && sidebarExpanded"
-                x-cloak
-                x-transition:enter="transition-all duration-300 ease-out"
-                x-transition:enter-start="opacity-0 transform -translate-y-2 scale-95"
-                x-transition:enter-end="opacity-100 transform translate-y-0 scale-100"
-                x-transition:leave="transition-all duration-200 ease-in"
-                x-transition:leave-start="opacity-100 transform translate-y-0 scale-100"
-                x-transition:leave-end="opacity-0 transform -translate-y-2 scale-95"
-                class="ml-4 mt-2 space-y-1 border-l-2 border-blue-200/50 pl-4">
+            <div data-dropdown-expanded="teachers_visitors"
+                 class="ml-4 mt-2 space-y-1 border-l-2 border-blue-200/50 pl-4 hidden
+                       transition-all duration-300 ease-out opacity-100 translate-y-0 scale-100">
 
                 <x-nav-link :href="route('admin.teachers_visitors.index')"
                         :active="request()->routeIs('admin.teachers_visitors.index')"
@@ -347,13 +284,10 @@
             </div>
 
             <!-- Hover Dropdown for Minimized State -->
-            <div x-show="minimizedOpen && !sidebarExpanded"
-                x-cloak
-                x-transition:enter="transition ease-out duration-200"
-                x-transition:enter-start="opacity-0 transform translate-x-4 scale-95"
-                x-transition:enter-end="opacity-100 transform translate-x-0 scale-100"
-                class="absolute left-16 top-0 bg-white/95 backdrop-blur-lg rounded-xl shadow-2xl border border-blue-200/50 py-2 min-w-48 z-50"
-                @click.away="minimizedOpen = false">
+            <div data-dropdown-minimized="teachers_visitors"
+                 class="absolute left-16 top-0 bg-white/95 backdrop-blur-lg rounded-xl shadow-2xl border border-blue-200/50 py-2 min-w-48 z-50 hidden
+                 transition ease-out duration-200 opacity-100 translate-x-0 scale-100"
+                 onclick="handleClickAway(event, 'teachers_visitors')">
 
                 <div class="px-3 py-2 border-b border-blue-100/50">
                     <h3 class="font-semibold text-gray-800 text-sm">Teachers / Visitors</h3>
@@ -381,14 +315,10 @@
             </div>
         </div>
 
-
-
-
         <!-- Books Dropdown -->
-        <div class="relative"
-            x-data="{ isOpen: false, minimizedOpen: false }">
+        <div class="relative" data-dropdown="books">
             <button type="button"
-                @click="if (sidebarExpanded) { isOpen = !isOpen } else { minimizedOpen = !minimizedOpen }"
+                data-dropdown-toggle="books"
                 class="flex items-center w-full px-4 py-3 group relative rounded-xl hover:bg-gradient-to-r hover:from-blue-100/60 hover:to-indigo-100/60 transition-all duration-300 hover:shadow-md hover:scale-105 active:scale-95"
             >
                 <div class="relative">
@@ -397,31 +327,18 @@
                     </svg>
                     <div class="absolute inset-0 bg-blue-400/20 rounded-full scale-0 group-hover:scale-150 transition-transform duration-300 -z-10"></div>
                 </div>
-                <span x-show="sidebarExpanded" 
-                    x-transition:enter="transition-all duration-200 delay-75"
-                    x-transition:enter-start="opacity-0 translate-x-2"
-                    x-transition:enter-end="opacity-100 translate-x-0"
-                    class="ml-3 text-gray-800 font-medium group-hover:text-gray-900 flex-1 text-left">
-                    Books
-                </span>
-                <svg x-show="sidebarExpanded"
-                    class="ml-auto h-4 w-4 transform transition-all duration-300 text-gray-500 group-hover:text-blue-600"
-                    :class="{'rotate-180': isOpen}"
-                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <span class="ml-3 text-gray-800 font-medium group-hover:text-gray-900 flex-1 text-left hidden data-text
+                      transition-all duration-200 delay-75 opacity-100 translate-x-0">Books</span>
+                <svg class="ml-auto h-4 w-4 transform transition-all duration-300 text-gray-500 group-hover:text-blue-600 chevron hidden data-text"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                 </svg>
             </button>
 
             <!-- Expanded Dropdown -->
-            <div x-show="isOpen && sidebarExpanded"
-                x-cloak
-                x-transition:enter="transition-all duration-300 ease-out"
-                x-transition:enter-start="opacity-0 -translate-y-2 scale-95"
-                x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-                x-transition:leave="transition-all duration-200 ease-in"
-                x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-                x-transition:leave-end="opacity-0 -translate-y-2 scale-95"
-                class="ml-4 mt-2 space-y-1 border-l-2 border-blue-200/50 pl-4">
+            <div data-dropdown-expanded="books"
+                 class="ml-4 mt-2 space-y-1 border-l-2 border-blue-200/50 pl-4 hidden
+                       transition-all duration-300 ease-out opacity-100 translate-y-0 scale-100">
                 <x-nav-link :href="route('admin.books.index')" 
                             :active="request()->routeIs('admin.books.index')" 
                             class="flex items-center px-4 py-2.5 hover:bg-blue-50/80 rounded-lg transition-all duration-200 group hover:translate-x-1">
@@ -441,16 +358,10 @@
             </div>
 
             <!-- Hover Dropdown for Minimized State -->
-            <div x-show="minimizedOpen && !sidebarExpanded"
-                x-cloak
-                x-transition:enter="transition ease-out duration-200"
-                x-transition:enter-start="opacity-0 transform translate-x-4 scale-95"
-                x-transition:enter-end="opacity-100 transform translate-x-0 scale-100"
-                x-transition:leave="transition ease-in duration-150"
-                x-transition:leave-start="opacity-100 transform translate-x-0 scale-100"
-                x-transition:leave-end="opacity-0 transform translate-x-4 scale-95"
-                class="absolute left-16 top-0 bg-white/95 backdrop-blur-lg rounded-xl shadow-2xl border border-blue-200/50 py-2 min-w-44 z-50"
-                @click.away="minimizedOpen = false">
+            <div data-dropdown-minimized="books"
+                 class="absolute left-16 top-0 bg-white/95 backdrop-blur-lg rounded-xl shadow-2xl border border-blue-200/50 py-2 min-w-44 z-50 hidden
+                 transition ease-out duration-200 opacity-100 translate-x-0 scale-100"
+                 onclick="handleClickAway(event, 'books')">
                 <div class="px-3 py-2 border-b border-blue-100/50">
                     <h3 class="font-semibold text-gray-800 text-sm">Books</h3>
                 </div>
@@ -475,64 +386,48 @@
         </div>
 
         <!-- Borrow Requests -->
-        <div class="relative"
-            @mouseenter="!sidebarExpanded ? showTooltip = 'borrow' : null"
-            @mouseleave="showTooltip = null">
+        <div class="relative" data-tooltip-trigger="borrow">
             <x-nav-link :href="route('admin.borrow.requests')" 
                     :active="request()->routeIs('admin.borrow.requests')" 
-                    class="flex items-center px-4 py-3 group relative rounded-xl hover:bg-gradient-to-r hover:from-blue-100/60 hover:to-indigo-100/60 transition-all duration-300 hover:shadow-md hover:scale-105 active:scale-95">
+                    class="flex items-center px-4 py-3 group relative rounded-xl hover:bg-gradient-to-r hover:from-blue-100/60 hover:to-indigo-100/60 transition-all duration-300 hover:shadow-md hover:scale-105 active:scale-95 w-full">
                 <div class="relative">
                     <svg class="h-5 w-5 text-gray-600 group-hover:text-blue-600 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
                     </svg>
                     <div class="absolute inset-0 bg-blue-400/20 rounded-full scale-0 group-hover:scale-150 transition-transform duration-300 -z-10"></div>
                 </div>
-                <span x-show="sidebarExpanded" 
-                    x-transition:enter="transition-all duration-200 delay-75"
-                    x-transition:enter-start="opacity-0 transform translate-x-2"
-                    x-transition:enter-end="opacity-100 transform translate-x-0"
-                    class="ml-3 text-gray-800 font-medium group-hover:text-gray-900">Borrow Requests</span>
+                <span class="ml-3 text-gray-800 font-medium group-hover:text-gray-900 hidden data-text
+                      transition-all duration-200 delay-75 opacity-100 translate-x-0">Borrow Requests</span>
             </x-nav-link>
             
             <!-- Tooltip for minimized state -->
-            <div x-show="showTooltip === 'borrow' && !sidebarExpanded"
-                x-transition:enter="transition-all duration-200"
-                x-transition:enter-start="opacity-0 transform translate-x-2 scale-95"
-                x-transition:enter-end="opacity-100 transform translate-x-0 scale-100"
-                class="absolute left-16 top-1/2 transform -translate-y-1/2 bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap shadow-lg z-50">
+            <div class="hidden absolute left-16 top-1/2 transform -translate-y-1/2 bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap shadow-lg z-50 data-tooltip='borrow'
+                 transition-all duration-200 opacity-100 translate-x-0 scale-100">
                 Borrow Requests
                 <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-900 rotate-45"></div>
             </div>
         </div>
 
                 <!-- Campus News -->
-        <div class="relative"
-            @mouseenter="!sidebarExpanded ? showTooltip = 'campus-news' : null"
-            @mouseleave="showTooltip = null">
+        <div class="relative" data-tooltip-trigger="campus-news">
             <x-nav-link :href="route('admin.campus-news.index')"
                     :active="request()->routeIs('admin.campus-news.index')"
-                    class="flex items-center px-4 py-3 group relative rounded-xl hover:bg-gradient-to-r hover:from-blue-100/60 hover:to-indigo-100/60 transition-all duration-300 hover:shadow-md hover:scale-105 active:scale-95">
+                    class="flex items-center px-4 py-3 group relative rounded-xl hover:bg-gradient-to-r hover:from-blue-100/60 hover:to-indigo-100/60 transition-all duration-300 hover:shadow-md hover:scale-105 active:scale-95 w-full">
                 <div class="relative">
                   <svg class=" h-5 w-5 text-gray-600 group-hover:text-blue-600 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V7a2 2 0 012-2h10l4 4v9a2 2 0 01-2 2z" />
-  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m-6-8h3" />
-</svg>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V7a2 2 0 012-2h10l4 4v9a2 2 0 01-2 2z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m-6-8h3" />
+                    </svg>
 
                     <div class="absolute inset-0 bg-blue-400/20 rounded-full scale-0 group-hover:scale-150 transition-transform duration-300 -z-10"></div>
                 </div>
-                <span x-show="sidebarExpanded"
-                    x-transition:enter="transition-all duration-200 delay-75"
-                    x-transition:enter-start="opacity-0 transform translate-x-2"
-                    x-transition:enter-end="opacity-100 transform translate-x-0"
-                    class="ml-3 text-gray-800 font-medium group-hover:text-gray-900">Campus News</span>
+                <span class="ml-3 text-gray-800 font-medium group-hover:text-gray-900 hidden data-text
+                      transition-all duration-200 delay-75 opacity-100 translate-x-0">Campus News</span>
             </x-nav-link>
 
             <!-- Tooltip for minimized state -->
-            <div x-show="showTooltip === 'campus-news' && !sidebarExpanded"
-                x-transition:enter="transition-all duration-200"
-                x-transition:enter-start="opacity-0 transform translate-x-2 scale-95"
-                x-transition:enter-end="opacity-100 transform translate-x-0 scale-100"
-                class="absolute left-16 top-1/2 transform -translate-y-1/2 bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap shadow-lg z-50">
+            <div class="hidden absolute left-16 top-1/2 transform -translate-y-1/2 bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap shadow-lg z-50 data-tooltip='campus-news'
+                 transition-all duration-200 opacity-100 translate-x-0 scale-100">
                 Campus News
                 <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-900 rotate-45"></div>
             </div>
@@ -541,11 +436,10 @@
     </div>
 
     <!-- Sidebar Toggle -->
-    <button type="button" @click="sidebarExpanded = !sidebarExpanded" 
+    <button type="button" data-toggle 
             class="absolute -right-4 top-8 bg-white/90 backdrop-blur-sm rounded-full p-2.5 shadow-xl hover:shadow-2xl border border-blue-200/50 hover:bg-blue-50/80 transition-all duration-300 group hover:scale-110 active:scale-95 z-10">
-        <svg class="h-5 w-5 transition-all duration-500 text-gray-600 group-hover:text-blue-600" 
-            :class="{'rotate-180': sidebarExpanded}" 
-            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="h-5 w-5 transition-all duration-500 text-gray-600 group-hover:text-blue-600 toggle-icon" 
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
         </svg>
         <div class="absolute inset-0 bg-blue-400/20 rounded-full scale-0 group-hover:scale-150 transition-transform duration-300 -z-10"></div>
@@ -554,12 +448,10 @@
     <!-- User Profile Section (Bottom) -->
     <div class="absolute bottom-0 left-0 right-0 border-t border-blue-200/40 bg-white/60 backdrop-blur-sm">
         <div class="p-3">
-            <div class="relative" x-data="{ profileOpen: false }" @click.away="profileOpen = false">
-                <button @click.stop="profileOpen = !profileOpen" 
+            <div class="relative" data-profile @click.away="handleProfileClickAway(event)">
+                <button data-profile-toggle 
                         class="flex items-center w-full text-left focus:outline-none hover:bg-blue-100/30 rounded-xl transition-all duration-300 p-2.5 group relative overflow-hidden"
-                        :class="{ 'justify-center': !sidebarExpanded }"
-                        @mouseenter="!sidebarExpanded ? showTooltip = 'profile' : null"
-                        @mouseleave="showTooltip = null">
+                        data-tooltip-trigger="profile">
                     <div class="flex-shrink-0 relative">
                         <div class="h-9 w-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-0.5 group-hover:scale-110 transition-all duration-300">
                             <div class="h-full w-full rounded-full bg-white/90 flex items-center justify-center">
@@ -571,14 +463,8 @@
                         <div class="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
                     </div>
                     
-                    <div x-show="sidebarExpanded" 
-                         x-transition:enter="transition-all duration-300 delay-100"
-                         x-transition:enter-start="opacity-0 transform translate-x-4 scale-95"
-                         x-transition:enter-end="opacity-100 transform translate-x-0 scale-100"
-                         x-transition:leave="transition-all duration-200"
-                         x-transition:leave-start="opacity-100 transform translate-x-0 scale-100"
-                         x-transition:leave-end="opacity-0 transform translate-x-4 scale-95"
-                         class="ml-3 flex-1 min-w-0">
+                    <div class="ml-3 flex-1 min-w-0 hidden data-text
+                         transition-all duration-300 delay-100 opacity-100 translate-x-0 scale-100">
                         <div class="text-sm font-semibold text-gray-800 truncate group-hover:text-gray-900 transition-colors duration-200">
                             {{ Auth::user()->name }}
                         </div>
@@ -587,12 +473,7 @@
                         </div>
                     </div>
                     
-                    <div x-show="sidebarExpanded" 
-                         x-transition:enter="transition-all duration-300 delay-150"
-                         x-transition:enter-start="opacity-0 transform rotate-90 scale-50"
-                         x-transition:enter-end="opacity-100 transform rotate-0 scale-100"
-                         class="ml-2 transition-transform duration-300" 
-                         :class="{ 'rotate-180': profileOpen }">
+                    <div class="ml-2 transition-transform duration-300 profile-chevron hidden data-text" >
                         <svg class="h-4 w-4 text-gray-500 group-hover:text-blue-600 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                         </svg>
@@ -603,16 +484,9 @@
                 </button>
 
                 <!-- Profile Dropdown Menu -->
-                <div x-show="profileOpen"
-                     x-transition:enter="transition-all duration-300 ease-out"
-                     x-transition:enter-start="opacity-0 transform translate-y-4 scale-95"
-                     x-transition:enter-end="opacity-100 transform translate-y-0 scale-100"
-                     x-transition:leave="transition-all duration-200 ease-in"
-                     x-transition:leave-start="opacity-100 transform translate-y-0 scale-100"
-                     x-transition:leave-end="opacity-0 transform translate-y-4 scale-95"
-                     class="absolute bg-white/95 backdrop-blur-lg rounded-xl shadow-2xl border border-blue-200/50 overflow-hidden z-50 min-w-56"
-                     :class="sidebarExpanded ? 'bottom-16 left-0 right-0' : 'bottom-16 left-16'"
-                     @click.away="profileOpen = false">
+                <div data-profile-dropdown
+                     class="absolute bg-white/95 backdrop-blur-lg rounded-xl shadow-2xl border border-blue-200/50 overflow-hidden z-50 min-w-56 hidden
+                     transition-all duration-300 ease-out opacity-100 translate-y-0 scale-100 bottom-16 left-0 right-0">
                     
                     <!-- Profile Header -->
                     <div class="px-4 py-3 bg-gradient-to-r from-blue-50/80 to-purple-50/80 border-b border-blue-100/50">
@@ -633,7 +507,7 @@
 
                     <!-- Profile Menu Items -->
                     <div class="py-2">
-                        <a href="{{ route('profile.edit') }}" 
+                        <a href="{{ route('admin.profile') }}"
                            class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50/80 hover:text-blue-700 transition-all duration-200 group">
                             <svg class="w-5 h-5 mr-3 text-gray-500 group-hover:text-blue-600 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -641,14 +515,6 @@
                             <span class="font-medium">Profile Settings</span>
                         </a>
                         
-                        <a href="#" 
-                           class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50/80 hover:text-blue-700 transition-all duration-200 group">
-                            <svg class="w-5 h-5 mr-3 text-gray-500 group-hover:text-blue-600 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            </svg>
-                            <span class="font-medium">Preferences</span>
-                        </a>
 
                         <div class="border-t border-gray-100/50 my-2"></div>
 
@@ -665,16 +531,12 @@
                     </div>
 
                     <!-- Arrow pointer -->
-                    <div class="absolute transform rotate-45 w-2 h-2 bg-white border-l border-b border-blue-200/50"
-                         :class="sidebarExpanded ? 'bottom-2 left-6' : 'bottom-6 left-0 -translate-x-1'"></div>
+                    <div class="absolute transform rotate-45 w-2 h-2 bg-white border-l border-b border-blue-200/50 arrow"></div>
                 </div>
 
                 <!-- Tooltip for minimized state -->
-                <div x-show="showTooltip === 'profile' && !sidebarExpanded"
-                     x-transition:enter="transition-all duration-200"
-                     x-transition:enter-start="opacity-0 transform translate-x-2 scale-95"
-                     x-transition:enter-end="opacity-100 transform translate-x-0 scale-100"
-                     class="absolute left-16 bottom-1/2 transform translate-y-1/2 bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap shadow-lg z-50">
+                <div class="hidden absolute left-16 bottom-1/2 transform translate-y-1/2 bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap shadow-lg z-50 data-tooltip='profile'
+                     transition-all duration-200 opacity-100 translate-x-0 scale-100">
                     {{ Auth::user()->name }}
                     <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-900 rotate-45"></div>
                 </div>
@@ -777,64 +639,242 @@
             transform: translateX(0);
         }
     }
-
-    /* Hide elements with x-cloak until Alpine.js loads */
-    [x-cloak] {
-        display: none !important;
-    }
 </style>
 
 <script>
-    // Initialize Alpine.js data and watchers
-    document.addEventListener('alpine:init', () => {
-        // Set up global store for sidebar state
-        Alpine.store('sidebar', {
-            expanded: Alpine.$persist(true).as('sidebarExpanded')
-        });
+    // Global variables
+    let sidebarExpanded = localStorage.getItem('sidebarExpanded') !== 'false';
+    let dropdownStates = {
+        students: { isOpen: false, minimizedOpen: false },
+        attendance: { isOpen: false, minimizedOpen: false },
+        teachers_visitors: { isOpen: false, minimizedOpen: false },
+        books: { isOpen: false, minimizedOpen: false }
+    };
+    let profileOpen = false;
 
-        // Watch for changes and dispatch events
-        Alpine.effect(() => {
-            const expanded = Alpine.store('sidebar').expanded;
-            document.dispatchEvent(new CustomEvent('sidebar-changed', { 
-                detail: { expanded: expanded }
-            }));
-        });
-    });
+    // Elements
+    const sidebar = document.getElementById('sidebar');
+    const textElements = document.querySelectorAll('.data-text');
+    const toggleBtn = document.querySelector('[data-toggle]');
+    const profileToggle = document.querySelector('[data-profile-toggle]');
+    const profileDropdown = document.querySelector('[data-profile-dropdown]');
+    const profileChevron = document.querySelector('.profile-chevron');
+    const toggleIcon = document.querySelector('.toggle-icon');
+    const tooltipTriggers = document.querySelectorAll('[data-tooltip-trigger]');
+    const tooltips = document.querySelectorAll('[data-tooltip]');
 
-    // Listen for sidebar changes and update body classes
-    document.addEventListener('sidebar-changed', (e) => {
-        const body = document.body;
-        if (e.detail.expanded) {
-            body.classList.remove('sidebar-collapsed');
-            body.classList.add('sidebar-expanded');
+    // Functions for text animation
+    function animateTextIn() {
+        textElements.forEach(el => {
+            el.classList.remove('hidden');
+            el.classList.add('opacity-0', 'translate-x-4');
+            setTimeout(() => {
+                el.classList.remove('opacity-0', 'translate-x-4');
+                el.classList.add('opacity-100', 'translate-x-0');
+            }, 10);
+        });
+    }
+
+    function animateTextOut() {
+        textElements.forEach(el => {
+            el.classList.add('opacity-0', 'translate-x-4');
+            setTimeout(() => {
+                el.classList.add('hidden');
+            }, 200);
+        });
+    }
+
+    // Update sidebar state
+    function updateSidebar() {
+        if (sidebarExpanded) {
+            sidebar.classList.remove('w-16');
+            sidebar.classList.add('w-64');
+            animateTextIn();
+            profileToggle.classList.remove('justify-center');
+            toggleIcon.classList.remove('rotate-180');
+            if (profileOpen) {
+                profileOpen = false;
+                toggleProfile(false);
+            }
+            closeAllMinimized();
         } else {
-            body.classList.remove('sidebar-expanded');
-            body.classList.add('sidebar-collapsed');
+            sidebar.classList.add('w-16');
+            sidebar.classList.remove('w-64');
+            animateTextOut();
+            profileToggle.classList.add('justify-center');
+            toggleIcon.classList.add('rotate-180');
+            closeAllMinimized();
+            hideAllTooltips();
+        }
+
+        localStorage.setItem('sidebarExpanded', sidebarExpanded);
+        // Dispatch custom event for other components to listen
+        window.dispatchEvent(new CustomEvent('sidebarToggled', { detail: { expanded: sidebarExpanded } }));
+    }
+
+    // Toggle button
+    toggleBtn.addEventListener('click', () => {
+        sidebarExpanded = !sidebarExpanded;
+        updateSidebar();
+    });
+
+    // Initial load
+    updateSidebar();
+
+    // Tooltip functions
+    function hideAllTooltips() {
+        tooltips.forEach(tooltip => {
+            tooltip.classList.add('hidden');
+        });
+    }
+
+    tooltipTriggers.forEach(trigger => {
+        trigger.addEventListener('mouseenter', () => {
+            if (!sidebarExpanded) {
+                const id = trigger.dataset.tooltipTrigger;
+                hideAllTooltips();
+                const tooltip = document.querySelector(`[data-tooltip="${id}"]`);
+                if (tooltip) {
+                    tooltip.classList.remove('hidden');
+                    tooltip.classList.add('opacity-0', 'translate-x-2', 'scale-95');
+                    setTimeout(() => {
+                        tooltip.classList.remove('opacity-0', 'translate-x-2', 'scale-95');
+                        tooltip.classList.add('opacity-100', 'translate-x-0', 'scale-100');
+                    }, 10);
+                }
+            }
+        });
+    });
+
+    // Dropdown functions
+    function toggleExpanded(id, show) {
+        const el = document.querySelector(`[data-dropdown-expanded="${id}"]`);
+        const chevron = document.querySelector(`[data-dropdown="${id}"] .chevron`);
+        if (show) {
+            el.classList.remove('hidden');
+            el.classList.add('opacity-0', '-translate-y-2', 'scale-95');
+            setTimeout(() => {
+                el.classList.remove('opacity-0', '-translate-y-2', 'scale-95');
+                el.classList.add('opacity-100', 'translate-y-0', 'scale-100');
+            }, 10);
+            if (chevron) chevron.classList.add('rotate-180');
+        } else {
+            el.classList.add('opacity-0', '-translate-y-2', 'scale-95');
+            setTimeout(() => {
+                el.classList.add('hidden');
+            }, 200);
+            if (chevron) chevron.classList.remove('rotate-180');
+        }
+    }
+
+    function toggleMinimized(id, show) {
+        const el = document.querySelector(`[data-dropdown-minimized="${id}"]`);
+        if (show) {
+            el.classList.remove('hidden');
+            el.classList.add('opacity-0', 'translate-x-4', 'scale-95');
+            setTimeout(() => {
+                el.classList.remove('opacity-0', 'translate-x-4', 'scale-95');
+                el.classList.add('opacity-100', 'translate-x-0', 'scale-100');
+            }, 10);
+        } else {
+            el.classList.add('opacity-0', 'translate-x-4', 'scale-95');
+            setTimeout(() => {
+                el.classList.add('hidden');
+            }, 150);
+        }
+    }
+
+    function closeAllMinimized() {
+        Object.keys(dropdownStates).forEach(id => {
+            if (dropdownStates[id].minimizedOpen) {
+                dropdownStates[id].minimizedOpen = false;
+                toggleMinimized(id, false);
+            }
+        });
+    }
+
+    // Dropdown toggles
+    ['students', 'attendance', 'teachers_visitors', 'books'].forEach(id => {
+        const button = document.querySelector(`[data-dropdown-toggle="${id}"]`);
+        button.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (sidebarExpanded) {
+                dropdownStates[id].isOpen = !dropdownStates[id].isOpen;
+                toggleExpanded(id, dropdownStates[id].isOpen);
+                if (dropdownStates[id].minimizedOpen) {
+                    dropdownStates[id].minimizedOpen = false;
+                    toggleMinimized(id, false);
+                }
+            } else {
+                dropdownStates[id].minimizedOpen = !dropdownStates[id].minimizedOpen;
+                toggleMinimized(id, dropdownStates[id].minimizedOpen);
+                if (dropdownStates[id].isOpen) {
+                    dropdownStates[id].isOpen = false;
+                    toggleExpanded(id, false);
+                }
+            }
+        });
+    });
+
+    // Click away for minimized
+    document.addEventListener('click', (e) => {
+        if (!sidebarExpanded) {
+            const isInsideDropdown = Array.from(document.querySelectorAll('[data-dropdown-toggle]')).some(btn => btn.contains(e.target));
+            if (!isInsideDropdown) {
+                closeAllMinimized();
+            }
         }
     });
 
-    // Performance optimization: Debounced resize handler
-    let resizeTimer;
-    window.addEventListener('resize', () => {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => {
-            const sidebar = document.querySelector('nav');
-            if (window.innerWidth < 768 && sidebar) {
-                // Mobile specific adjustments if needed
+    // Profile functions
+    function toggleProfile(show) {
+        const arrow = profileDropdown.querySelector('.arrow');
+        if (show) {
+            profileDropdown.classList.remove('hidden');
+            profileDropdown.classList.add('opacity-0', 'translate-y-4', 'scale-95');
+            if (sidebarExpanded) {
+                profileDropdown.classList.remove('bottom-16', 'left-16');
+                profileDropdown.classList.add('bottom-16', 'left-0', 'right-0');
+                arrow.classList.remove('bottom-6', 'left-0', '-translate-x-1');
+                arrow.classList.add('bottom-2', 'left-6');
+            } else {
+                profileDropdown.classList.remove('bottom-16', 'left-0', 'right-0');
+                profileDropdown.classList.add('bottom-16', 'left-16');
+                arrow.classList.remove('bottom-2', 'left-6');
+                arrow.classList.add('bottom-6', 'left-0', '-translate-x-1');
             }
-        }, 150);
+            setTimeout(() => {
+                profileDropdown.classList.remove('opacity-0', 'translate-y-4', 'scale-95');
+                profileDropdown.classList.add('opacity-100', 'translate-y-0', 'scale-100');
+            }, 10);
+            if (profileChevron) profileChevron.classList.add('rotate-180');
+        } else {
+            profileDropdown.classList.add('opacity-0', 'translate-y-4', 'scale-95');
+            setTimeout(() => {
+                profileDropdown.classList.add('hidden');
+            }, 200);
+            if (profileChevron) profileChevron.classList.remove('rotate-180');
+        }
+    }
+
+    profileToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        profileOpen = !profileOpen;
+        toggleProfile(profileOpen);
     });
 
-    // Keyboard navigation support
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            // Close any open menus
-            const navElement = document.querySelector('nav');
-            if (navElement && navElement._x_dataStack) {
-                navElement._x_dataStack[0].openMenu = null;
-                navElement._x_dataStack[0].hoveredMenu = null;
-                navElement._x_dataStack[0].showTooltip = null;
-            }
+    // Click away for profile
+    document.addEventListener('click', (e) => {
+        if (profileOpen && !profileToggle.contains(e.target) && !profileDropdown.contains(e.target)) {
+            profileOpen = false;
+            toggleProfile(false);
         }
     });
+
+    // Global click away helper (for compatibility)
+    window.handleClickAway = (event, id) => {
+        // No-op, handled by document listener
+    };
+
+    window.hideAllTooltips = hideAllTooltips;
 </script>

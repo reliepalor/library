@@ -65,7 +65,7 @@
                 <div class="bg-white/80 backdrop-blur-lg rounded-xl shadow-lg p-6 border border-blue-200/40">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Tags</h3>
                     <div class="flex flex-wrap gap-2">
-                        @foreach(explode(',', $news->tags) as $tag)
+                        @foreach(explode(',', $campusNews->tags) as $tag)
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
                                 {{ trim($tag) }}
                             </span>
@@ -224,19 +224,5 @@
     </div>
 </div>
 
-<script>
-function confirmDelete(newsId) {
-    if (confirm('Are you sure you want to delete this news article? This action cannot be undone.')) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/admin/campus-news/${newsId}`;
-        form.innerHTML = `
-            @csrf
-            @method('DELETE')
-        `;
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
-</script>
+@vite(['resources/js/campus-news.js'])
 @endsection

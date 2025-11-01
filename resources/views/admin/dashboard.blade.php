@@ -86,12 +86,11 @@
         
     </head>
     <body class="font-sans antialiased bg-gray-100 dark:bg-gray-100">
-        <div x-data="{ sidebarExpanded: window.innerWidth > 768 }" @resize.window="sidebarExpanded = window.innerWidth > 768">
+        <div id="main-content" class="transition-all duration-500 ml-64 main-content">
             <!-- Navigation Sidebar -->
             <x-admin-nav-bar/>
             <!-- Main Content Area -->
-            <div class="main-content min-h-screen"
-                 :class="sidebarExpanded ? 'sidebar-expanded' : 'sidebar-collapsed'">
+            <div class="min-h-screen">
                 <!-- Top Navigation Bar -->
                 <nav class="bg-white shadow-sm border-b border-gray-200">
                     <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
@@ -491,6 +490,8 @@ function showToast(message, type = 'success', duration = 3000) {
     }, duration - 300);
 }
 
+
+
         // Study Area Form Handler
         document.addEventListener('DOMContentLoaded', function() {
             // Load current 2FA setting
@@ -831,6 +832,10 @@ function showToast(message, type = 'success', duration = 3000) {
                 select.dataset.previousValue = select.value;
             });
         });
+
+
+
+        
         </script>
     </body>
 </html>

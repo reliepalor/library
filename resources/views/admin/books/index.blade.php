@@ -43,14 +43,13 @@
             }
         </style>
     </head>
-    <body class="font-sans antialiased" x-data="{ sidebarExpanded: window.innerWidth > 768 }" @resize.window="sidebarExpanded = window.innerWidth > 768">
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-100 flex">
+    <body class="font-sans antialiased">
+        <div id="main-content" class="transition-all duration-500 ml-64 main-content">
             <x-admin-nav-bar/>
 
             <!-- Content Area -->
-            <div class="content-area flex-1" :class="{'ml-16': !sidebarExpanded, 'ml-64': sidebarExpanded}">
+            <div class="min-h-screen">
               
-
                 <!-- Page Content -->
                 <main class="max-w-full mx-auto py-6 px-4 sm:px-6 lg:px-8">
                     <div class="py-12 mt-1 border border-gray-200 shadow-sm py-8 bg-white rounded-lg">

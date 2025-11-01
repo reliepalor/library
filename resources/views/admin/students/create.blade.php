@@ -17,7 +17,9 @@
         window.assetBaseUrl = "{{ asset('') }}";
     </script>
 </head>
-<body class="bg-gray-50" x-data="{ sidebarExpanded: true }">
+<body class="bg-gray-50 antialiased" >
+    <div id="main-content" class="transition-all duration-500 ml-64 main-content">
+
     <x-admin-nav-bar />
     <x-grid-background/>
  

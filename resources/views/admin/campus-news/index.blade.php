@@ -77,11 +77,12 @@
     </script>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-blue-50">
-    <div class="flex h-screen" x-data="{ sidebarExpanded: window.innerWidth > 768 }" @resize.window="sidebarExpanded = window.innerWidth > 768">
+        <div id="main-content" class="transition-all duration-500 ml-64 main-content">
         <x-admin-nav-bar />
 
         <!-- Main Content -->
-        <div class="main-content flex-1 overflow-auto" :class="sidebarExpanded ? 'sidebar-expanded' : 'sidebar-collapsed'">
+           <div class="min-h-screen">
+
             <div class="container mx-auto px-4 py-8">
                 <div class="min-h-screen bg-gradient-to-br">
     <!-- Header -->
@@ -396,21 +397,5 @@
         </div>
     </div>
 </body>
-
-<script>
-function confirmDelete(newsId) {
-    if (confirm('Are you sure you want to delete this news article? This action cannot be undone.')) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/admin/campus-news/${newsId}`;
-        form.innerHTML = `
-            @csrf
-            @method('DELETE')
-        `;
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
-</script>
 </html>
 

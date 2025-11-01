@@ -17,10 +17,14 @@ class UserMiddleware
      */
     public function handle(Request $request, Closure $next)
     {
-        if (Auth::check() && Auth::user()->usertype === 'user') {
-            return $next($request);
+        if (!Auth::check()) {
+            return redirect('/login')->with('error', 'Please log in to access this page.');
         }
 
-        return redirect('/login');
+        if (Auth::user()->usertype !== 'user') {
+            return redirect('/login')->with('error', 'Access denied. This area is for users only.');
+        }
+
+        return $next($request);
     }
 }

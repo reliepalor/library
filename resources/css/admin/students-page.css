@@ -46,9 +46,47 @@
 
 /* Print styles */
 @media print {
+  @page { margin: 90px 0 0 0; size: auto; }
+  @page :first {
+    @top-center { content: "QR Codes"; }
+  }
   body * { visibility: hidden !important; }
   #batch-print-modal, #batch-print-modal * { visibility: visible !important; }
-  #batch-print-modal { position: static !important; background: #fff !important; box-shadow: none !important; }
+  #batch-print-modal { position: static !important; background: #fff !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important; max-height: none !important; width: 100% !important; height: 100% !important; }
+  #batch-print-modal > div { padding: 0 !important; }
+  #batch-print-modal h2 { display: none !important; }
+  #batch-print-modal .flex.justify-center.mt-6 { display: none !important; }
   #close-batch-print, #modal-print-btn { display: none !important; }
   .print-container, .content-area, .sidebar, nav, header, footer { display: none !important; }
+  #batch-print-grid {
+    margin: 0 !important;
+    padding: 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 20px !important;
+    justify-items: center !important;
+    align-items: start !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .qr-block {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    width: 200px !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 10px !important;
+    background: #fff !important;
+    border: 1px solid #ddd !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    box-sizing: border-box !important;
+  }
+  .qr-block:nth-child(9n) { break-after: page; page-break-after: always; }
+  .qr-block img { width: 128px !important; height: 128px !important; margin: 8px 0 !important; }
+  .qr-block .name, .qr-block .college { text-align: center !important; margin: 4px 0 !important; }
 }

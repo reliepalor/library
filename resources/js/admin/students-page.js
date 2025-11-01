@@ -355,10 +355,6 @@
           alert('Select at least one student.');
           return;
         }
-        if (selected.length > 6) {
-          alert('You can only print up to 6 students at a time.');
-          return;
-        }
         let students = selected.map(cb => ({
           name: cb.getAttribute('data-name') || '',
           studentId: cb.getAttribute('data-student-id') || '',
@@ -374,35 +370,30 @@
         if (students.length < beforeCount) {
           alert('Some selected students were skipped because they have no QR code.');
         }
-        // Fill grid safely
+        // Fill grid dynamically without limit
         grid.innerHTML = '';
         students.forEach(stu => {
-          const wrap = document.createElement('div');
-          wrap.className = 'qr-block bg-white rounded-lg shadow p-4 flex flex-col items-center border';
+           const wrap = document.createElement('div');
+           wrap.className = 'qr-block bg-white rounded-lg shadow p-4 flex flex-col items-center border';
 
-          const nameEl = document.createElement('div');
-          nameEl.className = 'name font-semibold text-base mb-1 text-center';
-          nameEl.textContent = stu.name;
+           const nameEl = document.createElement('div');
+           nameEl.className = 'name font-semibold text-base mb-1 text-center';
+           nameEl.textContent = stu.name;
 
-          const collegeEl = document.createElement('div');
-          collegeEl.className = 'college text-gray-700 text-sm mb-2 text-center';
-          collegeEl.textContent = stu.college;
+           const collegeEl = document.createElement('div');
+           collegeEl.className = 'college text-gray-700 text-sm mb-2 text-center';
+           collegeEl.textContent = (stu.college || 'N/A') + ' - ' + (stu.year || 'N/A');
 
-          const img = document.createElement('img');
-          img.className = 'w-32 h-32 bg-white border rounded';
-          img.src = stu.qr;
-          img.alt = 'QR Code';
+           const img = document.createElement('img');
+           img.className = 'w-32 h-32 bg-white border rounded';
+           img.src = stu.qr;
+           img.alt = 'QR Code';
 
-          wrap.appendChild(nameEl);
-          wrap.appendChild(collegeEl);
-          wrap.appendChild(img);
-          grid.appendChild(wrap);
-        });
-        for (let i = students.length; i < 6; i++) {
-          const placeholder = document.createElement('div');
-          placeholder.className = 'qr-block';
-          grid.appendChild(placeholder);
-        }
+           wrap.appendChild(nameEl);
+           wrap.appendChild(collegeEl);
+           wrap.appendChild(img);
+           grid.appendChild(wrap);
+         });
         openModal();
       });
     }

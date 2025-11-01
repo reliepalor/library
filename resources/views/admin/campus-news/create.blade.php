@@ -11,7 +11,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/campus-news.js'])
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -239,7 +239,7 @@
                                 </h2>
 
                                 <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-\                                    <div class="space-y-4">
+                                    <div class="space-y-4">
                                         <div class="mx-auto h-12 w-12 text-gray-400">
                                             <svg fill="none" stroke="currentColor" viewBox="0 0 48 48">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"/>
@@ -331,7 +331,7 @@
                                         Cancel
                                     </a>
                                     <button type="submit"
-                                            class="bg-gray-800 text-white px-8 py-3 rounded-lg hoverbg-gray-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center space-x-2">
+                                            class="bg-gray-800 text-white px-8 py-3 rounded-lg hover:bg-gray-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center space-x-2">
                                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                         </svg>
@@ -346,35 +346,4 @@
         </div>
     </div>
 </body>
-    <script>
-    function previewImage(input) {
-        const preview = document.getElementById('imagePreview');
-        const previewImg = document.getElementById('previewImg');
-
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-
-            reader.onload = function(e) {
-                previewImg.src = e.target.result;
-                preview.classList.remove('hidden');
-            };
-
-            reader.readAsDataURL(input.files[0]);
-        } else {
-            preview.classList.add('hidden');
-        }
-    }
-
-    // Auto-resize textareas
-    document.addEventListener('DOMContentLoaded', function() {
-        const textareas = document.querySelectorAll('textarea');
-        textareas.forEach(textarea => {
-            textarea.addEventListener('input', function() {
-                this.style.height = 'auto';
-                this.style.height = this.scrollHeight + 'px';
-            });
-        });
-    });
-    </script>
-
 </html>

@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>Admin | Students</title>
+        <title>Students</title>
         <link rel="icon" type="image/png" href="/favicon/library.png">
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
@@ -18,8 +18,9 @@
             'resources/js/admin/students-page.js'
         ])
     </head>
-    <body class="font-sans antialiased" x-data="{ sidebarExpanded: window.innerWidth > 768, showArchived: false }" @resize.window="sidebarExpanded = window.innerWidth > 768">
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-100 flex">
+    <body class="font-sans antialiased bg-gray-100 dark:bg-gray-100">
+
+        <div id="main-content" class="transition-all duration-500 ml-64 main-content min-h-screen bg-gray-100 dark:bg-gray-100 flex">
             <x-admin-nav-bar />
 
             <!-- Content Area -->
@@ -229,8 +230,8 @@
                                                     <th class="px-6 py-3">Last Name</th>
                                                     <th class="px-6 py-3">First Name</th>
                                                     <th class="px-3 py-3">MI</th>
-                                                    <th class="px-6 py-3">College</th>
-                                                    <th class="px-3 py-3">Year</th>
+                                                    <th class="px-6 py-3">Year</th>
+                                                    <th class="px-3 py-3">College</th>
                                                     <th class="px-6 py-3">Gender</th>
                                                     <th class="px-2 py-3">Email</th>
                                                     <th class="px-2 py-3">QR Code</th>
@@ -240,7 +241,7 @@
                                             <tbody class="divide-y divide-gray-100" id="student-table-body">
                                                 @foreach ($students as $student)
                                                 <tr class="hover:bg-gray-50" data-college="{{ $student->college }}" data-gender="{{ $student->gender ?? 'N/A' }}">
-                                                    <td class="px-2 py-4"><input type="checkbox" class="select-student" value="{{ $student->id }}" data-name="{{ $student->lname }}, {{ $student->fname }}{{ $student->MI ? ' ' . $student->MI . '.' : '' }}" data-student-id="{{ $student->student_id }}" data-college="{{ $student->college }}" data-qr="{{ $student->qr_code_path ? asset('storage/' . $student->qr_code_path) : '' }}"></td>
+                                                    <td class="px-2 py-4"><input type="checkbox" class="select-student" value="{{ $student->id }}" data-name="{{ $student->lname }}, {{ $student->fname }}{{ $student->MI ? ' ' . $student->MI . '.' : '' }}" data-student-id="{{ $student->student_id }}" data-college="{{ $student->college }}" data-year="{{ $student->year }}" data-qr="{{ $student->qr_code_path ? asset('storage/' . $student->qr_code_path) : '' }}"></td>
                                                     <td class="px-6 py-4">{{ $student->student_id }}</td>
                                                     <td class="px-6 py-4">{{ $student->lname }}</td>
                                                     <td class="px-6 py-4">{{ $student->fname }}</td>
@@ -404,11 +405,11 @@
 
         <!-- Batch Print Modal -->
         <div id="batch-print-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden transition-opacity duration-300">
-            <div class="bg-white rounded-xl shadow-lg p-8 max-w-4xl w-full relative animate-fadeIn">
-                <button id="close-batch-print" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
+            <div class="bg-white rounded-xl shadow-lg p-8 max-w-4xl w-full max-h-[90vh] relative animate-fadeIn flex flex-col">
+                <button id="close-batch-print" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-2xl font-bold z-10">&times;</button>
                 <h2 class="text-xl font-semibold text-center mb-6">Batch Print QR Codes</h2>
-                <div id="batch-print-grid" class="grid grid-cols-3 grid-rows-2 gap-6 justify-items-center"></div>
-                <div class="flex justify-center mt-6">
+                <div id="batch-print-grid" class="grid grid-cols-3 gap-6 justify-items-center overflow-y-auto flex-1"></div>
+                <div class="flex justify-center mt-6 border-t pt-4 bg-white">
                     <button id="modal-print-btn" class="px-6 py-2 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition">Print</button>
                 </div>
             </div>

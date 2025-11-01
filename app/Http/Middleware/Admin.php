@@ -22,7 +22,7 @@ class Admin
 
         if (Auth::user()->usertype !== 'admin') {
             Auth::logout();
-            return redirect('/admin/login')->with('error', 'You do not have admin privileges.');
+            return redirect('/login')->with('error', 'Access denied. Please log in as an administrator.');
         }
 
         return $next($request);

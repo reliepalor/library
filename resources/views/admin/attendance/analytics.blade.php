@@ -59,14 +59,14 @@
         }
     </style>
 </head>
-<body class="bg-background" x-data="{ sidebarExpanded: true }">
-    <div class="content-area flex-1" :class="{'ml-16': !sidebarExpanded, 'ml-64': sidebarExpanded}">
+<body class="bg-background">
+        <div id="main-content" class="transition-all duration-500 ml-64 main-content">
         <x-admin-nav-bar />
 
         <!-- Main Content -->
-        <div class="container mx-auto px-4 py-8">
+        <div class="min-h-screen">
             <!-- Header -->
-            <div class="flex justify-between items-center mb-8">
+            <div class="flex justify-between items-center mb-8 mt-8 mx-8">
                 <div>
                     <h1 class="text-2xl font-semibold text-foreground">Attendance Analytics</h1>
                 </div>
@@ -74,7 +74,7 @@
             </div>
 
             <!-- Time Period Selector -->
-            <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-6 mb-8">
+            <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-6 mb-8 mx-6">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-4">
                         <label class="text-sm font-medium text-muted-foreground">Time Period:</label>
@@ -92,7 +92,7 @@
             </div>
 
             <!-- Analytics Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mx-8">
                 <!-- Activity Distribution -->
                 <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
                     <div class="p-6">

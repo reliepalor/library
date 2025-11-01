@@ -22,6 +22,8 @@ class Admin extends Authenticatable
         'name',
         'email',
         'password',
+        'last_login_at',
+        'profile_picture',
     ];
 
     /**
@@ -44,6 +46,7 @@ class Admin extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'last_login_at' => 'datetime',
         ];
     }
 }

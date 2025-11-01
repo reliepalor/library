@@ -28,6 +28,11 @@ class LoginController extends Controller
 
         $request->session()->regenerate();
 
+        // Update last login timestamp for admin users
+        if ($request->user() && $request->user() instanceof \App\Models\Admin) {
+            $request->user()->update(['last_login_at' => now()]);
+        }
+
         if($request->user()->usertype == 'admin') {
             return redirect()->route('admin.auth.dashboard');
         }
