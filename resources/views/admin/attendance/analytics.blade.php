@@ -47,16 +47,26 @@
         }
         .chart-container {
             position: relative;
-            height: 0;
-            padding-bottom: 75%; /* 4:3 aspect ratio for responsiveness */
+            height: 220px !important; /* force a smaller, fixed height */
+            padding-bottom: 0 !important; /* disable ratio-based sizing */
+            margin-bottom: 10px; /* slight gap before totals */
+        }
+        @media (max-width: 1024px) {
+            .chart-container { height: 200px !important; }
+        }
+        @media (max-width: 640px) {
+            .chart-container { height: 180px !important; }
         }
         .chart-container canvas {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100% !important;
+            height: 100% !important;
         }
+        /* Neutral progress bars for rankings */
+        .rank-bar { height: 6px; background: #e5e7eb; border-radius: 9999px; overflow: hidden; }
+        .rank-bar-fill { height: 100%; background: #9ca3af; border-radius: 9999px; }
     </style>
 </head>
 <body class="bg-background">
@@ -79,10 +89,10 @@
                     <div class="flex items-center gap-4">
                         <label class="text-sm font-medium text-muted-foreground">Time Period:</label>
                         <div class="flex gap-2">
-                            <button id="dailyBtn" class="period-btn active">Daily</button>
-                            <button id="weeklyBtn" class="period-btn">Weekly</button>
-                            <button id="monthlyBtn" class="period-btn">Monthly</button>
-                            <button id="yearlyBtn" class="period-btn">Yearly</button>
+                            <button id="dailyBtn" class="period-btn active hover:border-b border-black duration-200">Daily</button>
+                            <button id="weeklyBtn" class="period-btn hover:border-b border-black duration-200">Weekly</button>
+                            <button id="monthlyBtn" class="period-btn hover:border-b border-black duration-200">Monthly</button>
+                            <button id="yearlyBtn" class="period-btn hover:border-b border-black duration-200">Yearly</button>
                         </div>
                     </div>
                     <div id="timeframeDisplay" class="text-sm text-muted-foreground">
@@ -91,8 +101,8 @@
                 </div>
             </div>
 
-            <!-- Analytics Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mx-8">
+            <!-- Analytics (stacked full-width) -->
+            <div class="grid grid-cols-1 gap-6 mx-8">
                 <!-- Activity Distribution -->
                 <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
                     <div class="p-6">
@@ -111,6 +121,8 @@
                     </div>
                     <div class="p-6 pt-0 flex flex-col gap-2 text-xs">
                         <div id="activityTotal" class="text-muted-foreground"></div>
+                        <div id="activityRanking" class="mt-2 space-y-1"></div>
+                        <div id="activityInsights" class="mt-2 text-[11px] text-muted-foreground"></div>
                     </div>
                 </div>
 
@@ -138,6 +150,8 @@
                     </div>
                     <div class="p-6 pt-0 flex flex-col gap-2 text-xs">
                         <div id="collegeTotal" class="text-muted-foreground"></div>
+                        <div id="collegeRanking" class="mt-2 space-y-1"></div>
+                        <div id="collegeInsights" class="mt-2 text-[11px] text-muted-foreground"></div>
                     </div>
                 </div>
             </div>
@@ -154,6 +168,49 @@
             // Initialize charts
             function initCharts() {
                 updateCharts(currentPeriod, currentDataType);
+            }
+
+            // Helpers: render ranking list highest->lowest with percentages and bottom items
+            function renderRanking(containerId, items, total) {
+                const el = document.getElementById(containerId);
+                if (!el) return;
+                if (!items || items.length === 0 || !total) { el.innerHTML = '<div class="no-data">No data</div>'; return; }
+                const sorted = [...items].sort((a,b)=>b.value-a.value);
+                const top = sorted.slice(0, 3);
+                const bottom = sorted.slice(-3).reverse();
+                function row(it){
+                    const pct = total ? ((it.value/total)*100).toFixed(1) : '0.0';
+                    return `
+                      <div class="border rounded px-2 py-1">
+                        <div class="flex items-center justify-between text-xs">
+                          <span class="truncate max-w-[70%]">${it.label}</span>
+                          <span class="ml-2 text-muted-foreground">${pct}%</span>
+                        </div>
+                        <div class="rank-bar mt-1">
+                          <div class="rank-bar-fill" style="width:${pct}%"></div>
+                        </div>
+                      </div>`;
+                }
+                el.innerHTML = `
+                  <div class="font-medium text-[11px] text-foreground">Top</div>
+                  ${top.map(row).join('')}
+                  <div class="font-medium text-[11px] text-foreground mt-2">Bottom</div>
+                  ${bottom.map(row).join('')}
+                `;
+            }
+
+            // Helpers: simple insight sentence like crypto tickers
+            function renderInsights(containerId, title, items, total, period){
+                const el = document.getElementById(containerId);
+                if (!el) return;
+                if (!items || items.length === 0 || !total) { el.textContent = ''; return; }
+                const sorted = [...items].sort((a,b)=>b.value-a.value);
+                const top = sorted[0];
+                const bot = sorted[sorted.length-1];
+                const topPct = ((top.value/total)*100).toFixed(1);
+                const botPct = ((bot.value/total)*100).toFixed(1);
+                const periodLabel = period.charAt(0).toUpperCase()+period.slice(1);
+                el.textContent = `${title}: ${top.label} leads at ${topPct}% while ${bot.label} trails at ${botPct}% · ${periodLabel} view`;
             }
 
             // Fetch data from API based on period and data type
@@ -287,6 +344,20 @@
                     document.getElementById('activityTotal').textContent = 'Total: 0';
                 }
 
+                // Render Activity ranking and insights
+                renderRanking(
+                  'activityRanking',
+                  activityData.map(x => ({ label: x.activity, value: x.cnt })),
+                  activityTotal
+                );
+                renderInsights(
+                  'activityInsights',
+                  'Activities',
+                  activityData.map(x => ({ label: x.activity, value: x.cnt })),
+                  activityTotal,
+                  currentPeriod
+                );
+
                 // Update College Usage Chart (Area Chart with Gradient)
                 let collegeData = (data.colleges || []).sort((a, b) => a.cnt - b.cnt);
                 const collegeLabels = collegeData.map(r => r.college);
@@ -387,6 +458,20 @@
                     document.getElementById('collegeNoData').classList.remove('hidden');
                     document.getElementById('collegeTotal').textContent = 'Total: 0';
                 }
+
+                // Render College ranking and insights
+                renderRanking(
+                  'collegeRanking',
+                  collegeData.map(x => ({ label: x.college, value: x.cnt })),
+                  collegeTotal
+                );
+                renderInsights(
+                  'collegeInsights',
+                  currentDataType === 'student' ? 'Colleges (Students)' : 'Colleges (Teachers/Visitors)',
+                  collegeData.map(x => ({ label: x.college, value: x.cnt })),
+                  collegeTotal,
+                  currentPeriod
+                );
 
                 // Update button styles
                 updatePeriodButtonStyles(period);

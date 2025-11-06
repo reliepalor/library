@@ -109,7 +109,7 @@
                 </div>
             </div>
 
-            <form action="{{ route('admin.students.bulk-store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+            <form id="bulkForm" action="{{ route('admin.students.bulk-store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                 @csrf
 
                 <div>
@@ -152,7 +152,7 @@
                     <a href="{{ route('admin.students.index') }}" class="inline-flex items-center px-6 py-2 bg-gray-600 text-white text-sm font-medium rounded-md shadow-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition">
                         Cancel
                     </a>
-                    <button type="submit"
+                    <button id="submitBtn" type="submit"
                         class="inline-flex items-center px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
@@ -164,7 +164,54 @@
         </div>
     </div>
 
-    <!-- Minimal full-screen loading spinner -->
+    <!-- Progress Modal -->
+    <div id="progressModal" class="fixed inset-0 z-[60] hidden">
+        <div class="absolute inset-0 bg-black/40 opacity-0 transition-opacity duration-300" id="progressBackdrop"></div>
+        <div class="relative w-full h-full flex items-center justify-center p-4">
+            <div id="progressCard" class="w-full max-w-xl bg-white rounded-2xl shadow-2xl transform scale-95 opacity-0 transition-all duration-300">
+                <div class="p-6 border-b border-gray-100">
+                    <div class="flex items-center gap-3">
+                        <div class="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center">
+                            <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Processing Bulk Registration</h3>
+                            <p id="statusSubtitle" class="text-sm text-gray-500">Uploading file...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4">
+                        <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div id="progressBar" class="h-2 bg-blue-600 rounded-full w-0 transition-all duration-500"></div>
+                        </div>
+                        <div class="mt-2 flex items-center justify-between text-xs text-gray-500">
+                            <span id="statusText">Starting...</span>
+                            <span id="progressPercent">0%</span>
+                        </div>
+                    </div>
+                    <ul class="space-y-3" id="statusList">
+                        <li class="flex items-center gap-3 text-sm"><span class="step-dot h-2.5 w-2.5 rounded-full bg-blue-500 animate-pulse"></span><span>Upload file</span></li>
+                        <li class="flex items-center gap-3 text-sm opacity-60"><span class="step-dot h-2.5 w-2.5 rounded-full bg-gray-300"></span><span>Parse data</span></li>
+                        <li class="flex items-center gap-3 text-sm opacity-60"><span class="step-dot h-2.5 w-2.5 rounded-full bg-gray-300"></span><span>Create student records</span></li>
+                        <li class="flex items-center gap-3 text-sm opacity-60"><span class="step-dot h-2.5 w-2.5 rounded-full bg-gray-300"></span><span>Generate QR codes</span></li>
+                        <li class="flex items-center gap-3 text-sm opacity-60"><span class="step-dot h-2.5 w-2.5 rounded-full bg-gray-300"></span><span>Send emails</span></li>
+                        <li class="flex items-center gap-3 text-sm opacity-60"><span class="step-dot h-2.5 w-2.5 rounded-full bg-gray-300"></span><span>Finish</span></li>
+                    </ul>
+                    <div id="resultBox" class="hidden mt-6 rounded-lg border border-gray-200 p-4">
+                        <div class="text-sm text-gray-700"><span id="resultMessage"></span></div>
+                        <ul id="resultErrors" class="mt-3 text-xs text-red-600 list-disc pl-5 space-y-1"></ul>
+                    </div>
+                </div>
+                <div class="px-6 pb-6">
+                    <div class="flex justify-end gap-3">
+                        <a id="viewListBtn" href="{{ route('admin.students.index') }}" class="hidden inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow hover:bg-blue-700 transition">View Students</a>
+                        <button id="closeModalBtn" type="button" class="hidden inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md shadow hover:bg-gray-200 transition">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <script>
         // Auto-hide notifications after 10 seconds
         document.addEventListener('DOMContentLoaded', function() {
@@ -184,26 +231,209 @@
             }
         });
     </script>
-    <div id="pageSpinner" class="fixed inset-0 z-50 hidden">
-        <div class="absolute inset-0 bg-black/30"></div>
-        <div class="relative w-full h-full flex items-center justify-center">
-            <div class="flex flex-col items-center gap-3">
-                <div class="h-12 w-12 border-4 border-white/70 border-t-transparent rounded-full animate-spin"></div>
-                <p class="text-white text-sm">Processing file, please wait...</p>
-            </div>
-        </div>
-    </div>
+    <!-- Minimal full-screen loading spinner (replaced by modal, left in DOM if needed) -->
+    <div id="pageSpinner" class="fixed inset-0 z-50 hidden"></div>
 
     <script>
-        // Show spinner on form submit
+        // Progress modal + AJAX submit
         (function(){
-            const form = document.querySelector('form[action="{{ route('admin.students.bulk-store') }}"]');
-            const spinner = document.getElementById('pageSpinner');
-            if (form && spinner) {
-                form.addEventListener('submit', function(){
-                    spinner.classList.remove('hidden');
+            const form = document.getElementById('bulkForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const modal = document.getElementById('progressModal');
+            const backdrop = document.getElementById('progressBackdrop');
+            const card = document.getElementById('progressCard');
+            const progressBar = document.getElementById('progressBar');
+            const progressPercent = document.getElementById('progressPercent');
+            const statusText = document.getElementById('statusText');
+            const statusSubtitle = document.getElementById('statusSubtitle');
+            const statusList = document.getElementById('statusList');
+            const resultBox = document.getElementById('resultBox');
+            const resultMessage = document.getElementById('resultMessage');
+            const resultErrors = document.getElementById('resultErrors');
+            const viewListBtn = document.getElementById('viewListBtn');
+            const closeModalBtn = document.getElementById('closeModalBtn');
+
+            function openModal(){
+                modal.classList.remove('hidden');
+                requestAnimationFrame(()=>{
+                    backdrop.classList.remove('opacity-0');
+                    card.classList.remove('opacity-0','scale-95');
                 });
             }
+            function closeModal(){
+                backdrop.classList.add('opacity-0');
+                card.classList.add('opacity-0','scale-95');
+                setTimeout(()=>modal.classList.add('hidden'), 250);
+            }
+            function setProgress(p, text){
+                progressBar.style.width = p + '%';
+                progressPercent.textContent = Math.round(p) + '%';
+                if (text) { statusText.textContent = text; }
+            }
+            function setStepActive(idx){
+                const items = Array.from(statusList.children);
+                items.forEach((li,i)=>{
+                    const dot = li.querySelector('.step-dot');
+                    if (i < idx){
+                        li.classList.remove('opacity-60');
+                        li.classList.add('text-gray-700');
+                        dot.classList.remove('bg-gray-300','animate-pulse');
+                        dot.classList.add('bg-green-500');
+                    } else if (i === idx){
+                        li.classList.remove('opacity-60');
+                        li.classList.add('text-gray-800');
+                        dot.classList.remove('bg-gray-300');
+                        dot.classList.add('bg-blue-500','animate-pulse');
+                    } else {
+                        li.classList.add('opacity-60');
+                        li.classList.remove('text-gray-800');
+                        const d2 = li.querySelector('.step-dot');
+                        d2.classList.remove('bg-blue-500','animate-pulse','bg-green-500');
+                        d2.classList.add('bg-gray-300');
+                    }
+                });
+            }
+
+            form.addEventListener('submit', function(e){
+                e.preventDefault();
+                resultBox.classList.add('hidden');
+                resultMessage.textContent = '';
+                resultErrors.innerHTML = '';
+                viewListBtn.classList.add('hidden');
+                closeModalBtn.classList.add('hidden');
+
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-60','cursor-not-allowed');
+
+                openModal();
+                setProgress(5,'Initializing...');
+                statusSubtitle.textContent = 'Uploading file...';
+                setStepActive(0);
+
+                const formData = new FormData(form);
+                const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                let fake = 5;
+                const stages = [20, 40, 60, 80, 90];
+                const stageTexts = ['Parsing data...','Creating records...','Generating QR codes...','Sending emails...','Finalizing...'];
+                let stageIdx = 0;
+                const timer = setInterval(()=>{
+                    if (stageIdx < stages.length && fake < stages[stageIdx]){
+                        fake += 2;
+                        setProgress(fake);
+                    } else if (stageIdx < stages.length) {
+                        setStepActive(stageIdx+1);
+                        statusSubtitle.textContent = stageTexts[stageIdx];
+                        stageIdx++;
+                    }
+                }, 400);
+
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrf,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                })
+                .then(async (res) => {
+                    let data;
+                    try { data = await res.json(); } catch (_) { data = { success: false, message: 'Unexpected response' }; }
+                    clearInterval(timer);
+                    if (!res.ok || !data.success){
+                        setProgress(100,'Failed');
+                        statusSubtitle.textContent = 'An error occurred';
+                        setStepActive(5);
+                        resultBox.classList.remove('hidden');
+                        resultMessage.textContent = data.message || 'Bulk processing failed.';
+                        closeModalBtn.classList.remove('hidden');
+                        submitBtn.disabled = false;
+                        submitBtn.classList.remove('opacity-60','cursor-not-allowed');
+                        return;
+                    }
+                    setProgress(100,'Completed');
+                    statusSubtitle.textContent = 'Finished';
+                    setStepActive(5);
+                    resultBox.classList.remove('hidden');
+                    resultMessage.textContent = data.message || 'Completed.';
+                    (data.errors || []).slice(0,5).forEach(err => {
+                        const li = document.createElement('li'); li.textContent = err; resultErrors.appendChild(li);
+                    });
+                    viewListBtn.classList.remove('hidden');
+                    closeModalBtn.classList.remove('hidden');
+
+                    // Show success toast and auto-close modal
+                    showToast('Bulk registration completed', data.message || 'All students were processed.');
+                    setTimeout(()=>{ try { closeModal(); } catch(e){} }, 700);
+                })
+                .catch((err)=>{
+                    clearInterval(timer);
+                    setProgress(100,'Failed');
+                    statusSubtitle.textContent = 'An error occurred';
+                    setStepActive(5);
+                    resultBox.classList.remove('hidden');
+                    resultMessage.textContent = 'Bulk processing failed: ' + (err?.message || 'Unknown error');
+                    closeModalBtn.classList.remove('hidden');
+                })
+                .finally(()=>{
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('opacity-60','cursor-not-allowed');
+                });
+            });
+
+            closeModalBtn.addEventListener('click', closeModal);
+
+            // Toast helpers (robust: creates DOM if missing)
+            let toast = document.getElementById('toast');
+            let toastCard = document.getElementById('toastCard');
+            let toastTitle = document.getElementById('toastTitle');
+            let toastMessage = document.getElementById('toastMessage');
+            let toastClose = document.getElementById('toastClose');
+            let toastTimer = null;
+            function ensureToastDom(){
+                if (document.getElementById('toast')) return;
+                const wrapper = document.createElement('div');
+                wrapper.id = 'toast';
+                wrapper.className = 'fixed top-6 right-6 z-[70]';
+                wrapper.innerHTML = `
+                  <div id="toastCard" class="flex items-start gap-3 bg-white rounded-lg shadow-lg border border-gray-200 p-4 w-80 transform transition-all duration-300 opacity-0 translate-y-2">
+                    <div class="h-8 w-8 rounded-full bg-green-50 flex items-center justify-center shrink-0">
+                      <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                    <div class="flex-1">
+                      <p id="toastTitle" class="text-sm font-semibold text-gray-900"></p>
+                      <p id="toastMessage" class="text-xs text-gray-600 mt-0.5"></p>
+                    </div>
+                    <button id="toastClose" class="text-gray-400 hover:text-gray-600">
+                      <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414 5.707 15.707a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                    </button>
+                  </div>`;
+                document.body.appendChild(wrapper);
+                toast = document.getElementById('toast');
+                toastCard = document.getElementById('toastCard');
+                toastTitle = document.getElementById('toastTitle');
+                toastMessage = document.getElementById('toastMessage');
+                toastClose = document.getElementById('toastClose');
+                toastClose.addEventListener('click', hideToast);
+            }
+            function showToast(title, message){
+                ensureToastDom();
+                toast.classList.remove('hidden');
+                toastTitle.textContent = title || '';
+                toastMessage.textContent = message || '';
+                requestAnimationFrame(()=>{
+                    toastCard.classList.remove('opacity-0','translate-y-2');
+                });
+                if (toastTimer) clearTimeout(toastTimer);
+                toastTimer = setTimeout(hideToast, 4000);
+            }
+            function hideToast(){
+                if (!toast || !toastCard) return;
+                toastCard.classList.add('opacity-0','translate-y-2');
+                setTimeout(()=> toast.classList.add('hidden'), 250);
+            }
+            if (toastClose) { toastClose.addEventListener('click', hideToast); }
         })();
 
         // File input handling

@@ -91,7 +91,7 @@
 
                 <!-- Profile Picture Section -->
                 <div class="text-center mt-4 sm:mt-8">
-                    <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Change Profile Picture</h1>
+                    <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Profile Picture</h1>
 
                     <div class="relative group mb-4 sm:mb-6">
                         <!-- Current profile picture -->
@@ -143,90 +143,7 @@
                 </div>
             </div>
 
-            <!-- Student Info Section -->
-            @if ($user->student)
-                <div class="bg-gray-50 rounded-xl shadow p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 w-full max-w-4xl order-2 lg:order-none mt-4 lg:mt-0">
-                    <h3 class="text-lg sm:text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2">Student Profile Information</h3>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 text-sm">
-                        <div class="bg-white p-3 sm:p-4 rounded-lg shadow-sm transition transform hover:scale-[1.02] hover:shadow-md">
-                            <label class="text-gray-600 font-medium block mb-1 sm:mb-0">Student ID</label>
-                            <p class="text-gray-900 font-semibold">{{ $user->student->student_id }}</p>
-                        </div>
-                        <div class="bg-white p-3 sm:p-4 rounded-lg shadow-sm transition transform hover:scale-[1.02] hover:shadow-md">
-                            <label class="text-gray-600 font-medium block mb-1 sm:mb-0">Full Name</label>
-                            <p class="text-gray-900 font-semibold">{{ $user->student->full_name }}</p>
-                        </div>
-                        <div class="bg-white p-3 sm:p-4 rounded-lg shadow-sm transition transform hover:scale-[1.02] hover:shadow-md">
-                            <label class="text-gray-600 font-medium block mb-1 sm:mb-0">College</label>
-                            <p class="text-gray-900 font-semibold">{{ $user->student->college }}</p>
-                        </div>
-                        <div class="bg-white p-3 sm:p-4 rounded-lg shadow-sm transition transform hover:scale-[1.02] hover:shadow-md">
-                            <label class="text-gray-600 font-medium block mb-1 sm:mb-0">Year Level</label>
-                            <p class="text-gray-900 font-semibold">{{ $user->student->year }}</p>
-                        </div>
-                    </div>
-
-                    <!-- QR Code Section (if user has student profile) -->
-                    @if($user->student && $user->student->qr_code_path)
-                        <div class="border-t pt-4 sm:pt-6 mt-4 sm:mt-6 flex justify-center flex-col items-center">
-                            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-3">Your QR Code</h3>
-                            <p class="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 text-center">Click to view full size</p>
-
-                            <div x-data="{ showQrModal: false }" class="relative w-full max-w-xs mx-auto">
-
-                                <!-- Existing QR code image -->
-                                <img src="{{ asset('storage/' . $user->student->qr_code_path) }}"
-                                     alt="Student QR Code"
-                                     class="w-full max-w-48 sm:max-w-64 h-auto max-h-48 sm:max-h-64 object-contain border border-gray-200 rounded-lg shadow-md cursor-pointer hover:scale-105 transform transition-transform duration-300 mx-auto"
-                                     @click="showQrModal = true" />
-
-                                <!-- QR Code Modal -->
-                                <div x-show="showQrModal"
-                                    x-transition:enter="transition ease-out duration-300"
-                                    x-transition:enter-start="opacity-0"
-                                    x-transition:enter-end="opacity-100"
-                                    x-transition:leave="transition ease-in duration-200"
-                                    x-transition:leave-start="opacity-100"
-                                    x-transition:leave-end="opacity-0"
-                                    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-2 sm:p-4"
-                                    @click="showQrModal = false"
-                                    x-cloak>
-
-                                    <div class="bg-white rounded-2xl p-4 sm:p-6 relative max-w-sm sm:max-w-lg w-full shadow-2xl transform transition-all mx-auto"
-                                        @click.stop
-                                        x-show="showQrModal"
-                                        x-transition:enter="transition ease-out duration-300"
-                                        x-transition:enter-start="opacity-0 scale-90"
-                                        x-transition:enter-end="opacity-100 scale-100"
-                                        x-transition:leave="transition ease-in duration-200"
-                                        x-transition:leave-start="opacity-100 scale-100"
-                                        x-transition:leave-end="opacity-0 scale-90">
-
-                                        <button @click="showQrModal = false"
-                                                class="absolute top-2 sm:top-4 right-2 sm:right-4 text-gray-500 hover:text-gray-700 focus:outline-none transition-colors duration-200 z-10">
-                                            <svg class="w-5 sm:w-6 h-5 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </button>
-
-                                        <div class="text-center">
-                                            <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Your Student QR Code</h3>
-                                            <div class="flex justify-center">
-                                                <img src="{{ asset('storage/' . $user->student->qr_code_path) }}"
-                                                     alt="Student QR Code"
-                                                     class="w-full max-w-48 sm:max-w-64 h-auto max-h-48 sm:max-h-64 object-contain border border-gray-200 rounded-lg shadow-md mx-auto" />
-                                            </div>
-                                            <p class="text-xs sm:text-sm text-gray-600 mt-3 sm:mt-4">Use this QR code for attendance and library services</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
-                    @endif
-                </div>
-            @endif
 
             <!-- Teacher/Visitor Info Section -->
             @if ($user->teacherVisitor)

@@ -91,7 +91,7 @@
                             <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow">
 
                                 <div class="flex flex-col md:flex-row justify-between items-center p-6 bg-gray-50 border-b border-gray-200">
-                                    <h2 class="text-xl font-semibold text-gray-800" x-text="showArchived ? '📚 Archived Students' : '👥 Active Students'"></h2>
+                                    <h2 id="students-table-title" class="text-xl font-semibold text-gray-800">👥 Active Students</h2>
                                     <div class="flex flex-col items-start gap-4 mb-4">
                                         <h3 class="text-sm font-medium text-gray-600">Filter Students</h3>
                                         <div class="flex flex-wrap items-center gap-2">
@@ -187,9 +187,9 @@
                                         </div>
                                     </div>
                                     <div class="flex items-center gap-4">
-                                        <button @click="showArchived = !showArchived"
+                                        <button id="toggle-archived-view"
                                                 class="inline-flex items-center px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
-                                            <span x-text="showArchived ? 'View Active Students' : 'View Archived Students'"></span>
+                                            View Archived Students
                                         </button>
                                         <a href="{{ route('admin.students.create')}}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
                                             + Add Student
@@ -215,7 +215,7 @@
                                 </div>
 
                                 <!-- Active Students Table -->
-                                <div x-show="!showArchived" x-transition>
+                                <div id="active-students-section">
                                     <div class="overflow-x-auto p-4 py-6">
                                         <table class="w-full table-auto text-sm text-left text-gray-700">
                                             <thead class="bg-gray-50 text-gray-500 uppercase text-xs font-semibold border-b">
@@ -230,8 +230,8 @@
                                                     <th class="px-6 py-3">Last Name</th>
                                                     <th class="px-6 py-3">First Name</th>
                                                     <th class="px-3 py-3">MI</th>
-                                                    <th class="px-6 py-3">Year</th>
-                                                    <th class="px-3 py-3">College</th>
+                                                    <th class="px-6 py-3">College</th>
+                                                    <th class="px-3 py-3">Year</th>
                                                     <th class="px-6 py-3">Gender</th>
                                                     <th class="px-2 py-3">Email</th>
                                                     <th class="px-2 py-3">QR Code</th>
@@ -335,7 +335,7 @@
                                 </div>
 
                                 <!-- Archived Students Section -->
-                                <div x-show="showArchived" x-transition x-cloak>
+                                <div id="archived-students-section" style="display: none;">
                                     <div class="p-4">
                                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                             @forelse($archivedStudents as $student)
@@ -367,6 +367,17 @@
                                                                             <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
                                                                         </svg>
                                                                         Unarchive
+                                                                    </button>
+                                                                </form>
+                                                                <form action="{{ route('admin.students.permanent-delete', $student->id) }}" method="POST" class="inline delete-form" data-student-name="{{ $student->fname }} {{ $student->lname }}">
+                                                                    @csrf
+                                                                    @method('DELETE')
+                                                                    <button type="button"
+                                                                            class="delete-btn inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 transition">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                                                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                                                        </svg>
+                                                                        Delete
                                                                     </button>
                                                                 </form>
                                                             </div>
@@ -404,6 +415,42 @@
         <div id="flash-data" data-success='@json(session("success"))' data-error='@json(session("error"))'></div>
 
         <!-- Batch Print Modal -->
+        <style>
+            @media print {
+                /* Hard reset layout to avoid a blank first page */
+                html, body { margin: 0 !important; padding: 0 !important; }
+                /* Only print the batch print modal (remove others from flow entirely) */
+                body * { display: none !important; }
+                #batch-print-modal.print-mode { display: block !important; }
+                /* Make all descendants visible again after body* was hidden */
+                #batch-print-modal.print-mode * { display: initial !important; }
+                /* Ensure grid container keeps its grid layout in print */
+                #batch-print-modal.print-mode #batch-print-grid { display: grid !important; }
+
+                /* Normalize layout to full page and remove background overlay */
+                #batch-print-modal.print-mode { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #ffffff !important; opacity: 1 !important; overflow: visible !important; }
+                /* Inner container: remove extra spacing and add predictable print padding */
+                #batch-print-modal.print-mode > div { box-shadow: none !important; max-width: 100% !important; width: 100% !important; max-height: none !important; border-radius: 0 !important; padding: 0.35in 0.35in 0.4in !important; margin: 0 !important; overflow: visible !important; }
+
+                /* Hide title, close button and footer in print */
+                #batch-print-modal.print-mode h2,
+                #batch-print-modal.print-mode #close-batch-print,
+                #batch-print-modal.print-mode .border-t { display: none !important; }
+
+                /* Grid and blocks: 3x3 per page */
+                #batch-print-grid { gap: 0.25in !important; padding: 0 !important; overflow: visible !important; max-height: none !important; grid-template-columns: repeat(3, 1fr) !important; }
+                .qr-block { break-inside: avoid; page-break-inside: avoid; width: 100% !important; height: 3.0in !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: flex-start !important; padding: 0.1in !important; }
+                /* Ensure labels are on separate lines (increase specificity) */
+                #batch-print-modal.print-mode .qr-block .name { display: block !important; width: 100% !important; font-size: 12pt !important; margin-bottom: 0.05in !important; text-align: center !important; white-space: normal !important; }
+                #batch-print-modal.print-mode .qr-block .college { display: block !important; width: 100% !important; font-size: 10pt !important; margin-bottom: 0.08in !important; text-align: center !important; white-space: normal !important; }
+                /* Images scaled to fit 3 rows */
+                .qr-block img { width: 2.2in !important; height: 2.2in !important; object-fit: contain !important; }
+
+                /* Hide scrollbars in print-capable browsers */
+                #batch-print-grid::-webkit-scrollbar { display: none !important; }
+            }
+            @page { margin: 0.35in; }
+        </style>
         <div id="batch-print-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden transition-opacity duration-300">
             <div class="bg-white rounded-xl shadow-lg p-8 max-w-4xl w-full max-h-[90vh] relative animate-fadeIn flex flex-col">
                 <button id="close-batch-print" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-2xl font-bold z-10">&times;</button>
@@ -525,6 +572,18 @@
                 <div class="flex justify-end space-x-3">
                     <button id="cancel-archive" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition">Cancel</button>
                     <button id="confirm-archive" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">Archive</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div id="delete-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden transition-opacity duration-300">
+            <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Confirm Permanent Delete</h3>
+                <p class="text-gray-600 mb-6" id="delete-modal-message">Are you sure you want to permanently delete this student? This action cannot be undone.</p>
+                <div class="flex justify-end space-x-3">
+                    <button id="cancel-delete" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition">Cancel</button>
+                    <button id="confirm-delete" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">Delete Permanently</button>
                 </div>
             </div>
         </div>

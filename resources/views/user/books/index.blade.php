@@ -216,7 +216,7 @@
             {{ session('success') }}
         </div>
     @endif
-    <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+    <div id="books-grid" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
         @foreach($books as $book)
             <div class="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm overflow-hidden 
                         transform transition-all duration-300 hover:shadow-lg hover:-translate-y-1 
@@ -298,7 +298,7 @@
         @endforeach
     </div>
 
-    <div class="mt-8 flex justify-center">
+    <div id="books-pagination" class="mt-8 flex justify-center">
         {{ $books->links('vendor.pagination.modern-gray') }}
     </div>
 </div>
@@ -381,7 +381,9 @@
             const ebookSearchForm = document.getElementById('ebook-search-form');
             const ebookSearchInput = document.getElementById('ebook-search-input');
             const ebookResults = document.getElementById('ebook-results');
-
+            const grid = document.getElementById('books-grid');
+            const noBooks = document.getElementById('no-books-placeholder');
+            const pagination = document.getElementById('books-pagination');
             let ebookTabLoaded = false;
 
             function setActiveButton(activeBtn, inactiveBtn) {
@@ -504,13 +506,18 @@
                         const matchesSection = selectedFilter === 'all' || section === selectedFilter;
                         card.style.display = (matchesSearch && matchesSection) ? '' : 'none';
                     });
+                    // After filtering, update placeholder
+                    updateNoBooksPlaceholder();
                 });
+                // Initial check
+                updateNoBooksPlaceholder();
                 // Also re-filter when section changes (Alpine)
-                document.addEventListener('alpine:init', () => {
-                    Alpine.effect(() => {
-                        const selectedFilter = Alpine.store('selectedFilter') || 'all';
-                        searchInput.dispatchEvent(new Event('input'));
-                    });
+                // Also update when the section dropdown is used (delegate clicks)
+                document.addEventListener('click', (e) => {
+                    const btn = e.target.closest('button');
+                    if (!btn) return;
+                    // Allow Alpine to toggle x-show first
+                    setTimeout(() => updateNoBooksPlaceholder(), 0);
                 });
             }
         });

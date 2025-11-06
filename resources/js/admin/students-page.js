@@ -357,8 +357,9 @@
         }
         let students = selected.map(cb => ({
           name: cb.getAttribute('data-name') || '',
-          studentId: cb.getAttribute('data-student-id') || '',
+          studentId: cb.getAttribute('data-student-id') || cb.getAttribute('data-studentid') || '',
           college: cb.getAttribute('data-college') || '',
+          year: cb.getAttribute('data-year') || '',
           qr: cb.getAttribute('data-qr') || ''
         }));
         const beforeCount = students.length;
@@ -630,9 +631,10 @@
     }
 
     document.addEventListener('click', function (e) {
-      if (e.target.classList.contains('archive-btn')) {
+      if (e.target.closest('.archive-btn')) {
         e.preventDefault();
-        const form = e.target.closest('.archive-form');
+        const button = e.target.closest('.archive-btn');
+        const form = button.closest('.archive-form');
         const studentName = form.getAttribute('data-student-name');
         openArchiveModal(studentName, form);
       }
@@ -654,6 +656,85 @@
     if (archiveModal) {
       archiveModal.addEventListener('click', function (e) {
         if (e.target === archiveModal) closeArchiveModal();
+      });
+    }
+
+    // Toggle archived view logic
+    const toggleArchivedViewBtn = document.getElementById('toggle-archived-view');
+    const activeStudentsSection = document.getElementById('active-students-section');
+    const archivedStudentsSection = document.getElementById('archived-students-section');
+    const studentsTableTitle = document.getElementById('students-table-title');
+    let showArchived = false;
+
+    function toggleArchivedView() {
+      showArchived = !showArchived;
+
+      if (showArchived) {
+        activeStudentsSection.style.display = 'none';
+        archivedStudentsSection.style.display = 'block';
+        studentsTableTitle.textContent = '📚 Archived Students';
+        toggleArchivedViewBtn.textContent = 'View Active Students';
+      } else {
+        activeStudentsSection.style.display = 'block';
+        archivedStudentsSection.style.display = 'none';
+        studentsTableTitle.textContent = '👥 Active Students';
+        toggleArchivedViewBtn.textContent = 'View Archived Students';
+      }
+    }
+
+    if (toggleArchivedViewBtn) {
+      toggleArchivedViewBtn.addEventListener('click', toggleArchivedView);
+    }
+
+    // Delete modal logic
+    const deleteModal = document.getElementById('delete-modal');
+    const cancelDeleteBtn = document.getElementById('cancel-delete');
+    const confirmDeleteBtn = document.getElementById('confirm-delete');
+    const deleteModalMessage = document.getElementById('delete-modal-message');
+    let currentDeleteForm = null;
+
+    function openDeleteModal(studentName, form) {
+      if (!deleteModal || !deleteModalMessage) return;
+      deleteModalMessage.textContent = `Are you sure you want to permanently delete ${studentName}? This action cannot be undone.`;
+      currentDeleteForm = form;
+      deleteModal.classList.remove('hidden');
+      deleteModal.classList.add('flex');
+      deleteModal.style.opacity = 1;
+    }
+
+    function closeDeleteModal() {
+      if (!deleteModal) return;
+      deleteModal.classList.add('hidden');
+      deleteModal.classList.remove('flex');
+      deleteModal.style.opacity = 0;
+      currentDeleteForm = null;
+    }
+
+    document.addEventListener('click', function (e) {
+      if (e.target.closest('.delete-btn')) {
+        e.preventDefault();
+        const form = e.target.closest('.delete-form');
+        const studentName = form.getAttribute('data-student-name');
+        openDeleteModal(studentName, form);
+      }
+    });
+
+    if (cancelDeleteBtn) {
+      cancelDeleteBtn.addEventListener('click', closeDeleteModal);
+    }
+
+    if (confirmDeleteBtn) {
+      confirmDeleteBtn.addEventListener('click', function () {
+        if (currentDeleteForm) {
+          currentDeleteForm.submit();
+        }
+        closeDeleteModal();
+      });
+    }
+
+    if (deleteModal) {
+      deleteModal.addEventListener('click', function (e) {
+        if (e.target === deleteModal) closeDeleteModal();
       });
     }
   });

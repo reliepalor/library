@@ -21,6 +21,7 @@ use App\Events\AttendanceUpdated;
 use App\Mail\LogoutCodeMail;
 use Illuminate\Support\Facades\Cache;
 use App\Helpers\StudyAreaHelper;
+use App\Models\StudyArea;
 
 class UnifiedAttendanceController extends Controller
 {
@@ -671,8 +672,42 @@ class UnifiedAttendanceController extends Controller
         $studentAttendance->each->delete();
         $teacherAttendance->each->delete();
 
+        // Reset study area availability (all active sessions end, so reset to max capacity)
+        $this->resetStudyAreaAvailability();
+
         return redirect()->route('admin.attendance.index')
             ->with('success', 'Attendance records saved and reset successfully.');
+    }
+
+    /**
+     * Reset study area availability to maximum capacity
+     */
+    private function resetStudyAreaAvailability()
+    {
+        try {
+            $studyArea = StudyArea::firstOrCreate(
+                ['name' => 'Main Study Area'],
+                ['max_capacity' => 30, 'available_slots' => 30]
+            );
+
+            // Reset to maximum capacity since all sessions end
+            $studyArea->available_slots = $studyArea->max_capacity;
+            $studyArea->save();
+
+            // Clear the cache to ensure fresh data
+            Cache::forget('study_area_availability');
+
+            Log::info('Study area availability reset during attendance save and reset', [
+                'max_capacity' => $studyArea->max_capacity,
+                'reset_slots' => $studyArea->available_slots
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Study area reset failed during attendance save and reset', [
+                'error' => $e->getMessage()
+            ]);
+            // Don't throw exception here as it's not critical to the main attendance reset
+        }
     }
 
     /**
@@ -944,7 +979,8 @@ public function initiateLogout(Request $request)
             ], 404);
         }
 
-        if (!$attendee->email || !filter_var($attendee->email, FILTER_VALIDATE_EMAIL)) {
+        $email = trim($attendee->email ?? '');
+        if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return response()->json([
                 'success' => false,
                 'message' => ucfirst($userType) . ' does not have a valid email address. Please contact library staff.'
@@ -1338,9 +1374,9 @@ private function maskEmail($email)
             // Send logout notification email
             try {
                 $duration = $attendance->login->diffForHumans($now, ['parts' => 2]);
-                Mail::to($student->email)->queue(new AttendanceNotification($student, 'student', 'logout', $now, $attendance->activity, $duration));
+                \Illuminate\Support\Facades\Mail::to($attendee->email)->queue(new AttendanceNotification($attendee, $userType, 'logout', $now, $attendance->activity, $duration));
             } catch (\Exception $e) {
-                Log::error('Failed to send logout notification email: ' . $e->getMessage());
+                \Illuminate\Support\Facades\Log::error('Failed to send logout notification email: ' . $e->getMessage());
             }
 
             return response()->json([
@@ -1435,8 +1471,9 @@ private function maskEmail($email)
             // Generate new 6-digit code
             $code = str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
 
-            Log::info('Generated new logout code for resend', [
-                'student_id' => $student->student_id,
+            \Illuminate\Support\Facades\Log::info('Generated new logout code for resend', [
+                'user_type' => $userType,
+                'attendee_id' => $attendee->id,
                 'code' => $code,
                 'timestamp' => now()
             ]);
@@ -1452,7 +1489,8 @@ private function maskEmail($email)
             ], now()->addMinutes(2));
 
             // Ensure email is valid
-            if (!$attendee->email || !filter_var($attendee->email, FILTER_VALIDATE_EMAIL)) {
+            $email = trim($attendee->email ?? '');
+            if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 return response()->json([
                     'success' => false,
                     'message' => ucfirst($userType) . ' does not have a valid email address.'

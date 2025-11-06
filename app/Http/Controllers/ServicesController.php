@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Storage;
 use App\Mail\StudentQrMail;
 use App\Mail\TeacherVisitorQrMail;
 use Illuminate\Support\Facades\Mail;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 
 class ServicesController extends Controller
 {
@@ -52,15 +54,49 @@ class ServicesController extends Controller
                 // Generate QR code data
                 $data = "{$student->student_id} | {$student->lname} {$student->fname} | {$student->college} | Year: {$student->year}";
 
+                // Ensure directory exists before saving QR
+                $directory = 'qrcodes';
+                if (!Storage::disk('public')->exists($directory)) {
+                    Storage::disk('public')->makeDirectory($directory);
+                }
+
                 // Path to public storage where the QR code will be saved
                 $fileName = "qrcodes/student_{$student->student_id}.png";
 
-                // Generate and save the QR code with a white background and black foreground
-                Storage::disk('public')->put($fileName, QrCode::format('png')
-                    ->size(300)  // Set size of the QR code
-                    ->backgroundColor(255, 255, 255)  // Set background color to white (RGB: 255, 255, 255)
-                    ->color(0, 0, 0)  // Set the color of the QR code itself to black (RGB: 0, 0, 0)
-                    ->generate($data));
+                // Build composite image: white padded background with headers
+                $fullName = trim($student->fname . ' ' . ($student->MI ? $student->MI . '. ' : '') . $student->lname);
+                $collegeYear = $student->college . ' - ' . $student->year;
+
+                $qrImage = QrCode::format('png')
+                    ->size(300)
+                    ->backgroundColor(255, 255, 255)
+                    ->color(0, 0, 0)
+                    ->generate($data);
+
+                $manager = new ImageManager(new Driver());
+                // Match layout with admin generator (compact + generous bottom padding)
+                $canvas = $manager->create(420, 620);
+                $canvas->fill('#ffffff');
+                $fontPath = public_path('fonts/OpenSans-Bold.ttf');
+                $hasFont = is_string($fontPath) && file_exists($fontPath);
+                $canvas->text($fullName, 210, 60, function($font) use ($fontPath, $hasFont) {
+                    if ($hasFont) { $font->file($fontPath); }
+                    $font->size(40);
+                    $font->color('#000000');
+                    $font->align('center');
+                });
+                $canvas->text($collegeYear, 210, 110, function($font) use ($fontPath, $hasFont) {
+                    if ($hasFont) { $font->file($fontPath); }
+                    $font->size(28);
+                    $font->color('#000000');
+                    $font->align('center');
+                });
+                // Read via data URI for robustness
+                $qrImg = $manager->read('data:image/png;base64,' . base64_encode($qrImage));
+                // Bring QR closer to text while leaving bottom space
+                $canvas->place($qrImg, 'center', 0, -40);
+
+                Storage::disk('public')->put($fileName, $canvas->toPng()->toString());
 
                 // Save QR code path to student record
                 $student->qr_code_path = $fileName;

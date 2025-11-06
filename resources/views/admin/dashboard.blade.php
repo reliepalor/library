@@ -366,7 +366,7 @@
                                         </div>
                                     </div>
 
-                                    <!-- Status -->
+                                    <!-- Status 
                                     <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-5 border border-gray-200/50 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:shadow-lg" id="statusCard">
                                         <div class="flex items-center justify-between">
                                             <div>
@@ -404,6 +404,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                    -->
                                 </div>
 
                                 <!-- Update Form -->

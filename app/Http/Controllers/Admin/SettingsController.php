@@ -9,7 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Password as PasswordReset;
 use Illuminate\Validation\Rules\Password;
 
 class SettingsController extends Controller
@@ -37,19 +39,46 @@ class SettingsController extends Controller
 
     public function profile()
     {
-        $admin = Auth::guard('admin')->user();
+        $admin = Auth::user(); // Use the default guard since admin middleware checks usertype
         return view('admin.profile', compact('admin'));
     }
 
     public function updateProfile(Request $request)
     {
+        Log::info('UpdateProfile called', $request->all());
+
+        $admin = Auth::user();
+
+        // Check if this is a profile picture only update (only profile_picture and _token present)
+        if ($request->hasFile('profile_picture') && !$request->has('name') && !$request->has('email')) {
+            Log::info('Profile picture only update detected');
+
+            $request->validate([
+                'profile_picture' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            ]);
+
+            // Handle profile picture upload
+            if ($admin->profile_picture && Storage::disk('public')->exists($admin->profile_picture)) {
+                Storage::disk('public')->delete($admin->profile_picture);
+            }
+
+            // Store new profile picture
+            $path = $request->file('profile_picture')->store('profile_pictures', 'public');
+            Log::info('New profile picture path: ' . $path);
+
+            $admin->profile_picture = $path;
+            $admin->save();
+
+            Log::info('Profile picture saved successfully');
+            return back()->with('success', 'Profile picture updated successfully!');
+        }
+
+        // Full profile update
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:admins,email,' . Auth::guard('admin')->id(),
+            'email' => 'required|string|email|max:255|unique:users,email,' . Auth::id(),
             'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
-
-        $admin = Auth::guard('admin')->user();
 
         $data = [
             'name' => $request->name,
@@ -64,11 +93,12 @@ class SettingsController extends Controller
             }
 
             // Store new profile picture
-            $path = $request->file('profile_picture')->store('profile-pictures', 'public');
+            $path = $request->file('profile_picture')->store('profile_pictures', 'public');
             $data['profile_picture'] = $path;
         }
 
-        $admin->update($data);
+        $admin->fill($data);
+        $admin->save();
 
         return back()->with('success', 'Profile updated successfully!');
     }
@@ -80,17 +110,41 @@ class SettingsController extends Controller
             'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
-        $admin = Auth::guard('admin')->user();
+        $admin = Auth::user();
 
         // Check current password
         if (!Hash::check($request->current_password, $admin->password)) {
             return back()->withErrors(['current_password' => 'Current password is incorrect.']);
         }
 
-        $admin->update([
-            'password' => Hash::make($request->password),
-        ]);
+        $admin->password = Hash::make($request->password);
+        $admin->save();
 
         return back()->with('success', 'Password changed successfully!');
+    }
+
+    public function forgotPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $admin = Auth::user();
+
+        // Ensure the email matches the authenticated user's email
+        if ($admin->email !== $request->email) {
+            return back()->withErrors(['email' => 'The email address does not match your account.']);
+        }
+
+        // Send password reset link using admin broker
+        $status = PasswordReset::broker('admins')->sendResetLink(
+            $request->only('email')
+        );
+
+        if ($status === PasswordReset::RESET_LINK_SENT) {
+            return back()->with('success', 'Password reset link sent to your email!');
+        }
+
+        return back()->withErrors(['email' => __($status)]);
     }
 }

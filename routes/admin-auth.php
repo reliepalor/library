@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Admin\Auth\LoginController;
 use App\Http\Controllers\Admin\Auth\RegisteredUserController;
+use App\Http\Controllers\Admin\Auth\AdminPasswordResetLinkController;
+use App\Http\Controllers\Admin\Auth\AdminNewPasswordController;
 use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\UnifiedAttendanceController;
 use App\Http\Controllers\Admin\SettingsController;
@@ -15,6 +17,12 @@ Route::prefix('admin')->group(function () {
 
     Route::get('register', [RegisteredUserController::class, 'create'])->name('admin.auth.register');
     Route::post('register', [RegisteredUserController::class, 'store'])->name('admin.auth.register.submit');
+
+    // Password Reset Routes
+    Route::get('forgot-password', [AdminPasswordResetLinkController::class, 'create'])->name('admin.password.request');
+    Route::post('forgot-password', [AdminPasswordResetLinkController::class, 'store'])->name('admin.password.email');
+    Route::get('reset-password/{token}', [AdminNewPasswordController::class, 'create'])->name('admin.password.reset');
+    Route::post('reset-password', [AdminNewPasswordController::class, 'store'])->name('admin.password.store');
 
     Route::middleware(['auth', 'admin'])->group(function () {
         Route::post('logout', [LoginController::class, 'destroy'])->name('admin.logout');
@@ -43,6 +51,7 @@ Route::prefix('admin')->group(function () {
         Route::get('profile', [SettingsController::class, 'profile'])->name('admin.profile');
         Route::post('profile/update', [SettingsController::class, 'updateProfile'])->name('admin.profile.update');
         Route::post('profile/change-password', [SettingsController::class, 'changePassword'])->name('admin.profile.change-password');
+        Route::post('profile/forgot-password', [SettingsController::class, 'forgotPassword'])->name('admin.profile.forgot-password');
 
         // Added route for attendance analytics
         Route::get('overdue/check-emails', [OverdueBookController::class, 'checkOverdueEmails'])->name('admin.overdue.check-emails');

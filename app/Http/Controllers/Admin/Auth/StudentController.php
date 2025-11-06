@@ -9,7 +9,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use App\Mail\StudentQrMail;
 use Illuminate\Support\Facades\Mail;
-use Intervention\Image\Facades\Image;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 use Maatwebsite\Excel\Facades\Excel;
 use Smalot\PdfParser\Parser;
 
@@ -28,6 +29,11 @@ class StudentController extends \App\Http\Controllers\Controller
      */
     public function bulkStore(Request $request)
     {
+        // Prevent timeout/memory issues during bulk processing
+        try { @set_time_limit(0); } catch (\Throwable $e) {}
+        try { @ini_set('max_execution_time', '0'); } catch (\Throwable $e) {}
+        try { @ini_set('memory_limit', '512M'); } catch (\Throwable $e) {}
+
         $request->validate([
             'file' => 'required|file|mimes:pdf,xlsx,xls,csv|max:10240', // 10MB max
         ]);
@@ -39,23 +45,75 @@ class StudentController extends \App\Http\Controllers\Controller
 
         try {
             if (in_array($extension, ['xlsx', 'xls', 'csv'])) {
-                // Handle Excel files
-                $data = Excel::toArray([], $file)[0]; // Get first sheet
-                $headers = array_shift($data); // Remove header row
+                // Handle Excel/CSV files with header-based mapping
+                $sheet = Excel::toArray([], $file)[0] ?? [];
+                if (empty($sheet)) { throw new \Exception('The uploaded file is empty or unreadable.'); }
 
-                foreach ($data as $row) {
-                    if (count($row) >= 8) { // Ensure we have all required columns
-                        $studentsData[] = [
-                            'student_id' => trim($row[0] ?? ''),
-                            'lname' => trim($row[1] ?? ''),
-                            'fname' => trim($row[2] ?? ''),
-                            'MI' => trim($row[3] ?? ''),
-                            'gender' => trim($row[4] ?? ''),
-                            'college' => trim($row[5] ?? ''),
-                            'year' => trim($row[6] ?? ''),
-                            'email' => strtolower(trim($row[7] ?? '')),
-                        ];
+                $headers = array_map(function($h){
+                    return is_string($h) ? strtolower(preg_replace('/[^a-z0-9]+/i','', $h)) : '';
+                }, array_shift($sheet) ?? []);
+
+                // Build column index map using common header synonyms
+                $map = [];
+                foreach ($headers as $i => $h) {
+                    if ($h === '') continue;
+                    $map[$h] = $i;
+                }
+                $idx = function(array $keys) use ($map) {
+                    foreach ($keys as $k) { if (isset($map[$k])) return $map[$k]; }
+                    return null; // not found
+                };
+                $colStudentId = $idx(['studentid','idnumber','id','studentno','studentnumber']);
+                $colLname     = $idx(['lastname','surname','familyname','lname']);
+                $colFname     = $idx(['firstname','givenname','fname','first']);
+                $colMI        = $idx(['mi','middleinitial','middlename','middle']);
+                $colCollege   = $idx(['college','department','dept','school']);
+                $colYear      = $idx(['year','yearlevel','level','grade']);
+                $colGender    = $idx(['gender','sex']);
+                $colEmail     = $idx(['email','emailaddress','mail']);
+
+                foreach ($sheet as $row) {
+                    // Skip completely empty rows
+                    if (!is_array($row) || count(array_filter($row, function($v){ return trim((string)$v) !== ''; })) === 0) {
+                        continue;
                     }
+
+                    $get = function($col) use ($row) {
+                        return $col !== null ? (trim((string)($row[$col] ?? ''))) : '';
+                    };
+
+                    $student_id = $get($colStudentId) ?: trim((string)($row[0] ?? ''));
+                    $lname      = $get($colLname)     ?: trim((string)($row[1] ?? ''));
+                    $fname      = $get($colFname)     ?: trim((string)($row[2] ?? ''));
+                    $MI         = $get($colMI)        ?: trim((string)($row[3] ?? ''));
+                    $college    = $get($colCollege)   ?: trim((string)($row[5] ?? ''));
+                    $yearRaw    = $get($colYear)      ?: trim((string)($row[6] ?? ''));
+                    $genderRaw  = $get($colGender)    ?: trim((string)($row[4] ?? ''));
+                    $email      = strtolower($get($colEmail) ?: trim((string)($row[7] ?? '')));
+
+                    // Normalize gender
+                    $g = strtolower($genderRaw);
+                    $gender = null;
+                    if ($g !== '') {
+                        if (in_array($g, ['male','m','1'])) { $gender = 'Male'; }
+                        elseif (in_array($g, ['female','f','2'])) { $gender = 'Female'; }
+                        elseif (in_array($g, ['prefernottosay','prefernotto say','prefer not to say','na','n/a','unknown'])) { $gender = 'Prefer not to say'; }
+                        else { $gender = 'Other'; }
+                    }
+
+                    // Normalize year to integer
+                    $yearDigits = preg_match('/\d+/', $yearRaw, $m) ? (int)$m[0] : null;
+
+                    $studentsData[] = [
+                        'student_id' => $student_id,
+                        'lname'      => $lname,
+                        'fname'      => $fname,
+                        'MI'         => $MI,
+                        'gender'     => $gender,
+                        'college'    => $college,
+                        'year'       => $yearDigits,
+                        'email'      => $email,
+                    ];
                 }
             } elseif ($extension === 'pdf') {
                 // Handle PDF files
@@ -90,13 +148,13 @@ class StudentController extends \App\Http\Controllers\Controller
                     // Validate each student data
                     $validator = \Illuminate\Support\Facades\Validator::make($studentData, [
                         'student_id' => 'required|string|min:5|max:20|unique:students,student_id',
-                        'lname' => 'required|string|max:155',
-                        'fname' => 'required|string|max:155',
-                        'MI' => 'nullable|string|max:155',
-                        'gender' => 'nullable|string|in:Male,Female',
-                        'college' => 'required|string|max:155',
-                        'year' => 'required|string|max:155',
-                        'email' => 'required|string|email|max:155',
+                        'lname'      => 'required|string|max:155',
+                        'fname'      => 'required|string|max:155',
+                        'MI'         => 'nullable|string|max:155',
+                        'gender'     => 'nullable|string|in:Male,Female,Prefer not to say,Other',
+                        'college'    => 'required|string|max:155',
+                        'year'       => 'required|integer|min:1|max:4',
+                        'email'      => 'required|string|email|max:155',
                     ]);
 
                     if ($validator->fails()) {
@@ -107,21 +165,32 @@ class StudentController extends \App\Http\Controllers\Controller
                     // Create student
                     $student = Student::create($studentData);
 
-                    // Generate QR code
+                    // Generate composite QR code (white background with headers)
                     $data = "{$student->student_id} | {$student->lname} {$student->fname} | {$student->college} | Year: {$student->year}";
                     $directory = 'qrcodes';
                     if (!Storage::disk('public')->exists($directory)) {
                         Storage::disk('public')->makeDirectory($directory);
                     }
                     $fileName = "qrcodes/student_{$student->student_id}.png";
-                    Storage::disk('public')->put($fileName, QrCode::format('png')
-                        ->size(300)
-                        ->backgroundColor(255, 255, 255)
-                        ->color(0, 0, 0)
-                        ->generate($data));
+                    try {
+                        $composite = $this->generateCompositeQr($student);
+                        Storage::disk('public')->put($fileName, $composite->toString());
+                    } catch (\Throwable $imgEx) {
+                        // Fallback: save plain QR if composite fails
+                        $plainQr = QrCode::format('png')
+                            ->size(300)
+                            ->backgroundColor(255, 255, 255)
+                            ->color(0, 0, 0)
+                            ->generate("{$student->student_id} | {$student->lname} {$student->fname} | {$student->college} | Year: {$student->year}");
+                        Storage::disk('public')->put($fileName, $plainQr);
+                        \Log::warning('Composite QR failed, saved plain QR instead', [
+                            'student_id' => $student->student_id,
+                            'error' => $imgEx->getMessage(),
+                        ]);
+                    }
                     $student->update(['qr_code_path' => $fileName]);
 
-                    // Send email
+                    // Send email synchronously to ensure delivery without a queue worker
                     try {
                         $qrCodeBase64 = base64_encode(Storage::disk('public')->get($fileName));
                         Mail::to($student->email)->send(new StudentQrMail($student, $qrCodeBase64));
@@ -147,9 +216,25 @@ class StudentController extends \App\Http\Controllers\Controller
                 }
             }
 
+            // Return JSON for AJAX requests
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message,
+                    'successCount' => $successCount,
+                    'errors' => $errors,
+                ]);
+            }
+
             return redirect()->route('admin.students.index')->with('success', $message);
 
         } catch (\Throwable $e) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to process file: ' . $e->getMessage(),
+                ], 500);
+            }
             return redirect()->back()->with('error', 'Failed to process file: ' . $e->getMessage());
         }
     }
@@ -210,7 +295,7 @@ class StudentController extends \App\Http\Controllers\Controller
                 $validate
             );
 
-            // Generate QR code data
+            // Generate QR code data (kept for data encoded in QR)
             $data = "{$student->student_id} | {$student->lname} {$student->fname} | {$student->college} | Year: {$student->year}";
 
             // Ensure directory exists before saving QR
@@ -222,12 +307,9 @@ class StudentController extends \App\Http\Controllers\Controller
             // Path to public storage where the QR code will be saved
             $fileName = "qrcodes/student_{$student->student_id}.png";
 
-            // Generate and save the QR code with a white background and black foreground
-            Storage::disk('public')->put($fileName, QrCode::format('png')
-                ->size(300)  // Set size of the QR code
-                ->backgroundColor(255, 255, 255)  // Set background color to white (RGB: 255, 255, 255)
-                ->color(0, 0, 0)  // Set the color of the QR code itself to black (RGB: 0, 0, 0)
-                ->generate($data));
+            // Generate composite QR image with white padded background and headers
+            $composite = $this->generateCompositeQr($student);
+            Storage::disk('public')->put($fileName, $composite->toString());
 
             // Save QR code path to student record
             if ($student->qr_code_path !== $fileName) {
@@ -408,7 +490,7 @@ class StudentController extends \App\Http\Controllers\Controller
         // Find the student by ID
         $student = Student::findOrFail($id);
 
-        // Generate QR code data
+        // Generate QR code data (used inside composite)
         $data = "{$student->student_id} | {$student->lname} {$student->fname} | {$student->college} | Year: {$student->year}";
 
         // Path to QR code file
@@ -420,24 +502,10 @@ class StudentController extends \App\Http\Controllers\Controller
             Storage::disk('public')->makeDirectory($directory);
         }
 
-        // Generate QR code (or use existing one)
-        if (!Storage::disk('public')->exists($fileName)) {
-            // Create new QR code
-            $qrCode = QrCode::format('png')
-                ->size(300)
-                ->backgroundColor(255, 255, 255)
-                ->color(0, 0, 0)
-                ->generate($data);
-
-            // Save to storage
-            Storage::disk('public')->put($fileName, $qrCode);
-
-            // For email
-            $qrCodeBase64 = base64_encode($qrCode);
-        } else {
-            // Use existing QR code
-            $qrCodeBase64 = base64_encode(Storage::disk('public')->get($fileName));
-        }
+        // Always regenerate composite QR to reflect current layout and data
+        $composite = $this->generateCompositeQr($student);
+        Storage::disk('public')->put($fileName, $composite->toString());
+        $qrCodeBase64 = base64_encode($composite->toString());
 
         // Send email
         Mail::to($student->email)->send(new StudentQrMail($student, $qrCodeBase64));
@@ -474,4 +542,76 @@ class StudentController extends \App\Http\Controllers\Controller
         $archivedStudents = Student::archived()->get();
         return view('admin.students.archived', ["students" => $archivedStudents]);
     }
+
+    /**
+     * Permanently delete the specified archived student.
+     */
+    public function permanentDelete(string $id)
+    {
+        $student = Student::findOrFail($id);
+
+        // Ensure the student is archived before allowing permanent deletion
+        if (!$student->archived) {
+            return redirect()->route('admin.students.index')->with('error', 'Only archived students can be permanently deleted.');
+        }
+
+        // Delete the QR code file if it exists
+        if ($student->qr_code_path && Storage::disk('public')->exists($student->qr_code_path)) {
+            Storage::disk('public')->delete($student->qr_code_path);
+        }
+
+        // Permanently delete the student from the database
+        $student->delete();
+
+        return redirect()->route('admin.students.index')->with('success', 'Student permanently deleted successfully.');
+    }
+
+    /**
+     * Generate composite QR code image with text overlay.
+     */
+private function generateCompositeQr(Student $student)
+{
+    $fullName = $student->fname . ' ' . $student->lname;
+    if ($student->MI) {
+        $fullName .= ' ' . $student->MI . '.';
+    }
+
+    $collegeYear = $student->college . ' - ' . $student->year;
+    $qrData = "{$student->student_id} | {$student->lname} {$student->fname} | {$student->college} | Year: {$student->year}";
+
+    // Generate QR code image (larger and clearer)
+    $qrImage = QrCode::format('png')
+        ->size(350)
+        ->margin(1)
+        ->backgroundColor(255, 255, 255)
+        ->color(0, 0, 0)
+        ->generate($qrData);
+
+    $manager = new ImageManager(new Driver());
+
+    // Adjusted canvas size — smaller bottom, enough for text
+    $canvas = $manager->create(420, 420);
+    $canvas->fill('#ffffff');
+
+    /*/ Text positions higher up and larger font
+    $canvas->text($fullName, 225, 60, function ($font) {
+        $font->size(46);
+        $font->color('#000000');
+        $font->align('center');
+    });
+
+    $canvas->text($collegeYear, 225, 120, function ($font) {
+        $font->size(34);
+        $font->color('#333333');
+        $font->align('center');
+    });
+    */
+
+    // Place QR code lower (avoid overlapping text)
+    $qrImg = $manager->read('data:image/png;base64,' . base64_encode($qrImage));
+    $canvas->place($qrImg, 'center', 0, 10);
+
+    return $canvas->toPng();
+}
+
 }

@@ -19,7 +19,7 @@ use App\Http\Controllers\Admin\Auth\BorrowRequestController;
 use App\Http\Controllers\Admin\Auth\CampusNewsController;
 use App\Http\Controllers\User\DashboardController as UserDashboardController;
 
-Route::get('/', [HomeController::class, 'index']);
+Route::get('/', [HomeController::class, 'index'])->middleware('redirect.admin');
 
 // Public campus news routes
 Route::get('/campus-news/{campusNews}', [HomeController::class, 'showNews'])->name('campus-news.show');
@@ -27,9 +27,9 @@ Route::get('/campus-news/{campusNews}', [HomeController::class, 'showNews'])->na
 Route::get('/services', [App\Http\Controllers\ServicesController::class, 'index'])->name('services.index');
 Route::post('/services/register-qr', [App\Http\Controllers\ServicesController::class, 'registerQr'])->name('services.register-qr');
 
-Route::get('/dashboard', [UserDashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [UserDashboardController::class, 'index'])->middleware(['auth', 'verified', 'redirect.admin'])->name('dashboard');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'redirect.admin'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -40,7 +40,7 @@ Route::middleware('auth')->group(function () {
 });
 
 /*---------------------------ROUTE FOR USER MIDDLEWARE------------------------------*/
-Route::middleware(['auth', UserMiddleware::class])->group(function () {
+Route::middleware(['auth', UserMiddleware::class, 'redirect.admin'])->group(function () {
     Route::get('/user', [UserDashboardController::class, 'index'])->name('user.dashboard');
 
     Route::get('/user/books', [UserBooksController::class, 'index'])->name('user.books.index');
@@ -109,6 +109,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('admin/students/{id}', [AdminStudentController::class, 'update'])->name('admin.students.update');
     Route::post('/admin/students/{id}/archive', [AdminStudentController::class, 'archive'])->name('admin.students.archive');
     Route::patch('/admin/students/{id}/unarchive', [AdminStudentController::class, 'unarchive'])->name('admin.students.unarchive');
+    Route::delete('/admin/students/{id}/permanent-delete', [AdminStudentController::class, 'permanentDelete'])->name('admin.students.permanent-delete');
     Route::get('/admin/students/archived', [AdminStudentController::class, 'archived'])->name('admin.students.archived');
     Route::get('/admin/students/bulk-create', [AdminStudentController::class, 'bulkCreate'])->name('admin.students.bulk-create');
     Route::post('/admin/students/bulk-store', [AdminStudentController::class, 'bulkStore'])->name('admin.students.bulk-store');

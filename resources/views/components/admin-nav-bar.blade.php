@@ -454,11 +454,17 @@
                         data-tooltip-trigger="profile">
                     <div class="flex-shrink-0 relative">
                         <div class="h-9 w-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-0.5 group-hover:scale-110 transition-all duration-300">
-                            <div class="h-full w-full rounded-full bg-white/90 flex items-center justify-center">
-                                <svg class="h-5 w-5 text-gray-600 group-hover:text-blue-600 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                </svg>
-                            </div>
+                            @if(Auth::user() && Auth::user()->profile_picture)
+                                <img src="{{ asset('storage/profile_pictures/' . basename(Auth::user()->profile_picture)) }}"
+                                     alt="Profile Picture"
+                                     class="h-full w-full rounded-full object-cover">
+                            @else
+                                <div class="h-full w-full rounded-full bg-white/90 flex items-center justify-center">
+                                    <svg class="h-5 w-5 text-gray-600 group-hover:text-blue-600 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                    </svg>
+                                </div>
+                            @endif
                         </div>
                         <div class="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
                     </div>
@@ -492,11 +498,17 @@
                     <div class="px-4 py-3 bg-gradient-to-r from-blue-50/80 to-purple-50/80 border-b border-blue-100/50">
                         <div class="flex items-center space-x-3">
                             <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-0.5">
-                                <div class="h-full w-full rounded-full bg-white flex items-center justify-center">
-                                    <svg class="h-5 w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                    </svg>
-                                </div>
+                                @if(Auth::user() && Auth::user()->profile_picture)
+                                    <img src="{{ asset('storage/profile_pictures/' . basename(Auth::user()->profile_picture)) }}"
+                                         alt="Profile Picture"
+                                         class="h-full w-full rounded-full object-cover">
+                                @else
+                                    <div class="h-full w-full rounded-full bg-white flex items-center justify-center">
+                                        <svg class="h-5 w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                        </svg>
+                                    </div>
+                                @endif
                             </div>
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm font-semibold text-gray-900 truncate">{{ Auth::user()->name }}</p>
