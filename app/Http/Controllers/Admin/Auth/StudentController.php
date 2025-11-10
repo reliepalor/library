@@ -221,7 +221,9 @@ class StudentController extends \App\Http\Controllers\Controller
                 return response()->json([
                     'success' => true,
                     'message' => $message,
-                    'successCount' => $successCount,
+                    'total' => count($studentsData),
+                    'success_count' => $successCount,
+                    'failed_count' => count($errors),
                     'errors' => $errors,
                 ]);
             }
@@ -567,9 +569,37 @@ class StudentController extends \App\Http\Controllers\Controller
     }
 
     /**
+     * Bulk archive selected students.
+     */
+    public function bulkArchive(Request $request)
+    {
+        $request->validate([
+            'student_ids' => 'required|array',
+            'student_ids.*' => 'integer|exists:students,id',
+        ]);
+
+        $studentIds = $request->input('student_ids');
+        $archivedCount = 0;
+
+        foreach ($studentIds as $id) {
+            $student = Student::find($id);
+            if ($student && !$student->archived) {
+                $student->archive();
+                $archivedCount++;
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully archived {$archivedCount} student(s).",
+            'archived_count' => $archivedCount,
+        ]);
+    }
+
+    /**
      * Generate composite QR code image with text overlay.
      */
-private function generateCompositeQr(Student $student)
+    private function generateCompositeQr(Student $student)
 {
     $fullName = $student->fname . ' ' . $student->lname;
     if ($student->MI) {

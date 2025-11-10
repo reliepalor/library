@@ -1,0 +1,29 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "composer install && npm install && npm run build && php artisan key:generate"
+  },
+  "deploy": {
+    "startCommand": "php artisan serve --host 0.0.0.0 --port $PORT",
+    "healthcheckPath": "/",
+    "restartPolicyType": "ON_FAILURE"
+  },
+  "plugins": [
+    {
+      "name": "mysql"
+    }
+  ],
+  "env": {
+    "APP_ENV": "production",
+    "APP_DEBUG": "false",
+    "APP_KEY": "",
+    "APP_URL": "https://${{RAILWAY_STATIC_URL}}",
+    "DB_CONNECTION": "mysql",
+    "DB_HOST": "${{MYSQLHOST}}",
+    "DB_PORT": "${{MYSQLPORT}}",
+    "DB_DATABASE": "${{MYSQLDATABASE}}",
+    "DB_USERNAME": "${{MYSQLUSER}}",
+    "DB_PASSWORD": "${{MYSQLPASSWORD}}"
+  }
+}

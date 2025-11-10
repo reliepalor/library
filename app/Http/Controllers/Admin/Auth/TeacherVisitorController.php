@@ -11,16 +11,250 @@ use Illuminate\Support\Facades\File;
 use App\Mail\StudentQrMail;
 use Illuminate\Support\Facades\Mail;
 use Intervention\Image\Facades\Image;
+use Maatwebsite\Excel\Facades\Excel;
+use Smalot\PdfParser\Parser;
 
 class TeacherVisitorController extends \App\Http\Controllers\Controller
 {
+    /**
+     * Show the form for bulk creating teachers/visitors.
+     */
+    public function bulkCreate()
+    {
+        return view('admin.teachers_visitors.bulk_create');
+    }
+
+    /**
+     * Store bulk teachers/visitors from uploaded file.
+     */
+    public function bulkStore(Request $request)
+    {
+        // Prevent timeout/memory issues during bulk processing
+        try { @set_time_limit(0); } catch (\Throwable $e) {}
+        try { @ini_set('max_execution_time', '0'); } catch (\Throwable $e) {}
+        try { @ini_set('memory_limit', '512M'); } catch (\Throwable $e) {}
+
+        $request->validate([
+            'file' => 'required|file|mimes:pdf,xlsx,xls,csv|max:10240', // 10MB max
+        ]);
+
+        $file = $request->file('file');
+        $extension = $file->getClientOriginalExtension();
+
+        $teachersVisitorsData = [];
+
+        try {
+            if (in_array($extension, ['xlsx', 'xls', 'csv'])) {
+                // Handle Excel/CSV files with header-based mapping
+                $sheet = Excel::toArray([], $file)[0] ?? [];
+                if (empty($sheet)) { throw new \Exception('The uploaded file is empty or unreadable.'); }
+
+                $headers = array_map(function($h){
+                    return is_string($h) ? strtolower(preg_replace('/[^a-z0-9]+/i','', $h)) : '';
+                }, array_shift($sheet) ?? []);
+
+                // Build column index map using common header synonyms
+                $map = [];
+                foreach ($headers as $i => $h) {
+                    if ($h === '') continue;
+                    $map[$h] = $i;
+                }
+                $idx = function(array $keys) use ($map) {
+                    foreach ($keys as $k) { if (isset($map[$k])) return $map[$k]; }
+                    return null; // not found
+                };
+                $colLname     = $idx(['lastname','surname','familyname','lname']);
+                $colFname     = $idx(['firstname','givenname','fname','first']);
+                $colMI        = $idx(['mi','middleinitial','middlename','middle']);
+                $colDepartment= $idx(['department','dept','school']);
+                $colGender    = $idx(['gender','sex']);
+                $colEmail     = $idx(['email','emailaddress','mail']);
+                $colRole      = $idx(['role','type','position']);
+
+                foreach ($sheet as $row) {
+                    // Skip completely empty rows
+                    if (!is_array($row) || count(array_filter($row, function($v){ return trim((string)$v) !== ''; })) === 0) {
+                        continue;
+                    }
+
+                    $get = function($col) use ($row) {
+                        return $col !== null ? (trim((string)($row[$col] ?? ''))) : '';
+                    };
+
+                    $lname      = $get($colLname)     ?: trim((string)($row[0] ?? ''));
+                    $fname      = $get($colFname)     ?: trim((string)($row[1] ?? ''));
+                    $MI         = $get($colMI)        ?: trim((string)($row[2] ?? ''));
+                    $department = $get($colDepartment)?: trim((string)($row[4] ?? ''));
+                    $genderRaw  = $get($colGender)    ?: trim((string)($row[3] ?? ''));
+                    $email      = strtolower($get($colEmail) ?: trim((string)($row[5] ?? '')));
+                    $roleRaw    = $get($colRole)      ?: trim((string)($row[6] ?? ''));
+
+                    // Normalize gender
+                    $g = strtolower($genderRaw);
+                    $gender = null;
+                    if ($g !== '') {
+                        if (in_array($g, ['male','m','1'])) { $gender = 'Male'; }
+                        elseif (in_array($g, ['female','f','2'])) { $gender = 'Female'; }
+                        elseif (in_array($g, ['prefernottosay','prefernotto say','prefer not to say','na','n/a','unknown'])) { $gender = 'Prefer not to say'; }
+                        else { $gender = 'Other'; }
+                    }
+
+                    // Normalize role
+                    $r = strtolower($roleRaw);
+                    $role = null;
+                    if ($r !== '') {
+                        if (in_array($r, ['teacher','t','1'])) { $role = 'Teacher'; }
+                        elseif (in_array($r, ['visitor','v','2'])) { $role = 'Visitor'; }
+                    }
+
+                    $teachersVisitorsData[] = [
+                        'lname'      => $lname,
+                        'fname'      => $fname,
+                        'MI'         => $MI,
+                        'gender'     => $gender,
+                        'department' => $department,
+                        'email'      => $email,
+                        'role'       => $role,
+                    ];
+                }
+            } elseif ($extension === 'pdf') {
+                // Handle PDF files
+                $parser = new Parser();
+                $pdf = $parser->parseFile($file->getPathname());
+                $text = $pdf->getText();
+
+                // Parse PDF text - assuming tab or space separated data
+                $lines = explode("\n", $text);
+                foreach ($lines as $line) {
+                    $parts = preg_split('/\s+/', trim($line));
+                    if (count($parts) >= 7) {
+                        $teachersVisitorsData[] = [
+                            'lname' => trim($parts[0] ?? ''),
+                            'fname' => trim($parts[1] ?? ''),
+                            'MI' => trim($parts[2] ?? ''),
+                            'gender' => trim($parts[3] ?? ''),
+                            'department' => trim($parts[4] ?? ''),
+                            'email' => strtolower(trim($parts[5] ?? '')),
+                            'role' => trim($parts[6] ?? ''),
+                        ];
+                    }
+                }
+            }
+
+            $successCount = 0;
+            $errors = [];
+
+            foreach ($teachersVisitorsData as $index => $teacherVisitorData) {
+                try {
+                    // Validate each teacher/visitor data
+                    $validator = \Illuminate\Support\Facades\Validator::make($teacherVisitorData, [
+                        'lname'      => 'required|string|max:155',
+                        'fname'      => 'required|string|max:155',
+                        'MI'         => 'nullable|string|max:155',
+                        'gender'     => 'nullable|string|in:Male,Female,Prefer not to say,Other',
+                        'department' => 'required|string|max:155',
+                        'email'      => 'required|string|email|max:155|unique:teachers_visitors,email',
+                        'role'       => 'required|string|in:Teacher,Visitor',
+                    ]);
+
+                    if ($validator->fails()) {
+                        $errors[] = "Row " . ($index + 2) . ": " . implode(', ', $validator->errors()->all());
+                        continue;
+                    }
+
+                    // Create teacher/visitor
+                    $teacherVisitor = TeacherVisitor::create($teacherVisitorData);
+
+                    // Generate QR code data in format: teacher_visitor_id|name|department|role
+                    $name = $teacherVisitor->fname . ' ' . $teacherVisitor->lname;
+                    $data = "{$teacherVisitor->id}|{$name}|{$teacherVisitor->department}|{$teacherVisitor->role}";
+
+                    // Ensure directory exists before saving QR
+                    $directory = 'qrcodes';
+                    if (!Storage::disk('public')->exists($directory)) {
+                        Storage::disk('public')->makeDirectory($directory);
+                    }
+
+                    // Path to public storage where the QR code will be saved
+                    $fileName = "qrcodes/teacher_visitor_{$teacherVisitor->id}.png";
+
+                    // Generate and save the QR code with a white background and black foreground
+                    Storage::disk('public')->put($fileName, QrCode::format('png')
+                        ->size(300)  // Set size of the QR code
+                        ->backgroundColor(255, 255, 255)  // Set background color to white (RGB: 255, 255, 255)
+                        ->color(0, 0, 0)  // Set the color of the QR code itself to black (RGB: 0, 0, 0)
+                        ->generate($data));
+
+                    // Save QR code path to record
+                    if ($teacherVisitor->qr_code_path !== $fileName) {
+                        $teacherVisitor->qr_code_path = $fileName;
+                        $teacherVisitor->save();
+                    }
+
+                    // Send email synchronously to ensure delivery without a queue worker
+                    try {
+                        $qrCodeBase64 = base64_encode(Storage::disk('public')->get($fileName));
+                        Mail::to($teacherVisitor->email)->send(new StudentQrMail($teacherVisitor, $qrCodeBase64));
+                    } catch (\Throwable $mailException) {
+                        \Log::error('Failed to send bulk teacher/visitor QR email', [
+                            'id' => $teacherVisitor->id,
+                            'email' => $teacherVisitor->email,
+                            'error' => $mailException->getMessage(),
+                        ]);
+                    }
+
+                    $successCount++;
+                } catch (\Throwable $e) {
+                    $errors[] = "Row " . ($index + 2) . ": " . $e->getMessage();
+                }
+            }
+
+            $successMessage = "Successfully registered {$successCount} teachers/visitors.";
+            $errorMessages = [];
+            if (!empty($errors)) {
+                $errorMessages = array_slice($errors, 0, 5); // Show first 5 errors
+                if (count($errors) > 5) {
+                    $errorMessages[] = "and " . (count($errors) - 5) . " more errors.";
+                }
+            }
+
+            // Return JSON for AJAX requests
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'success_message' => $successMessage,
+                    'error_messages' => $errorMessages,
+                    'total' => count($teachersVisitorsData),
+                    'success_count' => $successCount,
+                    'failed_count' => count($errors),
+                    'errors' => $errors,
+                ]);
+            }
+
+            $message = $successMessage;
+            if (!empty($errorMessages)) {
+                $message .= " Errors: " . implode('; ', $errorMessages);
+            }
+            return redirect()->route('admin.teachers_visitors.index')->with('success', $message);
+
+        } catch (\Throwable $e) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to process file: ' . $e->getMessage(),
+                ], 500);
+            }
+            return redirect()->back()->with('error', 'Failed to process file: ' . $e->getMessage());
+        }
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $teachersVisitors = TeacherVisitor::active()->get();
-        $archivedTeachersVisitors = TeacherVisitor::archived()->get();
+        $teachersVisitors = TeacherVisitor::active()->orderBy('created_at', 'desc')->get();
+        $archivedTeachersVisitors = TeacherVisitor::archived()->orderBy('created_at', 'desc')->get();
         return view('admin.teachers_visitors.index', [
             "teachersVisitors" => $teachersVisitors,
             "archivedTeachersVisitors" => $archivedTeachersVisitors
@@ -303,11 +537,45 @@ class TeacherVisitorController extends \App\Http\Controllers\Controller
     /**
      * Archive the specified teacher/visitor.
      */
-    public function archive(string $id)
+    public function archive($id)
     {
         $teacherVisitor = TeacherVisitor::findOrFail($id);
-        $teacherVisitor->archive();
-        return redirect()->route("admin.teachers_visitors.index")->with("success", "Teacher/Visitor Archived Successfully.");
+        $teacherVisitor->update([
+            'archived' => true,
+            'archived_at' => now(),
+        ]);
+
+        return redirect()->route('admin.teachers-visitors.index')
+            ->with('success', 'Teacher/Visitor archived successfully.');
+    }
+
+    /**
+     * Permanently delete the specified resource from storage.
+     */
+    public function forceDelete($id)
+    {
+        // First try to find the record including trashed ones
+        $teacherVisitor = TeacherVisitor::withTrashed()->find($id);
+        
+        if (!$teacherVisitor) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Teacher/Visitor not found.'
+            ], 404);
+        }
+        
+        // Delete the QR code file if it exists
+        if ($teacherVisitor->qr_code_path && Storage::disk('public')->exists($teacherVisitor->qr_code_path)) {
+            Storage::disk('public')->delete($teacherVisitor->qr_code_path);
+        }
+        
+        // Force delete the record
+        $teacherVisitor->forceDelete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Teacher/Visitor permanently deleted successfully.'
+        ]);
     }
 
     /**

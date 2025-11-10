@@ -84,124 +84,124 @@
                                 </div>
                             </div>
 
-   
-
 
                             <!-- Table Card -->
                             <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow">
 
-                                <div class="flex flex-col md:flex-row justify-between items-center p-6 bg-gray-50 border-b border-gray-200">
-                                    <h2 id="students-table-title" class="text-xl font-semibold text-gray-800">👥 Active Students</h2>
-                                    <div class="flex flex-col items-start gap-4 mb-4">
-                                        <h3 class="text-sm font-medium text-gray-600">Filter Students</h3>
-                                        <div class="flex flex-wrap items-center gap-2">
-                                            <div class="flex items-center space-x-2">
-                                                <div class="relative inline-block text-left">
-                                                    <button id="collegeFilterButton" class="college-filter bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 text-sm font-medium flex items-center justify-between w-32 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500" data-college="All" aria-expanded="false" aria-controls="collegeFilterMenu">
+                                <div class="flex flex-col md:flex-row justify-between items-start md:items-center p-6 bg-gray-50 border-b border-gray-200 gap-6">
+                                    <!-- Title -->
+                                    <div>
+                                        <h2 class="text-2xl font-semibold text-gray-800 flex items-center gap-2">
+                                            Active Students
+                                        </h2>
+                                    </div>
+
+                                    <!-- Filters Section -->
+                                    <div class="flex flex-col md:flex-row items-start md:items-center gap-4 w-full md:w-auto">
+                                        <div class="flex flex-col gap-2">
+                                            <h3 class="text-sm font-medium text-gray-600">Filter Students</h3>
+                                            <div class="flex flex-wrap gap-2">
+                                                <!-- College Filter -->
+                                                <div class="relative">
+                                                    <button id="collegeFilterButton"
+                                                        class="flex items-center justify-between w-36 bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 transition">
                                                         <span id="selectedCollege">Colleges</span>
                                                         <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                                                         </svg>
                                                     </button>
-                                                    <ul id="collegeFilterMenu" class="absolute z-50 mt-2 w-32 bg-white border border-gray-200 rounded-lg shadow-lg hidden transform origin-top transition-all duration-300 ease-out opacity-0 scale-y-95">
-                                                      
-                                                        <li>
-                                                            <button class="college-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-college="All">All</button>
-                                                        </li>
-                                                        <li>
-                                                            <button class="college-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-college="CICS">CICS</button>
-                                                        </li>
-                                                        <li>
-                                                            <button class="college-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-college="CTED">CTED</button>
-                                                        </li>
-                                                        <li>
-                                                            <button class="college-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-college="CCJE">CCJE</button>
-                                                        </li>
-                                                        <li>
-                                                            <button class="college-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-college="CHM">CHM</button>
-                                                        </li>
-                                                        <li>
-                                                            <button class="college-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-college="CBEA">CBEA</button>
-                                                        </li>
-                                                        <li>
-                                                            <button class="college-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-college="CA">CA</button>
-                                                        </li>
+                                                    <ul id="collegeFilterMenu"
+                                                        class="absolute z-50 mt-2 w-36 bg-white border border-gray-200 rounded-lg shadow-md hidden transform origin-top transition duration-150 ease-out">
+                                                        <li><button class="college-filter-option w-full px-4 py-2 text-left text-sm hover:bg-gray-50" data-college="All">All</button></li>
+                                                        <li><button class="college-filter-option w-full px-4 py-2 text-left text-sm hover:bg-gray-50" data-college="CICS">CICS</button></li>
+                                                        <li><button class="college-filter-option w-full px-4 py-2 text-left text-sm hover:bg-gray-50" data-college="CTED">CTED</button></li>
+                                                        <li><button class="college-filter-option w-full px-4 py-2 text-left text-sm hover:bg-gray-50" data-college="CCJE">CCJE</button></li>
+                                                        <li><button class="college-filter-option w-full px-4 py-2 text-left text-sm hover:bg-gray-50" data-college="CHM">CHM</button></li>
+                                                        <li><button class="college-filter-option w-full px-4 py-2 text-left text-sm hover:bg-gray-50" data-college="CBEA">CBEA</button></li>
+                                                        <li><button class="college-filter-option w-full px-4 py-2 text-left text-sm hover:bg-gray-50" data-college="CA">CA</button></li>
                                                     </ul>
                                                 </div>
-                                                <div class="relative inline-block text-left">
-                                                    <button id="yearFilterButton" class="year-filter bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 text-sm font-medium flex items-center justify-between w-32 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500" data-year="All" aria-expanded="false" aria-controls="yearFilterMenu">
+
+                                                <!-- Year Filter -->
+                                                <div class="relative">
+                                                    <button id="yearFilterButton"
+                                                        class="flex items-center justify-between w-36 bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 transition">
                                                         <span id="selectedYear">Year</span>
                                                         <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                                                         </svg>
                                                     </button>
-                                                    <ul id="yearFilterMenu" class="absolute z-50 mt-2 w-32 bg-white border border-gray-200 rounded-lg shadow-lg hidden transform origin-top transition-all duration-300 ease-out opacity-0 scale-y-95">
-                                                        <li>
-                                                            <button class="year-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-year="All">All</button>
-                                                        </li>
-                                                        <li>
-                                                            <button class="year-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-year="1">1st Year</button>
-                                                        </li>
-                                                        <li>
-                                                            <button class="year-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-year="2">2nd Year</button>
-                                                        </li>
-                                                        <li>
-                                                            <button class="year-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-year="3">3rd Year</button>
-                                                        </li>
-                                                        <li>
-                                                            <button class="year-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-year="4">4th Year</button>
-                                                        </li>
+                                                    <ul id="yearFilterMenu"
+                                                        class="absolute z-50 mt-2 w-36 bg-white border border-gray-200 rounded-lg shadow-md hidden transform origin-top transition duration-150 ease-out">
+                                                        <li><button class="year-filter-option w-full px-4 py-2 text-left text-sm hover:bg-gray-50" data-year="All">All</button></li>
+                                                        <li><button class="year-filter-option w-full px-4 py-2 text-left text-sm hover:bg-gray-50" data-year="1">1st Year</button></li>
+                                                        <li><button class="year-filter-option w-full px-4 py-2 text-left text-sm hover:bg-gray-50" data-year="2">2nd Year</button></li>
+                                                        <li><button class="year-filter-option w-full px-4 py-2 text-left text-sm hover:bg-gray-50" data-year="3">3rd Year</button></li>
+                                                        <li><button class="year-filter-option w-full px-4 py-2 text-left text-sm hover:bg-gray-50" data-year="4">4th Year</button></li>
                                                     </ul>
                                                 </div>
-                                                <div class="relative inline-block text-left">
-                                                    <button id="genderFilterButton" class="gender-filter bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 text-sm font-medium flex items-center justify-between w-32 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500" data-gender="All" aria-expanded="false" aria-controls="genderFilterMenu">
+
+                                                <!-- Gender Filter -->
+                                                <div class="relative">
+                                                    <button id="genderFilterButton"
+                                                        class="flex items-center justify-between w-36 bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 transition">
                                                         <span id="selectedGender">Gender</span>
                                                         <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                                                         </svg>
                                                     </button>
-                                                    <ul id="genderFilterMenu" class="absolute z-50 mt-2 w-32 bg-white border border-gray-200 rounded-lg shadow-lg hidden transform origin-top transition-all duration-300 ease-out opacity-0 scale-y-95">
-                                                        <li>
-                                                            <button class="gender-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-gender="All">All</button>
-                                                        </li>
-                                                        <li>
-                                                            <button class="gender-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-gender="Male">Male</button>
-                                                        </li>
-                                                        <li>
-                                                            <button class="gender-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-gender="Female">Female</button>
-                                                        </li>
-                                                        <li>
-                                                            <button class="gender-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-gender="Prefer not to say">Prefer not to say</button>
-                                                        </li>
-                                                        <li>
-                                                            <button class="gender-filter-option w-full px-4 py-2 text-gray-700 text-sm font-medium text-left hover:bg-gray-50 transition-colors" data-gender="Other">Other</button>
-                                                        </li>
+                                                    <ul id="genderFilterMenu"
+                                                        class="absolute z-50 mt-2 w-36 bg-white border border-gray-200 rounded-lg shadow-md hidden transform origin-top transition duration-150 ease-out">
+                                                        <li><button class="gender-filter-option w-full px-4 py-2 text-left text-sm hover:bg-gray-50" data-gender="All">All</button></li>
+                                                        <li><button class="gender-filter-option w-full px-4 py-2 text-left text-sm hover:bg-gray-50" data-gender="Male">Male</button></li>
+                                                        <li><button class="gender-filter-option w-full px-4 py-2 text-left text-sm hover:bg-gray-50" data-gender="Female">Female</button></li>
+                                                        <li><button class="gender-filter-option w-full px-4 py-2 text-left text-sm hover:bg-gray-50" data-gender="Prefer not to say">Prefer not to say</button></li>
+                                                        <li><button class="gender-filter-option w-full px-4 py-2 text-left text-sm hover:bg-gray-50" data-gender="Other">Other</button></li>
                                                     </ul>
                                                 </div>
-                                                <button id="applyFiltersButton" class="bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 hidden">
-                                                    Apply
+
+                                                <!-- Print Button -->
+                                                <button id="print-selected-btn"
+                                                    class="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg px-4 py-2 text-sm font-medium hover:bg-blue-100 focus:ring-2 focus:ring-blue-500 transition">
+                                                    Print QR Codes
+                                                </button>
+
+                                                <!-- Archive Selected Button -->
+                                                <button id="archive-selected-btn"
+                                                    class="inline-flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-2 text-sm font-medium hover:bg-red-100 focus:ring-2 focus:ring-red-500 transition hidden">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                                                    </svg>
+                                                    Archive Selected
                                                 </button>
                                             </div>
+                                        </div>
 
-                                            <button id="print-selected-btn" class="bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500">Print QR Code</button>
+                                        <!-- Action Buttons -->
+                                        <div class="flex flex-wrap items-center gap-3 md:ml-6">
+                                            <button id="toggle-archived-view"
+                                                class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-100 transition">
+                                                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                                            </svg>
+                                                <span class="button-text">View Archived</span>
+                                            </button>
+                                            <a href="{{ route('admin.students.create')}}"
+                                                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition">
+                                                
+                                            + Add Student
+                                            </a>
+                                            <a href="{{ route('admin.students.bulk-create')}}"
+                                                class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-100 transition">
+                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                               <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                           </svg>
+                                                Bulk Upload
+                                            </a>
                                         </div>
                                     </div>
-                                    <div class="flex items-center gap-4">
-                                        <button id="toggle-archived-view"
-                                                class="inline-flex items-center px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
-                                            View Archived Students
-                                        </button>
-                                        <a href="{{ route('admin.students.create')}}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
-                                            + Add Student
-                                        </a>
-                                        <a href="{{ route('admin.students.bulk-create')}}" class="inline-flex items-center px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors ml-2">
-                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                                            </svg>
-                                            Bulk Upload
-                                        </a>
-                                    </div>
                                 </div>
+
                                 <!-- Search Bar -->
                                 <div class="bg-white p-1">
                                     <div class="relative max-w-md">
@@ -336,64 +336,96 @@
 
                                 <!-- Archived Students Section -->
                                 <div id="archived-students-section" style="display: none;">
-                                    <div class="p-4">
-                                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                            @forelse($archivedStudents as $student)
-                                                <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 hover:shadow-md transition-shadow">
-                                                    <div class="flex items-start justify-between">
-                                                        <div class="flex-1">
-                                                            <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ $student->fname }} {{ $student->lname }}</h3>
-                                                            <p class="text-sm text-gray-600 mb-1">Student ID: {{ $student->student_id }}</p>
-                                                            <p class="text-sm text-gray-600 mb-1">College: {{ $student->college }}</p>
-                                                            <p class="text-sm text-gray-600 mb-1">Year: {{ $student->year }}</p>
-                                                            <p class="text-sm text-gray-600 mb-1">Email: {{ $student->email }}</p>
-                                                            <p class="text-sm text-gray-500 mb-4">Archived: {{ $student->archived_at ? $student->archived_at->format('M d, Y') : 'N/A' }}</p>
-
-                                                            @if($student->qr_code_path)
-                                                                <div class="mb-4">
-                                                                    <img src="{{ asset('storage/' . $student->qr_code_path) }}"
-                                                                         alt="QR Code"
-                                                                         class="w-full h-32 object-contain rounded-lg shadow-sm">
-                                                                </div>
-                                                            @endif
-
-                                                            <div class="flex justify-end space-x-2">
-                                                                <form action="{{ route('admin.students.unarchive', $student->id) }}" method="POST" class="inline">
-                                                                    @csrf
-                                                                    @method('PATCH')
-                                                                    <button type="submit"
-                                                                            class="inline-flex items-center px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition">
-                                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                                                            <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
-                                                                        </svg>
-                                                                        Unarchive
-                                                                    </button>
-                                                                </form>
-                                                                <form action="{{ route('admin.students.permanent-delete', $student->id) }}" method="POST" class="inline delete-form" data-student-name="{{ $student->fname }} {{ $student->lname }}">
-                                                                    @csrf
-                                                                    @method('DELETE')
-                                                                    <button type="button"
-                                                                            class="delete-btn inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 transition">
-                                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                                                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                                                        </svg>
-                                                                        Delete
-                                                                    </button>
-                                                                </form>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            @empty
-                                                <div class="col-span-full text-center py-12">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
-                                                    </svg>
-                                                    <h3 class="mt-2 text-sm font-medium text-gray-900">No archived students</h3>
-                                                    <p class="mt-1 text-sm text-gray-500">Get started by archiving a student from the active students list.</p>
-                                                </div>
-                                            @endforelse
-                                        </div>
+                                    <div class="overflow-x-auto p-4 py-6">
+                                        <table class="w-full table-auto text-sm text-left text-gray-700">
+                                            <thead class="bg-gray-50 text-gray-500 uppercase text-xs font-semibold border-b">
+                                                <tr>
+                                                    <th class="px-6 py-3">Student ID</th>
+                                                    <th class="px-6 py-3">Last Name</th>
+                                                    <th class="px-6 py-3">First Name</th>
+                                                    <th class="px-3 py-3">MI</th>
+                                                    <th class="px-6 py-3">College</th>
+                                                    <th class="px-3 py-3">Year</th>
+                                                    <th class="px-6 py-3">Gender</th>
+                                                    <th class="px-2 py-3">Email</th>
+                                                    <th class="px-2 py-3">Archived Date</th>
+                                                    <th class="px-2 py-3 text-right">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-100">
+                                                @forelse($archivedStudents as $student)
+                                                <tr class="hover:bg-gray-50">
+                                                    <td class="px-6 py-4">{{ $student->student_id }}</td>
+                                                    <td class="px-6 py-4">{{ $student->lname }}</td>
+                                                    <td class="px-6 py-4">{{ $student->fname }}</td>
+                                                    <td class="px-3 py-4">{{ $student->MI }}</td>
+                                                    <td class="px-6 py-4">
+                                                        <span class="px-2 py-1 text-xs font-medium rounded-md
+                                                            @if($student->college === 'CICS') bg-violet-200 text-gray-800
+                                                            @elseif($student->college === 'CTED') bg-sky-200 text-gray-800
+                                                            @elseif($student->college === 'CCJE') bg-red-300 text-gray-800
+                                                            @elseif($student->college === 'CHM') bg-pink-300 text-gray-800
+                                                            @elseif($student->college === 'CBEA') bg-yellow-200 text-gray-800
+                                                            @elseif($student->college === 'CA') bg-green-300 text-gray-800
+                                                            @else bg-gray-100 text-gray-700 @endif">
+                                                            {{ $student->college }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="px-3 py-4">{{ $student->year }}</td>
+                                                    <td class="px-6 py-4">
+                                                        <span class="px-2 py-1 text-xs font-medium rounded-md
+                                                            @if($student->gender === 'Male') bg-blue-200 text-gray-800
+                                                            @elseif($student->gender === 'Female') bg-pink-200 text-gray-800
+                                                            @else bg-gray-100 text-gray-700 @endif">
+                                                            {{ $student->gender ?? 'N/A' }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="px-2 py-4 text-gray-600 hover:underline">
+                                                        <a href="mailto:{{ $student->email }}">{{ $student->email }}</a>
+                                                    </td>
+                                                    <td class="px-2 py-4 text-sm text-gray-500">
+                                                        {{ $student->archived_at ? $student->archived_at->format('M d, Y') : 'N/A' }}
+                                                    </td>
+                                                    <td class="px-2 py-4 text-right">
+                                                        <!-- Unarchive Button -->
+                                                        <form action="{{ route('admin.students.unarchive', $student->id) }}" method="POST" class="inline">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <button type="submit"
+                                                                class="inline-flex items-center px-3 py-1 bg-green-50 border border-gray-200 text-gray-700 rounded-lg text-sm hover:bg-green-100 transition-colors"
+                                                                title="Unarchive" aria-label="Unarchive student {{ $student->student_id }}">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                                    <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+                                                                </svg>
+                                                            </button>
+                                                        </form>
+                                                        <!-- Permanent Delete Button -->
+                                                        <form action="{{ route('admin.students.permanent-delete', $student->id) }}" method="POST" class="inline delete-form" data-student-name="{{ $student->fname }} {{ $student->lname }}">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="button"
+                                                                class="delete-btn inline-flex items-center px-3 py-1 bg-red-50 border border-gray-200 text-gray-700 rounded-lg text-sm hover:bg-red-100 transition-colors"
+                                                                title="Permanently Delete" aria-label="Permanently delete student {{ $student->student_id }}">
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                                                </svg>
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                                @empty
+                                                <tr>
+                                                    <td colspan="10" class="px-6 py-12 text-center text-gray-500">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                                                        </svg>
+                                                        <h3 class="mt-2 text-sm font-medium text-gray-900">No archived students</h3>
+                                                        <p class="mt-1 text-sm text-gray-500">Get started by archiving a student from the active students list.</p>
+                                                    </td>
+                                                </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
 
@@ -572,6 +604,18 @@
                 <div class="flex justify-end space-x-3">
                     <button id="cancel-archive" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition">Cancel</button>
                     <button id="confirm-archive" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">Archive</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bulk Archive Confirmation Modal -->
+        <div id="bulk-archive-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden transition-opacity duration-300">
+            <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Confirm Bulk Archive</h3>
+                <p class="text-gray-600 mb-6" id="bulk-archive-modal-message">Are you sure you want to archive the selected student(s)?</p>
+                <div class="flex justify-end space-x-3">
+                    <button id="cancel-bulk-archive" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition">Cancel</button>
+                    <button id="confirm-bulk-archive" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">Archive Selected</button>
                 </div>
             </div>
         </div>

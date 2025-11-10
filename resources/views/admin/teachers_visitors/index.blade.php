@@ -149,7 +149,7 @@
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                                                     </svg>
                                                 </button>
-                                                <ul id="departmentFilterMenu" class="absolute z-20 mt-2 w-32 bg-white/10 backdrop-blur-md border border-gray-400 rounded-2xl shadow-2xl hidden transform origin-top transition-all duration-300 ease-out opacity-0 scale-y-95">
+                                                <ul id="departmentFilterMenu" class="absolute z-100 mt-2 w-32 bg-black backdrop-blur-md border border-gray-400 rounded-2xl shadow-2xl hidden transform origin-top transition-all duration-300 ease-out opacity-0 scale-y-95 ">
                                                     <li>
                                                         <button class="department-filter-option w-full px-4 py-2 text-gray-500 text-sm font-medium text-left hover:bg-white/20 transition-all duration-200" data-department="All">All</button>
                                                     </li>
@@ -190,11 +190,18 @@
                                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
                                             </svg>
-
+                                            View Archived
                                         </a>
                                         <a href="{{ route('admin.teachers_visitors.create')}}"
                                            class="inline-flex items-center px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition">
                                            + Add Teacher/Visitor
+                                        </a>
+                                        <a href="{{ route('admin.teachers_visitors.bulk-create')}}"
+                                           class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition">
+                                           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                               <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                           </svg>
+                                           Bulk Upload
                                         </a>
                                     </div>
                                 </div>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bulk Register Students - Library System</title>
+    <title>Bulk Register Teachers/Visitors - Library System</title>
     <link rel="icon" type="image/x-icon" href="/favicon/Library.png">
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -26,7 +26,7 @@
     <div class="flex justify-center">
         <div class="mt-10 w-full max-w-4xl p-8 bg-white border border-gray-200 rounded-xl shadow-lg transition-all duration-300">
             <h1 class="text-2xl font-semibold text-gray-900 mb-6 text-center relative">
-                Bulk Register Students
+                Bulk Register Teachers/Visitors
             </h1>
 
             @if ($errors->any())
@@ -92,28 +92,27 @@
                                 <p class="mb-2"><strong>Supported formats:</strong> Excel (.xlsx, .xls, .csv) and PDF files</p>
                                 <p class="mb-2"><strong>Excel/CSV columns order:</strong></p>
                                 <ol class="list-decimal list-inside mb-2">
-                                    <li>Student ID</li>
                                     <li>Last Name</li>
                                     <li>First Name</li>
                                     <li>Middle Initial</li>
                                     <li>Gender</li>
-                                    <li>College</li>
-                                    <li>Year</li>
+                                    <li>Department</li>
                                     <li>Email</li>
+                                    <li>Role (Teacher or Visitor)</li>
                                 </ol>
                                 <p class="mb-2"><strong>PDF format:</strong> Tab or space-separated values in the same order as Excel columns</p>
-                                <p><strong>Note:</strong> First row should be headers in Excel files. PDF files should have one student per line.</p>
+                                <p><strong>Note:</strong> First row should be headers in Excel files. PDF files should have one teacher/visitor per line.</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <form id="bulkForm" action="{{ route('admin.students.bulk-store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+            <form id="bulkForm" action="{{ route('admin.teachers_visitors.bulk-store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                 @csrf
 
                 <div>
-                    <label for="file" class="block text-sm font-medium text-gray-700 mb-2">Upload Student Data File</label>
+                    <label for="file" class="block text-sm font-medium text-gray-700 mb-2">Upload Teachers/Visitors Data File</label>
                     <div id="uploadArea" class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400 transition-colors">
                         <div class="space-y-1 text-center">
                             <svg id="uploadIcon" class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
@@ -149,7 +148,7 @@
                 </div>
 
                 <div class="flex justify-center space-x-4">
-                    <a href="{{ route('admin.students.index') }}" class="inline-flex items-center px-6 py-2 bg-gray-600 text-white text-sm font-medium rounded-md shadow-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition">
+                    <a href="{{ route('admin.teachers_visitors.index') }}" class="inline-flex items-center px-6 py-2 bg-gray-600 text-white text-sm font-medium rounded-md shadow-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition">
                         Cancel
                     </a>
                     <button id="submitBtn" type="submit"
@@ -157,7 +156,7 @@
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                         </svg>
-                        Upload & Register Students
+                        Upload & Register Teachers/Visitors
                     </button>
                 </div>
             </form>
@@ -193,7 +192,7 @@
                     <ul class="space-y-3" id="statusList">
                         <li class="flex items-center gap-3 text-sm"><span class="step-dot h-2.5 w-2.5 rounded-full bg-blue-500 animate-pulse"></span><span>Upload file</span></li>
                         <li class="flex items-center gap-3 text-sm opacity-60"><span class="step-dot h-2.5 w-2.5 rounded-full bg-gray-300"></span><span>Parse data</span></li>
-                        <li class="flex items-center gap-3 text-sm opacity-60"><span class="step-dot h-2.5 w-2.5 rounded-full bg-gray-300"></span><span>Create student records</span></li>
+                        <li class="flex items-center gap-3 text-sm opacity-60"><span class="step-dot h-2.5 w-2.5 rounded-full bg-gray-300"></span><span>Create teacher/visitor records</span></li>
                         <li class="flex items-center gap-3 text-sm opacity-60"><span class="step-dot h-2.5 w-2.5 rounded-full bg-gray-300"></span><span>Generate QR codes</span></li>
                         <li class="flex items-center gap-3 text-sm opacity-60"><span class="step-dot h-2.5 w-2.5 rounded-full bg-gray-300"></span><span>Send emails</span></li>
                         <li class="flex items-center gap-3 text-sm opacity-60"><span class="step-dot h-2.5 w-2.5 rounded-full bg-gray-300"></span><span>Finish</span></li>
@@ -222,7 +221,7 @@
                         </div>
                         <div>
                             <h3 id="resultsTitle" class="text-lg font-semibold text-gray-900">Bulk Registration Complete</h3>
-                            <p id="resultsSubtitle" class="text-sm text-gray-500">All students have been processed successfully</p>
+                            <p id="resultsSubtitle" class="text-sm text-gray-500">All teachers/visitors have been processed successfully</p>
                         </div>
                     </div>
                 </div>
@@ -249,8 +248,8 @@
                 </div>
                 <div class="px-6 pb-6">
                     <div class="flex justify-end gap-3">
-                        <a id="viewListBtn" href="{{ route('admin.students.index') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow hover:bg-blue-700 transition">View Students List</a>
-                        <button id="seeListBtn" type="button" onclick="window.location.href='{{ route('admin.students.index') }}'" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-md shadow hover:bg-gray-700 transition">See List</button>
+                        <a id="viewListBtn" href="{{ route('admin.teachers_visitors.index') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow hover:bg-blue-700 transition">View Teachers/Visitors List</a>
+                        <button id="seeListBtn" type="button" onclick="window.location.href='{{ route('admin.teachers_visitors.index') }}'" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-md shadow hover:bg-gray-700 transition">See List</button>
                         <button id="closeResultsModalBtn" type="button" class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md shadow hover:bg-gray-200 transition">Close</button>
                     </div>
                 </div>
@@ -280,7 +279,6 @@
     <div id="pageSpinner" class="fixed inset-0 z-50 hidden"></div>
 
     <script>
-        console.log('Bulk upload script loaded');
         // Progress modal + AJAX submit
         (function(){
             const form = document.getElementById('bulkForm');
@@ -338,7 +336,6 @@
             }
 
             form.addEventListener('submit', function(e){
-                console.log('Form submit event triggered');
                 e.preventDefault();
                 viewListBtn.classList.add('hidden');
                 closeModalBtn.classList.add('hidden');
@@ -353,10 +350,6 @@
 
                 const formData = new FormData(form);
                 const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                console.log('FormData created, CSRF token:', csrf);
-
-                const controller = new AbortController();
-                const timeout = setTimeout(() => controller.abort(), 30000); // 30 seconds timeout
 
                 let fake = 5;
                 const stages = [20, 40, 60, 80, 90];
@@ -373,7 +366,6 @@
                     }
                 }, 400);
 
-                console.log('Starting fetch to:', form.action);
                 fetch(form.action, {
                     method: 'POST',
                     headers: {
@@ -381,17 +373,13 @@
                         'X-Requested-With': 'XMLHttpRequest',
                         'Accept': 'application/json'
                     },
-                    body: formData,
-                    signal: controller.signal
+                    body: formData
                 })
                 .then(async (res) => {
-                    console.log('Fetch response received, status:', res.status);
-                    clearTimeout(timeout);
                     let data;
-                    try { data = await res.json(); console.log('Response data:', data); } catch (_) { data = { success: false, message: 'Unexpected response' }; console.log('Failed to parse JSON'); }
+                    try { data = await res.json(); } catch (_) { data = { success: false, message: 'Unexpected response' }; }
                     clearInterval(timer);
                     if (!res.ok || !data.success){
-                        console.log('Request failed or data.success is false');
                         setProgress(100,'Failed');
                         statusSubtitle.textContent = 'An error occurred';
                         setStepActive(5);
@@ -404,7 +392,6 @@
                         submitBtn.classList.remove('opacity-60','cursor-not-allowed');
                         return;
                     }
-                    console.log('Request successful');
                     setProgress(100,'Completed');
                     statusSubtitle.textContent = 'Finished';
                     setStepActive(5);
@@ -415,23 +402,15 @@
                     }, 1000);
                 })
                 .catch((err)=>{
-                    console.log('Fetch error:', err);
-                    clearTimeout(timeout);
                     clearInterval(timer);
                     setProgress(100,'Failed');
                     statusSubtitle.textContent = 'An error occurred';
                     setStepActive(5);
-                    // Close progress modal and show results modal with error
-                    setTimeout(() => {
-                        closeModal();
-                        showResultsModal({ success: false, message: 'Bulk processing failed: ' + (err?.message || 'Unknown error') }, false);
-                    }, 1000);
-                    submitBtn.disabled = false;
-                    submitBtn.classList.remove('opacity-60','cursor-not-allowed');
+                    resultBox.classList.remove('hidden');
+                    resultMessage.textContent = 'Bulk processing failed: ' + (err?.message || 'Unknown error');
+                    closeModalBtn.classList.remove('hidden');
                 })
                 .finally(()=>{
-                    console.log('Fetch finally block executed');
-                    clearTimeout(timeout);
                     submitBtn.disabled = false;
                     submitBtn.classList.remove('opacity-60','cursor-not-allowed');
                 });
@@ -477,7 +456,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>`;
                     resultsTitle.textContent = 'Bulk Registration Complete';
-                    resultsSubtitle.textContent = 'All students have been processed successfully';
+                    resultsSubtitle.textContent = 'All teachers/visitors have been processed successfully';
 
                     // Successful section
                     const successHeading = document.createElement('li');
@@ -485,7 +464,7 @@
                     successHeading.classList.add('text-gray-800', 'font-semibold');
                     resultsMessageList.appendChild(successHeading);
 
-                    const successMessage = data.success_message || 'Your bulk registration has been completed successfully. All students have been added to the system with their QR codes generated and emails sent.';
+                    const successMessage = data.success_message || 'Your bulk registration has been completed successfully. All teachers and visitors have been added to the system with their QR codes generated and emails sent.';
                     const successLi = document.createElement('li');
                     successLi.textContent = successMessage;
                     successLi.classList.add('ml-4');
@@ -495,7 +474,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
                     </svg>`;
                     resultsTitle.textContent = 'Bulk Registration Partially Complete';
-                    resultsSubtitle.textContent = 'Some students were processed successfully, but there were errors';
+                    resultsSubtitle.textContent = 'Some teachers/visitors were processed successfully, but there were errors';
 
                     // Successful section
                     const successHeading = document.createElement('li');
@@ -503,7 +482,7 @@
                     successHeading.classList.add('text-gray-800', 'font-semibold');
                     resultsMessageList.appendChild(successHeading);
 
-                    const successMessage = data.success_message || 'Some students have been added to the system with their QR codes generated and emails sent.';
+                    const successMessage = data.success_message || 'Some teachers/visitors have been added to the system with their QR codes generated and emails sent.';
                     const successLi = document.createElement('li');
                     successLi.textContent = successMessage;
                     successLi.classList.add('ml-4');
@@ -580,7 +559,7 @@
                       <p id="toastMessage" class="text-xs text-gray-600 mt-0.5"></p>
                     </div>
                     <button id="toastClose" class="text-gray-400 hover:text-gray-600">
-                      <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414 5.707 15.707a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                      <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
                     </button>
                   </div>`;
                 document.body.appendChild(wrapper);

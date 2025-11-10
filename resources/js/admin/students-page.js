@@ -292,6 +292,7 @@
 
       // Update select all checkbox
       updateSelectAllState();
+      updateArchiveSelectedButton();
     }
 
     // Update select all checkbox state
@@ -318,6 +319,7 @@
           if (!row || row.style.display === 'none') return;
           cb.checked = selectAll.checked;
         });
+        updateArchiveSelectedButton();
       });
     }
 
@@ -325,8 +327,37 @@
     document.addEventListener('change', function (e) {
       if (e.target.classList.contains('select-student')) {
         updateSelectAllState();
+        updateArchiveSelectedButton();
       }
     });
+
+    // Update select all checkbox state
+    function updateSelectAllState() {
+      const selectAll = document.getElementById('select-all');
+      if (!selectAll) return;
+
+      const visibleCheckboxes = Array.from(document.querySelectorAll('.select-student')).filter(cb => {
+        const row = cb.closest('tr');
+        return row && row.style.display !== 'none';
+      });
+
+      const checkedVisible = visibleCheckboxes.filter(cb => cb.checked).length;
+      selectAll.checked = visibleCheckboxes.length > 0 && checkedVisible === visibleCheckboxes.length;
+      selectAll.indeterminate = checkedVisible > 0 && checkedVisible < visibleCheckboxes.length;
+    }
+
+    // Update archive selected button visibility
+    function updateArchiveSelectedButton() {
+      const archiveSelectedBtn = document.getElementById('archive-selected-btn');
+      if (!archiveSelectedBtn) return;
+
+      const checkedBoxes = document.querySelectorAll('.select-student:checked');
+      if (checkedBoxes.length > 0) {
+        archiveSelectedBtn.classList.remove('hidden');
+      } else {
+        archiveSelectedBtn.classList.add('hidden');
+      }
+    }
 
     // Batch Print Modal logic
     const modal = document.getElementById('batch-print-modal');
@@ -443,6 +474,7 @@
 
         // Update select all checkbox state after filtering
         updateSelectAllState();
+        updateArchiveSelectedButton();
       });
     }
 
@@ -673,12 +705,12 @@
         activeStudentsSection.style.display = 'none';
         archivedStudentsSection.style.display = 'block';
         studentsTableTitle.textContent = '📚 Archived Students';
-        toggleArchivedViewBtn.textContent = 'View Active Students';
+        toggleArchivedViewBtn.querySelector('.button-text').textContent = 'Student List';
       } else {
         activeStudentsSection.style.display = 'block';
         archivedStudentsSection.style.display = 'none';
         studentsTableTitle.textContent = '👥 Active Students';
-        toggleArchivedViewBtn.textContent = 'View Archived Students';
+        toggleArchivedViewBtn.querySelector('.button-text').textContent = 'View Archived';
       }
     }
 
@@ -735,6 +767,76 @@
     if (deleteModal) {
       deleteModal.addEventListener('click', function (e) {
         if (e.target === deleteModal) closeDeleteModal();
+      });
+    }
+
+    // Archive selected students logic
+    const archiveSelectedBtn = document.getElementById('archive-selected-btn');
+    if (archiveSelectedBtn) {
+      archiveSelectedBtn.addEventListener('click', function () {
+        const selectedCheckboxes = document.querySelectorAll('.select-student:checked');
+        if (selectedCheckboxes.length === 0) {
+          showToast('No students selected.', 'error');
+          return;
+        }
+
+        const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+        const selectedNames = Array.from(selectedCheckboxes).map(cb => cb.getAttribute('data-name'));
+
+        // Show bulk archive confirmation modal
+        const modal = document.getElementById('bulk-archive-modal');
+        const message = document.getElementById('bulk-archive-modal-message');
+        message.textContent = `Are you sure you want to archive ${selectedIds.length} selected student(s)?`;
+        modal.classList.remove('hidden');
+
+        // Handle modal buttons
+        const cancelBtn = document.getElementById('cancel-bulk-archive');
+        const confirmBtn = document.getElementById('confirm-bulk-archive');
+
+        const closeModal = () => {
+          modal.classList.add('hidden');
+          cancelBtn.removeEventListener('click', cancelHandler);
+          confirmBtn.removeEventListener('click', confirmHandler);
+        };
+
+        const cancelHandler = () => closeModal();
+
+        const confirmHandler = () => {
+          closeModal();
+
+          // Create form data for bulk archive
+          const formData = new FormData();
+          formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+          selectedIds.forEach(id => formData.append('student_ids[]', id));
+
+          // Send AJAX request
+          fetch('/admin/students/bulk-archive', {
+            method: 'POST',
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+          })
+          .then(response => response.json())
+          .then(result => {
+            if (result.success) {
+              showToast(`Successfully archived ${result.archived_count} student(s).`, 'success');
+              // Reload page to reflect changes
+              setTimeout(() => {
+                window.location.reload();
+              }, 1500);
+            } else {
+              showToast(result.message || 'Failed to archive selected students.', 'error');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            showToast('An error occurred while archiving students.', 'error');
+          });
+        };
+
+        cancelBtn.addEventListener('click', cancelHandler);
+        confirmBtn.addEventListener('click', confirmHandler);
       });
     }
   });

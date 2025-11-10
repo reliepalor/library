@@ -145,90 +145,244 @@
 
 
 
-            <!-- Teacher/Visitor Info Section -->
-            @if ($user->teacherVisitor)
-                <div class="bg-gray-50 rounded-xl shadow p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 w-full max-w-4xl order-2 lg:order-none mt-4 lg:mt-0">
+            <!-- Profile Information Section -->
+            <div class="bg-gray-50 rounded-xl shadow p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 w-full max-w-4xl order-2 lg:order-none mt-4 lg:mt-0">
+                @if($user->teacherVisitor)
                     <h3 class="text-lg sm:text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2">Teacher/Visitor Profile Information</h3>
-
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 text-sm">
                         <div class="bg-white p-3 sm:p-4 rounded-lg shadow-sm transition transform hover:scale-[1.02] hover:shadow-md">
-                            <label class="text-gray-600 font-medium block mb-1 sm:mb-0">Full Name</label>
-                            <p class="text-gray-900 font-semibold">{{ $user->teacherVisitor->full_name }}</p>
+                            <dt class="text-xs font-medium text-gray-500 uppercase tracking-wider">Full Name</dt>
+                            <dd class="mt-1 text-sm font-medium text-gray-900">{{ $user->teacherVisitor->full_name }}</dd>
                         </div>
+
                         <div class="bg-white p-3 sm:p-4 rounded-lg shadow-sm transition transform hover:scale-[1.02] hover:shadow-md">
-                            <label class="text-gray-600 font-medium block mb-1 sm:mb-0">Department</label>
-                            <p class="text-gray-900 font-semibold">{{ $user->teacherVisitor->department }}</p>
+                            <dt class="text-xs font-medium text-gray-500 uppercase tracking-wider">Role</dt>
+                            <dd class="mt-1 text-sm font-medium text-gray-900">{{ ucfirst($user->teacherVisitor->role) }}</dd>
                         </div>
+
                         <div class="bg-white p-3 sm:p-4 rounded-lg shadow-sm transition transform hover:scale-[1.02] hover:shadow-md">
-                            <label class="text-gray-600 font-medium block mb-1 sm:mb-0">Role</label>
-                            <p class="text-gray-900 font-semibold">{{ $user->teacherVisitor->role }}</p>
+                            <dt class="text-xs font-medium text-gray-500 uppercase tracking-wider">Department</dt>
+                            <dd class="mt-1 text-sm font-medium text-gray-900">{{ $user->teacherVisitor->department ?? 'N/A' }}</dd>
                         </div>
+
                         <div class="bg-white p-3 sm:p-4 rounded-lg shadow-sm transition transform hover:scale-[1.02] hover:shadow-md">
-                            <label class="text-gray-600 font-medium block mb-1 sm:mb-0">Email</label>
-                            <p class="text-gray-900 font-semibold">{{ $user->teacherVisitor->email }}</p>
+                            <dt class="text-xs font-medium text-gray-500 uppercase tracking-wider">Email</dt>
+                            <dd class="mt-1 text-sm font-medium text-gray-900">{{ $user->email }}</dd>
                         </div>
                     </div>
+                    @php $qrCodePath = $user->teacherVisitor->qr_code_path ?? null; @endphp
+                @elseif($user->student)
+                    <h3 class="text-lg sm:text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2">Student Profile Information</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 text-sm">
+                        <div class="bg-white p-3 sm:p-4 rounded-lg shadow-sm transition transform hover:scale-[1.02] hover:shadow-md">
+                            <dt class="text-xs font-medium text-gray-500 uppercase tracking-wider">Full Name</dt>
+                            <dd class="mt-1 text-sm font-medium text-gray-900">{{ $user->student->full_name }}</dd>
+                        </div>
 
-                    <!-- QR Code Section (if user has teacher/visitor profile) -->
-                    @if($user->teacherVisitor && $user->teacherVisitor->qr_code_path)
-                        <div class="border-t pt-4 sm:pt-6 mt-4 sm:mt-6 flex justify-center flex-col items-center">
-                            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-3">Your QR Code</h3>
-                            <p class="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 text-center">Click to view full size</p>
+                        <div class="bg-white p-3 sm:p-4 rounded-lg shadow-sm transition transform hover:scale-[1.02] hover:shadow-md">
+                            <dt class="text-xs font-medium text-gray-500 uppercase tracking-wider">Student ID</dt>
+                            <dd class="mt-1 text-sm font-medium text-gray-900">{{ $user->student->student_id ?? 'N/A' }}</dd>
+                        </div>
 
-                            <div x-data="{ showQrModal: false }" class="relative w-full max-w-xs mx-auto">
+                        <div class="bg-white p-3 sm:p-4 rounded-lg shadow-sm transition transform hover:scale-[1.02] hover:shadow-md">
+                            <dt class="text-xs font-medium text-gray-500 uppercase tracking-wider">College</dt>
+                            <dd class="mt-1 text-sm font-medium text-gray-900">{{ $user->student->college ?? 'N/A' }}</dd>
+                        </div>
 
-                                <!-- Existing QR code image -->
-                                <img src="{{ asset('storage/' . $user->teacherVisitor->qr_code_path) }}"
-                                     alt="Teacher/Visitor QR Code"
-                                     class="w-full max-w-48 sm:max-w-64 h-auto max-h-48 sm:max-h-64 object-contain border border-gray-200 rounded-lg shadow-md cursor-pointer hover:scale-105 transform transition-transform duration-300 mx-auto"
-                                     @click="showQrModal = true" />
+                        <div class="bg-white p-3 sm:p-4 rounded-lg shadow-sm transition transform hover:scale-[1.02] hover:shadow-md">
+                            <dt class="text-xs font-medium text-gray-500 uppercase tracking-wider">Year Level</dt>
+                            <dd class="mt-1 text-sm font-medium text-gray-900">{{ $user->student->year ?? 'N/A' }}</dd>
+                        </div>
 
-                                <!-- QR Code Modal -->
-                                <div x-show="showQrModal"
+                        <div class="bg-white p-3 sm:p-4 rounded-lg shadow-sm transition transform hover:scale-[1.02] hover:shadow-md">
+                            <dt class="text-xs font-medium text-gray-500 uppercase tracking-wider">Gender</dt>
+                            <dd class="mt-1 text-sm font-medium text-gray-900">{{ $user->student->gender ?? 'N/A' }}</dd>
+                        </div>
+
+                        <div class="bg-white p-3 sm:p-4 rounded-lg shadow-sm transition transform hover:scale-[1.02] hover:shadow-md">
+                            <dt class="text-xs font-medium text-gray-500 uppercase tracking-wider">Email</dt>
+                            <dd class="mt-1 text-sm font-medium text-gray-900">{{ $user->email }}</dd>
+                        </div>
+                    </div>
+                    @php $qrCodePath = $user->student->qr_code_path ?? null; @endphp
+                @endif
+
+                @if(isset($qrCodePath) && $qrCodePath)
+                    <div class="border-t pt-4 sm:pt-6 mt-4 sm:mt-6 flex justify-center flex-col items-center">
+                        <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-3">Your QR Code</h3>
+                        <p class="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 text-center">Click to view full size</p>
+
+                        <div x-data="{ showQrModal: false }" class="relative w-full max-w-xs mx-auto">
+                            <!-- QR code image -->
+                            <img src="{{ asset('storage/' . $qrCodePath) }}"
+                                 alt="QR Code"
+                                 class="w-full max-w-48 sm:max-w-64 h-auto max-h-48 sm:max-h-64 object-contain border border-gray-200 rounded-lg shadow-md cursor-pointer hover:scale-105 transform transition-transform duration-300 mx-auto"
+                                 @click="showQrModal = true"
+                                 @keydown.escape.window="if(showQrModal) showQrModal = false">
+
+                            <!-- QR Code Modal -->
+                            <div x-show="showQrModal"
+                                x-transition:enter="transition ease-out duration-300"
+                                x-transition:enter-start="opacity-0"
+                                x-transition:enter-end="opacity-100"
+                                x-transition:leave="transition ease-in duration-200"
+                                x-transition:leave-start="opacity-100"
+                                x-transition:leave-end="opacity-0"
+                                class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+                                @click.self="showQrModal = false"
+                                x-cloak>
+
+                                <div class="bg-white rounded-2xl p-4 sm:p-6 relative max-w-sm sm:max-w-lg w-full shadow-2xl transform transition-all mx-auto"
+                                    @click.stop
+                                    x-show="showQrModal"
                                     x-transition:enter="transition ease-out duration-300"
-                                    x-transition:enter-start="opacity-0"
-                                    x-transition:enter-end="opacity-100"
+                                    x-transition:enter-start="opacity-0 scale-90"
+                                    x-transition:enter-end="opacity-100 scale-100"
                                     x-transition:leave="transition ease-in duration-200"
-                                    x-transition:leave-start="opacity-100"
-                                    x-transition:leave-end="opacity-0"
-                                    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-2 sm:p-4"
-                                    @click="showQrModal = false"
-                                    x-cloak>
+                                    x-transition:leave-start="opacity-100 scale-100"
+                                    x-transition:leave-end="opacity-0 scale-90">
 
-                                    <div class="bg-white rounded-2xl p-4 sm:p-6 relative max-w-sm sm:max-w-lg w-full shadow-2xl transform transition-all mx-auto"
-                                        @click.stop
-                                        x-show="showQrModal"
-                                        x-transition:enter="transition ease-out duration-300"
-                                        x-transition:enter-start="opacity-0 scale-90"
-                                        x-transition:enter-end="opacity-100 scale-100"
-                                        x-transition:leave="transition ease-in duration-200"
-                                        x-transition:leave-start="opacity-100 scale-100"
-                                        x-transition:leave-end="opacity-0 scale-90">
+                                    <button @click="showQrModal = false"
+                                        class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                                        aria-label="Close QR code">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
 
-                                        <button @click="showQrModal = false"
-                                                class="absolute top-2 sm:top-4 right-2 sm:right-4 text-gray-500 hover:text-gray-700 focus:outline-none transition-colors duration-200 z-10">
-                                            <svg class="w-5 sm:w-6 h-5 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </button>
-
-                                        <div class="text-center">
-                                            <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Your Teacher/Visitor QR Code</h3>
-                                            <div class="flex justify-center">
-                                                <img src="{{ asset('storage/' . $user->teacherVisitor->qr_code_path) }}"
-                                                     alt="Teacher/Visitor QR Code"
-                                                     class="w-full max-w-48 sm:max-w-64 h-auto max-h-48 sm:max-h-64 object-contain border border-gray-200 rounded-lg shadow-md mx-auto" />
-                                            </div>
-                                            <p class="text-xs sm:text-sm text-gray-600 mt-3 sm:mt-4">Use this QR code for attendance and library services</p>
+                                    <div class="text-center">
+                                        <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Library QR Code</h3>
+                                        <div class="flex justify-center">
+                                            <img id="qrCodeImage" 
+                                                 src="{{ asset('storage/' . $qrCodePath) }}"
+                                                 alt="QR Code"
+                                                 class="w-full max-w-48 sm:max-w-64 h-auto max-h-48 sm:max-h-64 object-contain border border-gray-200 rounded-lg shadow-md" />
                                         </div>
+                                        <div class="mt-4 sm:mt-6 flex justify-center">
+                                            <button onclick="downloadQRWithDetails()" 
+                                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                                </svg>
+                                                Download QR Code
+                                            </button>
+                                        </div>
+                                        <p class="mt-2 text-xs text-gray-500">Use this QR code for attendance and library services</p>
                                     </div>
-                                </div>
 
+                                    <script>
+                                        function downloadQRWithDetails() {
+                                            const qrCodeImg = document.getElementById('qrCodeImage');
+                                            const canvas = document.createElement('canvas');
+                                            const ctx = canvas.getContext('2d');
+                                            
+                                            // Set canvas size with padding
+                                            const padding = 40;
+                                            const qrSize = 300; // Fixed size for QR code
+                                            const name = '{{ $user->student->full_name ?? $user->teacherVisitor->full_name }}';
+                                            const college = '{{ $user->student->college ?? ($user->teacherVisitor->department ?? "") }}';
+                                            const details = '{{ $user->student ? ($user->student->year ? "Year " . $user->student->year : "") : ($user->teacherVisitor->role ?? "") }}';
+                                            
+                                            // Calculate text height first
+                                            const tempCanvas = document.createElement('canvas');
+                                            const tempCtx = tempCanvas.getContext('2d');
+                                            tempCtx.font = 'bold 20px Arial';
+                                            
+                                            // Calculate text height for name
+                                            const maxWidth = qrSize * 0.9; // 90% of QR code width
+                                            const lineHeight = 24;
+                                            let textHeight = 0;
+                                            
+                                            // Calculate name height
+                                            const nameWords = name.split(' ');
+                                            let currentLine = '';
+                                            let nameLines = 1;
+                                            
+                                            for (const word of nameWords) {
+                                                const testLine = currentLine + word + ' ';
+                                                const metrics = tempCtx.measureText(testLine);
+                                                if (metrics.width > maxWidth && currentLine !== '') {
+                                                    currentLine = word + ' ';
+                                                    nameLines++;
+                                                } else {
+                                                    currentLine = testLine;
+                                                }
+                                            }
+                                            
+                                            // Add height for college/role
+                                            const hasAdditionalInfo = college || details;
+                                            const additionalInfoHeight = hasAdditionalInfo ? lineHeight : 0;
+                                            
+                                            // Calculate total text height with some padding
+                                            const totalTextHeight = (nameLines * lineHeight) + additionalInfoHeight + 20;
+                                            
+                                            // Set canvas size with enough space for text and QR code
+                                            canvas.width = qrSize + (padding * 2);
+                                            canvas.height = qrSize + totalTextHeight + (padding * 3);
+                                            
+                                            // Fill with white background
+                                            ctx.fillStyle = '#ffffff';
+                                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                                            
+                                            // Draw name
+                                            ctx.fillStyle = '#000000';
+                                            ctx.textAlign = 'center';
+                                            ctx.font = 'bold 20px Arial';
+                                            
+                                            // Reset for actual drawing
+                                            let y = padding + 30;
+                                            currentLine = '';
+                                            
+                                            // Draw wrapped name
+                                            for (const word of nameWords) {
+                                                const testLine = currentLine + word + ' ';
+                                                const metrics = ctx.measureText(testLine);
+                                                
+                                                if (metrics.width > maxWidth && currentLine !== '') {
+                                                    ctx.fillText(currentLine, canvas.width / 2, y);
+                                                    currentLine = word + ' ';
+                                                    y += lineHeight;
+                                                } else {
+                                                    currentLine = testLine;
+                                                }
+                                            }
+                                            ctx.fillText(currentLine, canvas.width / 2, y);
+                                            
+                                            // Draw college and year/role
+                                            if (college || details) {
+                                                y += lineHeight;
+                                                ctx.font = '16px Arial';
+                                                const infoText = [college, details].filter(Boolean).join(' - ');
+                                                ctx.fillText(infoText, canvas.width / 2, y);
+                                                y += lineHeight; // Add extra space before QR code
+                                            } else {
+                                                y += 20; // Add some space if no additional info
+                                            }
+                                            
+                                            // Draw QR code below the text with some padding
+                                            qrCodeImg.onload = function() {
+                                                const qrY = y + 20; // Add extra space after text
+                                                ctx.drawImage(qrCodeImg, padding, qrY, qrSize, qrSize);
+                                                
+                                                // Trigger download
+                                                const link = document.createElement('a');
+                                                link.download = `${name.replace(/[^a-z0-9]/gi, '_')}_QR_Code.png`;
+                                                link.href = canvas.toDataURL('image/png');
+                                                link.click();
+                                            };
+                                            
+                                            // In case image is already loaded
+                                            if (qrCodeImg.complete) {
+                                                qrCodeImg.onload();
+                                            }
+                                        }
+                                    </script>
+                                </div>
                             </div>
                         </div>
-                    @endif
+                    </div>
+                @endif
                 </div>
-            @endif
         </div>
 
         <!-- Reserved Books Section -->

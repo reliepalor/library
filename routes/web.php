@@ -113,6 +113,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/students/archived', [AdminStudentController::class, 'archived'])->name('admin.students.archived');
     Route::get('/admin/students/bulk-create', [AdminStudentController::class, 'bulkCreate'])->name('admin.students.bulk-create');
     Route::post('/admin/students/bulk-store', [AdminStudentController::class, 'bulkStore'])->name('admin.students.bulk-store');
+    Route::post('/admin/students/bulk-archive', [AdminStudentController::class, 'bulkArchive'])->name('admin.students.bulk-archive');
 
     /*---------------------------ROUTE FOR ADMIN ---TEACHERS/VISITORS------------------------------*/
     Route::get('teachers_visitors/{id}/qr', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'generateTeacherVisitorQr'])->name('teachers_visitors.qr');
@@ -124,7 +125,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('admin/teachers_visitors/{id}', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'update'])->name('admin.teachers_visitors.update');
     Route::post('/admin/teachers_visitors/{id}/archive', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'archive'])->name('admin.teachers_visitors.archive');
     Route::post('/admin/teachers_visitors/{id}/unarchive', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'unarchive'])->name('admin.teachers_visitors.unarchive');
+    Route::delete('/admin/teachers_visitors/{id}/force-delete', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'forceDelete'])->name('admin.teachers_visitors.force-delete');
     Route::get('/admin/teachers_visitors/archived', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'archived'])->name('admin.teachers_visitors.archived');
+    Route::get('/admin/teachers_visitors/bulk-create', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'bulkCreate'])->name('admin.teachers_visitors.bulk-create');
+    Route::post('/admin/teachers_visitors/bulk-store', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'bulkStore'])->name('admin.teachers_visitors.bulk-store');
 
     /*---------------------------ROUTE FOR ADMIN ---BOOKS------------------------------*/
     Route::prefix('admin/books')->name('admin.books.')->group(function () {
