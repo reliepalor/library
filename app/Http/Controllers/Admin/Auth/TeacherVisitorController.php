@@ -596,4 +596,29 @@ class TeacherVisitorController extends \App\Http\Controllers\Controller
         $archivedTeachersVisitors = TeacherVisitor::archived()->get();
         return view('admin.teachers_visitors.archived', ["teachersVisitors" => $archivedTeachersVisitors]);
     }
+
+    /**
+     * Bulk archive selected teachers/visitors.
+     */
+    public function bulkArchive(Request $request)
+    {
+        $request->validate([
+            'teacher_visitor_ids' => 'required|array',
+            'teacher_visitor_ids.*' => 'required|integer|exists:teachers_visitors,id',
+        ]);
+
+        $ids = $request->input('teacher_visitor_ids');
+        $count = count($ids);
+
+        TeacherVisitor::whereIn('id', $ids)->update([
+            'archived' => true,
+            'archived_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully archived {$count} teacher(s)/visitor(s).",
+            'archived_count' => $count,
+        ]);
+    }
 }

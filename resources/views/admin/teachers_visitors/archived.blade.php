@@ -37,7 +37,7 @@
                                     <table class="min-w-full divide-y divide-gray-200">
                                         <thead class="bg-gray-50">
                                             <tr>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student ID</th>
+
                                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">College</th>
                                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Year</th>
@@ -48,7 +48,7 @@
                                         <tbody class="bg-white divide-y divide-gray-200">
                                             @foreach($teachersVisitors as $teacherVisitor)
                                                 <tr id="row-{{ $teacherVisitor->id }}">
-                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $teacherVisitor->id }}</td>
+                                                    
                                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $teacherVisitor->full_name }}</td>
                                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $teacherVisitor->department }}</td>
                                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $teacherVisitor->role }}</td>

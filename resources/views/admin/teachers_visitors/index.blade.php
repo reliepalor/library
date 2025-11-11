@@ -144,7 +144,7 @@
                                         <div class="flex items-center space-x-2">
                                             <div class="relative inline-block text-left">
                                                 <button id="departmentFilterButton" class="department-filter glass-button px-4 py-2 text-gray-500 text-sm font-medium rounded-2xl flex items-center justify-between w-32 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white/10 backdrop-blur-md border border-gray-400 shadow-md" data-department="All" aria-expanded="false" aria-controls="departmentFilterMenu">
-                                                    <span id="selectedDepartment">All</span>
+                                                    <span id="selectedDepartment">Department</span>
                                                     <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                                                     </svg>
@@ -182,6 +182,13 @@
 
                                         </div>
 
+                                        <button id="archive-selected-btn"
+                                            class="inline-flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-2 text-sm font-medium hover:bg-red-100 focus:ring-2 focus:ring-red-500 transition hidden">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                                            </svg>
+                                            Archive Selected
+                                        </button>
                                         <button id="print-selected-btn" class="lass-button px-4 py-2 text-gray-500 text-sm font-medium rounded-2xl flex items-center justify-between w-32 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white/10 backdrop-blur-md border border-gray-400 shadow-md">Print QR Code</button>
                                     </div>
                                     <div class="flex items-center gap-4">
@@ -232,7 +239,7 @@
                                         <tbody class="divide-y divide-gray-100" id="teacher-visitor-table-body">
                                             @foreach ($teachersVisitors as $teacherVisitor)
                                             <tr class="hover:bg-gray-50" data-department="{{ $teacherVisitor->department }}">
-                                                <td class="px-2 py-4 w-12"><input type="checkbox" class="select-teacher-visitor" value="{{ $teacherVisitor->id }}" data-name="{{ $teacherVisitor->last_name }}, {{ $teacherVisitor->first_name }}{{ $teacherVisitor->middle_name ? ' ' . $teacherVisitor->middle_name . '.' : '' }}" data-role="{{ $teacherVisitor->role }}" data-department="{{ $teacherVisitor->department }}" data-qr="{{ $teacherVisitor->qr_code_path ? asset('storage/' . $teacherVisitor->qr_code_path) : '' }}"></td>
+                                                <td class="px-2 py-4 w-12"><input type="checkbox" class="select-teacher-visitor" value="{{ $teacherVisitor->id }}" data-name="{{ $teacherVisitor->last_name }}, {{ $teacherVisitor->first_name }}{{ $teacherVisitor->middle_name ? ' ' . $teacherVisitor->middle_name . '.' : '' }}" data-role="{{ $teacherVisitor->role }}" data-department="{{ $teacherVisitor->department }}" data-qr="{{ $teacherVisitor->qr_code_path ? asset('storage/' . $teacherVisitor->qr_code_path) : '' }}" data-teacher-visitor-id="{{ $teacherVisitor->id }}"></td>
                                                 <td class="px-6 py-4">
                                                     <span class="px-3 py-1.5 inline-flex items-center text-xs font-medium rounded-full
                                                         @if($teacherVisitor->role === 'teacher') bg-blue-100 text-blue-800
@@ -249,27 +256,16 @@
                                                 <td class="px-6 py-4">{{ $teacherVisitor->middle_name }}</td>
                                                 <td class="px-6 py-4">
                                                     @if(!empty($teacherVisitor->department))
-                                                        <span class="px-3 py-1.5 inline-flex items-center text-xs font-medium rounded-full
-                                                            @if($teacherVisitor->department === 'CICS') bg-violet-100 text-violet-800
-                                                            @elseif($teacherVisitor->department === 'CTED') bg-sky-100 text-sky-800
-                                                            @elseif($teacherVisitor->department === 'CCJE') bg-red-100 text-red-800
-                                                            @elseif($teacherVisitor->department === 'CHM') bg-pink-100 text-pink-800
-                                                            @elseif($teacherVisitor->department === 'CBEA') bg-yellow-100 text-yellow-800
-                                                            @elseif($teacherVisitor->department === 'CA') bg-green-100 text-green-800
-                                                            @elseif($teacherVisitor->department === 'Guest') bg-gray-100 text-gray-800
+                                                        <span class="px-2 py-1 inline-flex items-center text-xs font-medium rounded-md
+                                                            @if($teacherVisitor->department === 'CICS') bg-violet-100 text-violet-900
+                                                            @elseif($teacherVisitor->department === 'CTED') bg-sky-100 text-sky-900
+                                                            @elseif($teacherVisitor->department === 'CCJE') bg-red-100 text-red-900
+                                                            @elseif($teacherVisitor->department === 'CHM') bg-pink-100 text-pink-900
+                                                            @elseif($teacherVisitor->department === 'CBEA') bg-yellow-100 text-yellow-900
+                                                            @elseif($teacherVisitor->department === 'CA') bg-green-100 text-green-900
+                                                            @elseif($teacherVisitor->department === 'Guest') bg-gray-100 text-gray-900
                                                             @else bg-gray-100 text-gray-700 @endif">
-                                                            <svg class="-ml-0.5 mr-1.5 h-2 w-2
-                                                                @if($teacherVisitor->department === 'CICS') text-violet-600
-                                                                @elseif($teacherVisitor->department === 'CTED') text-sky-600
-                                                                @elseif($teacherVisitor->department === 'CCJE') text-red-600
-                                                                @elseif($teacherVisitor->department === 'CHM') text-pink-600
-                                                                @elseif($teacherVisitor->department === 'CBEA') text-yellow-600
-                                                                @elseif($teacherVisitor->department === 'CA') text-green-600
-                                                                @elseif($teacherVisitor->department === 'Guest') text-gray-600
-                                                                @else text-gray-500 @endif"
-                                                                fill="currentColor" viewBox="0 0 8 8">
-                                                                <circle cx="4" cy="4" r="3" />
-                                                            </svg>
+                                                          
                                                             {{ $teacherVisitor->department }}
                                                         </span>
                                                     @else
@@ -278,21 +274,13 @@
                                                 </td>
                                                 <td class="px-6 py-4">
                                                     @if(!empty($teacherVisitor->gender))
-                                                        <span class="px-3 py-1.5 inline-flex items-center text-xs font-medium rounded-full
+                                                        <span class="px-2 py-1 inline-flex items-center text-xs font-medium rounded-md
                                                             @if($teacherVisitor->gender === 'Male') bg-blue-100 text-blue-800
                                                             @elseif($teacherVisitor->gender === 'Female') bg-pink-100 text-pink-800
                                                             @elseif($teacherVisitor->gender === 'Prefer not to say') bg-gray-100 text-gray-800
                                                             @elseif($teacherVisitor->gender === 'Other') bg-purple-100 text-purple-800
                                                             @else bg-gray-100 text-gray-700 @endif">
-                                                            <svg class="-ml-0.5 mr-1.5 h-2 w-2
-                                                                @if($teacherVisitor->gender === 'Male') text-blue-600
-                                                                @elseif($teacherVisitor->gender === 'Female') text-pink-600
-                                                                @elseif($teacherVisitor->gender === 'Prefer not to say') text-gray-600
-                                                                @elseif($teacherVisitor->gender === 'Other') text-purple-600
-                                                                @else text-gray-500 @endif"
-                                                                fill="currentColor" viewBox="0 0 8 8">
-                                                                <circle cx="4" cy="4" r="3" />
-                                                            </svg>
+                                                            
                                                             {{ $teacherVisitor->gender }}
                                                         </span>
                                                     @else
@@ -462,6 +450,18 @@
             </div>
         </div>
 
+        <!-- Bulk Archive Confirmation Modal -->
+        <div id="bulk-archive-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden transition-opacity duration-300">
+            <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Confirm Bulk Archive</h3>
+                <p class="text-gray-600 mb-6" id="bulk-archive-modal-message">Are you sure you want to archive the selected teacher(s)/visitor(s)?</p>
+                <div class="flex justify-end space-x-3">
+                    <button id="cancel-bulk-archive" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition">Cancel</button>
+                    <button id="confirm-bulk-archive" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">Archive Selected</button>
+                </div>
+            </div>
+        </div>
+
         <!-- QR Code Modal -->
         <div id="qr-code-modal" class="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-70 opacity-0 pointer-events-none transition-opacity duration-300 ease-in-out">
             <div class="relative bg-white rounded-lg p-6 max-w-md w-full shadow-xl transform scale-95 transition-transform duration-300 ease-in-out flex justify-center items-center flex-col">
@@ -604,7 +604,44 @@
                             cb.checked = this.checked;
                         }
                     });
+                    updateArchiveSelectedButton();
                 });
+
+                // Update select all when individual checkboxes change
+                document.addEventListener('change', function (e) {
+                    if (e.target.classList.contains('select-teacher-visitor')) {
+                        updateSelectAllState();
+                        updateArchiveSelectedButton();
+                    }
+                });
+
+                // Update select all checkbox state
+                function updateSelectAllState() {
+                    const selectAll = document.getElementById('select-all');
+                    if (!selectAll) return;
+
+                    const visibleCheckboxes = Array.from(document.querySelectorAll('.select-teacher-visitor')).filter(cb => {
+                        const row = cb.closest('tr');
+                        return row && row.style.display !== 'none';
+                    });
+
+                    const checkedVisible = visibleCheckboxes.filter(cb => cb.checked).length;
+                    selectAll.checked = visibleCheckboxes.length > 0 && checkedVisible === visibleCheckboxes.length;
+                    selectAll.indeterminate = checkedVisible > 0 && checkedVisible < visibleCheckboxes.length;
+                }
+
+                // Update archive selected button visibility
+                function updateArchiveSelectedButton() {
+                    const archiveSelectedBtn = document.getElementById('archive-selected-btn');
+                    if (!archiveSelectedBtn) return;
+
+                    const checkedBoxes = document.querySelectorAll('.select-teacher-visitor:checked');
+                    if (checkedBoxes.length > 0) {
+                        archiveSelectedBtn.classList.remove('hidden');
+                    } else {
+                        archiveSelectedBtn.classList.add('hidden');
+                    }
+                }
                 // Modal logic
                 const modal = document.getElementById('batch-print-modal');
                 const grid = document.getElementById('batch-print-grid');
@@ -1041,6 +1078,76 @@
                         }, 3000);
                     });
                 });
+
+                // Archive selected teachers/visitors logic
+                const archiveSelectedBtn = document.getElementById('archive-selected-btn');
+                if (archiveSelectedBtn) {
+                    archiveSelectedBtn.addEventListener('click', function () {
+                        const selectedCheckboxes = document.querySelectorAll('.select-teacher-visitor:checked');
+                        if (selectedCheckboxes.length === 0) {
+                            showToast('No teachers/visitors selected.', 'error');
+                            return;
+                        }
+
+                        const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+                        const selectedNames = Array.from(selectedCheckboxes).map(cb => cb.getAttribute('data-name'));
+
+                        // Show bulk archive confirmation modal
+                        const modal = document.getElementById('bulk-archive-modal');
+                        const message = document.getElementById('bulk-archive-modal-message');
+                        message.textContent = `Are you sure you want to archive ${selectedIds.length} selected teacher(s)/visitor(s)?`;
+                        modal.classList.remove('hidden');
+
+                        // Handle modal buttons
+                        const cancelBtn = document.getElementById('cancel-bulk-archive');
+                        const confirmBtn = document.getElementById('confirm-bulk-archive');
+
+                        const closeModal = () => {
+                            modal.classList.add('hidden');
+                            cancelBtn.removeEventListener('click', cancelHandler);
+                            confirmBtn.removeEventListener('click', confirmHandler);
+                        };
+
+                        const cancelHandler = () => closeModal();
+
+                        const confirmHandler = () => {
+                            closeModal();
+
+                            // Create form data for bulk archive
+                            const formData = new FormData();
+                            formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+                            selectedIds.forEach(id => formData.append('teacher_visitor_ids[]', id));
+
+                            // Send AJAX request
+                            fetch('/admin/teachers_visitors/bulk-archive', {
+                                method: 'POST',
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                },
+                                body: formData
+                            })
+                            .then(response => response.json())
+                            .then(result => {
+                                if (result.success) {
+                                    showToast(`Successfully archived ${result.archived_count} teacher(s)/visitor(s).`, 'success');
+                                    // Reload page to reflect changes
+                                    setTimeout(() => {
+                                        window.location.reload();
+                                    }, 1500);
+                                } else {
+                                    showToast(result.message || 'Failed to archive selected teachers/visitors.', 'error');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                showToast('An error occurred while archiving teachers/visitors.', 'error');
+                            });
+                        };
+
+                        cancelBtn.addEventListener('click', cancelHandler);
+                        confirmBtn.addEventListener('click', confirmHandler);
+                    });
+                }
             });
         </script>
     </body>

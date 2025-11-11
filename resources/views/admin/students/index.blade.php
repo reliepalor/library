@@ -91,7 +91,7 @@
                                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center p-6 bg-gray-50 border-b border-gray-200 gap-6">
                                     <!-- Title -->
                                     <div>
-                                        <h2 class="text-2xl font-semibold text-gray-800 flex items-center gap-2">
+                                        <h2 id="students-table-title" class="text-2xl font-semibold text-gray-800 flex items-center gap-2">
                                             Active Students
                                         </h2>
                                     </div>
@@ -180,12 +180,14 @@
                                         <!-- Action Buttons -->
                                         <div class="flex flex-wrap items-center gap-3 md:ml-6">
                                             <button id="toggle-archived-view"
-                                                class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-100 transition">
-                                                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                                            class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-100 transition">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
                                             </svg>
-                                                <span class="button-text">View Archived</span>
+                                            <span class="button-text">View Archived</span>
                                             </button>
+
                                             <a href="{{ route('admin.students.create')}}"
                                                 class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition">
                                                 

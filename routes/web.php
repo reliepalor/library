@@ -129,6 +129,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/teachers_visitors/archived', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'archived'])->name('admin.teachers_visitors.archived');
     Route::get('/admin/teachers_visitors/bulk-create', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'bulkCreate'])->name('admin.teachers_visitors.bulk-create');
     Route::post('/admin/teachers_visitors/bulk-store', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'bulkStore'])->name('admin.teachers_visitors.bulk-store');
+    Route::post('/admin/teachers_visitors/bulk-archive', [App\Http\Controllers\Admin\Auth\TeacherVisitorController::class, 'bulkArchive'])->name('admin.teachers_visitors.bulk-archive');
 
     /*---------------------------ROUTE FOR ADMIN ---BOOKS------------------------------*/
     Route::prefix('admin/books')->name('admin.books.')->group(function () {

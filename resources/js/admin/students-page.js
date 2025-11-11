@@ -690,33 +690,50 @@
         if (e.target === archiveModal) closeArchiveModal();
       });
     }
+// Toggle archived view logic
+const toggleArchivedViewBtn = document.getElementById('toggle-archived-view');
+const activeStudentsSection = document.getElementById('active-students-section');
+const archivedStudentsSection = document.getElementById('archived-students-section');
+const studentsTableTitle = document.getElementById('students-table-title');
+let showArchived = false;
 
-    // Toggle archived view logic
-    const toggleArchivedViewBtn = document.getElementById('toggle-archived-view');
-    const activeStudentsSection = document.getElementById('active-students-section');
-    const archivedStudentsSection = document.getElementById('archived-students-section');
-    const studentsTableTitle = document.getElementById('students-table-title');
-    let showArchived = false;
+function toggleArchivedView() {
+  showArchived = !showArchived;
 
-    function toggleArchivedView() {
-      showArchived = !showArchived;
+  if (showArchived) {
+    // Show Archived
+    activeStudentsSection.classList.add('hidden');
+    archivedStudentsSection.classList.remove('hidden');
+    archivedStudentsSection.style.display = '';
+    studentsTableTitle.textContent = '📚 Students';
 
-      if (showArchived) {
-        activeStudentsSection.style.display = 'none';
-        archivedStudentsSection.style.display = 'block';
-        studentsTableTitle.textContent = '📚 Archived Students';
-        toggleArchivedViewBtn.querySelector('.button-text').textContent = 'Student List';
-      } else {
-        activeStudentsSection.style.display = 'block';
-        archivedStudentsSection.style.display = 'none';
-        studentsTableTitle.textContent = '👥 Active Students';
-        toggleArchivedViewBtn.querySelector('.button-text').textContent = 'View Archived';
-      }
-    }
+    const buttonText = toggleArchivedViewBtn.querySelector('.button-text');
+    if (buttonText) buttonText.textContent = 'Active Students';
 
-    if (toggleArchivedViewBtn) {
-      toggleArchivedViewBtn.addEventListener('click', toggleArchivedView);
-    }
+    // Optional visual cue
+    toggleArchivedViewBtn.classList.remove('bg-white', 'text-gray-700', 'hover:bg-gray-100');
+    toggleArchivedViewBtn.classList.add('bg-blue-600', 'text-white', 'hover:bg-blue-700');
+
+  } else {
+    // Show Active
+    archivedStudentsSection.classList.add('hidden');
+    archivedStudentsSection.style.display = 'none';
+    activeStudentsSection.classList.remove('hidden');
+    studentsTableTitle.textContent = '👥 Active Students';
+
+    const buttonText = toggleArchivedViewBtn.querySelector('.button-text');
+    if (buttonText) buttonText.textContent = 'View Archived';
+
+    // Revert button style
+    toggleArchivedViewBtn.classList.remove('bg-blue-600', 'text-white', 'hover:bg-blue-700');
+    toggleArchivedViewBtn.classList.add('bg-white', 'text-gray-700', 'hover:bg-gray-100');
+  }
+}
+
+if (toggleArchivedViewBtn) {
+  toggleArchivedViewBtn.addEventListener('click', toggleArchivedView);
+}
+
 
     // Delete modal logic
     const deleteModal = document.getElementById('delete-modal');
