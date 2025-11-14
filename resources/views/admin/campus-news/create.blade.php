@@ -49,6 +49,25 @@
 
     <script>
         window.assetBaseUrl = "{{ asset('') }}";
+
+        // Image preview function
+        function previewImage(input) {
+            const preview = document.getElementById('imagePreview');
+            const previewImg = document.getElementById('previewImg');
+
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    preview.classList.remove('hidden');
+                };
+
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                preview.classList.add('hidden');
+            }
+        }
     </script>
 </head>
 <body class="bg-gray-50">
@@ -148,8 +167,8 @@
                                                 name="status"
                                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('status') border-red-500 @enderror"
                                                 required>
-                                            <option value="draft" {{ old('status', 'draft') == 'draft' ? 'selected' : '' }}>Draft</option>
-                                            <option value="published" {{ old('status') == 'published' ? 'selected' : '' }}>Published</option>
+                                            <option value="published" {{ old('status', 'published') == 'published' ? 'selected' : '' }}>Published</option>
+                                            <option value="archived" {{ old('status') == 'archived' ? 'selected' : '' }}>Archived</option>
                                         </select>
                                         @error('status')
                                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>

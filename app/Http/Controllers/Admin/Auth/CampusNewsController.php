@@ -33,23 +33,24 @@ class CampusNewsController extends Controller
     }
 
     /**
-     * Store a newly created news item in storage.
-     */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
-            'excerpt' => 'nullable|string|max:500',
-            'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'publish_date' => 'required|date',
-            'category' => 'required|in:academic,events,sports,research,announcement,achievement',
-            'status' => 'required|in:draft,published,archived',
-            'is_featured' => 'boolean',
-            'tags' => 'nullable|string',
-            'meta_title' => 'nullable|string|max:255',
-            'meta_description' => 'nullable|string|max:500',
-        ]);
+     /**
+      * Store a newly created news item in storage.
+      */
+     public function store(Request $request)
+     {
+         $validated = $request->validate([
+             'title' => 'required|string|max:255',
+             'content' => 'required|string',
+             'excerpt' => 'nullable|string|max:500',
+             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+             'publish_date' => 'required|date',
+             'category' => 'required|in:academic,events,sports,research,announcement,achievement',
+             'status' => 'required|in:published,archived',
+             'is_featured' => 'boolean',
+             'tags' => 'nullable|string',
+             'meta_title' => 'nullable|string|max:255',
+             'meta_description' => 'nullable|string|max:500',
+         ]);
 
         // Handle featured image upload
         if ($request->hasFile('featured_image')) {
@@ -101,7 +102,7 @@ class CampusNewsController extends Controller
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'publish_date' => 'required|date',
             'category' => 'required|in:academic,events,sports,research,announcement,achievement',
-            'status' => 'required|in:draft,published,archived',
+            'status' => 'required|in:published,archived',
             'is_featured' => 'boolean',
             'tags' => 'nullable|string',
             'meta_title' => 'nullable|string|max:255',
@@ -172,7 +173,7 @@ class CampusNewsController extends Controller
     public function updateStatus(Request $request, CampusNews $campusNews)
     {
         $request->validate([
-            'status' => 'required|in:draft,published,archived'
+            'status' => 'required|in:published,archived'
         ]);
 
         $campusNews->update([

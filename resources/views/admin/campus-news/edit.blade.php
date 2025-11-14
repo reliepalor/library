@@ -166,8 +166,8 @@
                                         name="status"
                                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('status') border-red-500 @enderror"
                                         required>
-                                    <option value="draft" {{ old('status', $campusNews->status) == 'draft' ? 'selected' : '' }}>Draft</option>
                                     <option value="published" {{ old('status', $campusNews->status) == 'published' ? 'selected' : '' }}>Published</option>
+                                    <option value="archived" {{ old('status', $campusNews->status) == 'archived' ? 'selected' : '' }}>Archived</option>
                                 </select>
                                 @error('status')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>

@@ -44,6 +44,7 @@
             .fade-in { animation: fadeIn 0.5s ease-in; }
             .slide-up { animation: slideUp 0.5s ease-out; }
             .scale-in { animation: scaleIn 0.3s ease-out; }
+            .page-load { animation: pageLoad 0.8s ease-out; }
 
             @keyframes fadeIn {
                 from { opacity: 0; }
@@ -59,29 +60,53 @@
                 from { transform: scale(0.95); opacity: 0; }
                 to { transform: scale(1); opacity: 1; }
             }
+
+            @keyframes pageLoad {
+                from { opacity: 0; transform: translateY(30px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
             /* Layout for Side-by-Side Display on Larger Screens */
-@media (min-width: 768px) {
-    .settings-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 2rem;
-        margin-bottom: 2rem;
-    }
-}
+            @media (min-width: 768px) {
+                .settings-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 2rem;
+                    margin-bottom: 2rem;
+                }
+            }
 
-/* Enhanced Fade-In Animation */
-.fade-in {
-    animation: fadeInUp 0.6s ease-out forwards;
-    opacity: 0;
-    transform: translateY(20px);
-}
+            /* Enhanced Fade-In Animation */
+            .fade-in {
+                animation: fadeInUp 0.6s ease-out forwards;
+                opacity: 0;
+                transform: translateY(20px);
+            }
 
-@keyframes fadeInUp {
-    to {
-        opacity: 1;
-        transform: translateY(0);
+            @keyframes fadeInUp {
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+              @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
-}
+
+    .animate-slide-up {
+        animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
         </style>
         
     </head>
@@ -113,7 +138,7 @@
                 </nav>
 
                 <!-- Page Content -->
-                <main class="max-w-full mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                <main class="max-w-full mx-auto py-6 px-4 sm:px-6 lg:px-8 page-load">
                     <!-- Welcome Section -->
                     <div class="mb-8">
                         <h1 class="text-2xl font-bold text-gray-800">Welcome back, Librarian!</h1>
@@ -325,114 +350,106 @@
                             </div>
                         </div>
 
-                        <!-- Study Area Settings Section -->
-                        <div class="bg-white rounded-xl shadow-sm overflow-hidden fade-in">
-                            <div class="p-6">
-                                <div class="flex justify-between items-center mb-6">
-                                    <div>
-                                        <h2 class="text-xl font-semibold text-gray-800 mb-2">Study Area Settings</h2>
-                                        <p class="text-sm text-gray-600">Configure the maximum capacity for study area slots</p>
-                                    </div>
-                                </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                                    <!-- Maximum Capacity -->
-                                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border border-blue-200/50 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:shadow-lg">
-                                        <div class="flex items-center justify-between">
-                                            <div>
-                                                <p class="text-sm font-medium text-gray-600">Maximum Capacity</p>
-                                                <p class="text-2xl font-bold text-gray-800" id="maxCapacity">{{ $studyArea->max_capacity }}</p>
-                                            </div>
-                                            <div class="p-3 bg-blue-100/80 rounded-full transition-all duration-300 hover:rotate-12 hover:scale-110">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                                </svg>
-                                            </div>
-                                        </div>
-                                    </div>
+<!-- Study Area Settings Section -->
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden animate-slide-up">
+    <div class="p-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold text-gray-900 mb-2">Study Area Settings</h2>
+            <p class="text-sm text-gray-500">Configure the maximum capacity for study area slots</p>
+        </div>
 
-                                    <!-- Available Slots -->
-                                    <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-5 border border-green-200/50 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:shadow-lg">
-                                        <div class="flex items-center justify-between">
-                                            <div>
-                                                <p class="text-sm font-medium text-gray-600">Available Slots</p>
-                                                <p class="text-2xl font-bold text-gray-800" id="availableSlots">{{ $studyArea->available_slots }}</p>
-                                            </div>
-                                            <div class="p-3 bg-green-100/80 rounded-full transition-all duration-300 hover:rotate-12 hover:scale-110">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                            </div>
-                                        </div>
-                                    </div>
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Maximum Capacity Card -->
+            <div class="group relative overflow-hidden bg-white rounded-2xl p-7 border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-500">
+                <div class="flex items-start justify-between">
+                    <div class="space-y-2">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Maximum Capacity</p>
+                        <p class="text-4xl font-bold text-gray-900" id="maxCapacity">{{ $studyArea->max_capacity }}</p>
+                    </div>
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
 
-                                    <!-- Status 
-                                    <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-5 border border-gray-200/50 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:shadow-lg" id="statusCard">
-                                        <div class="flex items-center justify-between">
-                                            <div>
-                                                <p class="text-sm font-medium text-gray-600">Status</p>
-                                                <p class="text-lg font-semibold" id="statusText">
-                                                    @if($studyArea->available_slots <= 5)
-                                                        <span class="text-red-600">Critical</span>
-                                                    @elseif($studyArea->available_slots <= 10)
-                                                        <span class="text-yellow-600">Warning</span>
-                                                    @else
-                                                        <span class="text-green-600">Good</span>
-                                                    @endif
-                                                </p>
-                                            </div>
-                                            <div class="p-3 rounded-full transition-all duration-300 hover:rotate-12 hover:scale-110" id="statusIcon">
-                                                @if($studyArea->available_slots <= 5)
-                                                    <div class="bg-red-100/80 rounded-full p-3">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                                        </svg>
-                                                    </div>
-                                                @elseif($studyArea->available_slots <= 10)
-                                                    <div class="bg-yellow-100/80 rounded-full p-3">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-500 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                                        </svg>
-                                                    </div>
-                                                @else
-                                                    <div class="bg-green-100/80 rounded-full p-3">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                        </svg>
-                                                    </div>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                    -->
-                                </div>
+            <!-- Available Slots Card -->
+            <div class="group relative overflow-hidden bg-white rounded-2xl p-7 border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-500">
+                <div class="flex items-start justify-between">
+                    <div class="space-y-2">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Available Slots</p>
+                        <p class="text-4xl font-bold text-gray-900" id="availableSlots">{{ $studyArea->available_slots }}</p>
+                    </div>
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                                <!-- Update Form -->
-                                <form id="studyAreaForm" class="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-5 border border-gray-200/50 backdrop-blur-sm">
-                                    @csrf
-                                    <div class="flex items-end space-x-4">
-                                        <div class="flex-1">
-                                            <label for="max_capacity" class="block text-sm font-medium text-gray-700 mb-2">
-                                                Set Maximum Capacity
-                                            </label>
-                                            <input type="number" id="max_capacity" name="max_capacity"
-                                                value="{{ $studyArea->max_capacity }}"
-                                                min="1" max="1000"
-                                                class="w-full px-4 py-3 border border-gray-300/50 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent bg-white/80 backdrop-blur-sm transition-all duration-300 hover:border-gray-400"
-                                                placeholder="Enter maximum capacity">
-                                        </div>
-                                        <button type="submit"
-                                                class="group relative bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium py-3 px-8 rounded-xl transition-all duration-300 ease-out transform hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 flex items-center space-x-2 overflow-hidden">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" viewBox="0 0 20 20" fill="currentColor">
-                                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                                            </svg>
-                                            <span>Update</span>
-                                            <div class="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
+        <!-- Update Form -->
+        <form id="studyAreaForm" class="bg-gray-50 rounded-2xl p-6 border border-gray-100">
+            @csrf
+            <div class="flex flex-col sm:flex-row gap-4">
+                <div class="flex-1">
+                    <label for="max_capacity" class="block text-sm font-medium text-gray-700 mb-3">
+                        Set Maximum Capacity
+                    </label>
+                    <input type="number" 
+                           id="max_capacity" 
+                           name="max_capacity"
+                           value="{{ $studyArea->max_capacity }}"
+                           min="1" 
+                           max="1000"
+                           class="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:bg-white focus:border-gray-900 focus:ring-4 focus:ring-gray-100 transition-all duration-300 outline-none"
+                           placeholder="Enter maximum capacity">
+                </div>
+                <div class="flex items-end">
+                    <button type="submit"
+                            class="inline-flex items-center gap-2 bg-gray-200 px-6 py-3.5 rounded-xl font-medium text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 whitespace-nowrap text-gray-800">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <span>Update Capacity</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Status Indicator (Optional) 
+        <div class="mt-6 flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-100" id="statusCard">
+            <div class="flex-shrink-0">
+                @if($studyArea->available_slots <= 5)
+                    <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1-1.964-1-2.732 0L4.082 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                @elseif($studyArea->available_slots <= 10)
+                    <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1-1.964-1-2.732 0L4.082 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                @else
+                    <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                @endif
+            </div>
+
+        </div>
+        -->
+    </div>
+</div>
                     </div>
 
 
