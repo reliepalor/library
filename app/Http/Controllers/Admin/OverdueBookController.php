@@ -20,9 +20,22 @@ class OverdueBookController extends Controller
             ->get()
             ->map(function ($reminder) {
                 $student = $reminder->student;
+                // Fetch book details with images for each book in the reminder
+                $booksWithImages = collect($reminder->books)->map(function ($bookData) {
+                    $book = \App\Models\Books::where('book_code', $bookData['book_id'])->first();
+                    return [
+                        'name' => $bookData['name'],
+                        'book_id' => $bookData['book_id'],
+                        'image1' => $book ? $book->image1 : null,
+                        'author' => $book ? $book->author : null,
+                        'description' => $book ? $book->description : null,
+                        'section' => $book ? $book->section : null,
+                    ];
+                });
+
                 return [
                     'student' => $student,
-                    'books' => $reminder->books,
+                    'books' => $booksWithImages,
                     'total_books' => count($reminder->books),
                     'email_sent' => true,
                     'reminder_sent_at' => $reminder->reminder_sent_at,
@@ -56,6 +69,7 @@ class OverdueBookController extends Controller
                 return [
                     'name' => $borrow->book->name,
                     'book_id' => $borrow->book->book_id,
+                    'image1' => $borrow->book->image1,
                 ];
             });
 

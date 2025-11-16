@@ -482,6 +482,7 @@
                                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Overdue Books</th>
                                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email Status</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reminder Date</th>
                                         </tr>
                                     </thead>
                                         <tbody class="bg-white divide-y divide-gray-200" id="overdueBooksList">
@@ -658,18 +659,18 @@ function showToast(message, type = 'success', duration = 3000) {
                         console.log('Received books:', books); // Debug log
                         
                         if (!books || books.length === 0) {
-                            container.innerHTML = `
-                                <tr>
-                                    <td colspan="4" class="px-6 py-8 text-center">
-                                        <div class="flex flex-col items-center justify-center space-y-3">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                            </svg>
-                                            <h3 class="text-sm font-medium text-gray-900">No Students with Overdue Book Reminders</h3>
-                                            <p class="text-sm text-gray-500">Students who receive overdue book reminders will appear here.</p>
-                                        </div>
-                                    </td>
-                                </tr>`;
+                        container.innerHTML = `
+                            <tr>
+                                <td colspan="5" class="px-6 py-8 text-center">
+                                    <div class="flex flex-col items-center justify-center space-y-3">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        <h3 class="text-sm font-medium text-gray-900">No Students with Overdue Book Reminders</h3>
+                                        <p class="text-sm text-gray-500">Students who receive overdue book reminders will appear here.</p>
+                                    </div>
+                                </td>
+                            </tr>`;
                             return;
                         }
                         
@@ -677,22 +678,30 @@ function showToast(message, type = 'success', duration = 3000) {
                             const student = studentData.student;
                             const studentName = `${student.fname} ${student.lname}`;
                             const studentId = student.student_id;
-                            const booksList = studentData.books.map(b => `${b.name} (${b.book_id})`).join(', ');
+                            const booksList = studentData.books.map(b => {
+                                const imageHtml = b.image1 ? `<img src="${window.location.origin}/storage/${b.image1}" alt="${b.name}" class="w-8 h-8 object-cover rounded mr-2 inline-block">` : '';
+                                return `${imageHtml}${b.name} (${b.book_id})`;
+                            }).join(', ');
                             const totalBooks = studentData.total_books;
                             const emailStatus = studentData.email_sent ? 'Sent' : 'Pending';
                             const emailStatusClass = studentData.email_sent ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
                             const avatarUrl = studentData.student.avatar_url || '/images/default-profile.png';
+                            const reminderDate = new Date(studentData.reminder_sent_at).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                            });
 
                             return `
                                 <tr class="hover:bg-gray-50 transition-colors duration-150">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center">
-                                            
+
                                             <div class="">
                                                 <div class="text-sm font-medium text-gray-900">${studentName}</div>
                                                 <div class="text-sm text-gray-500">${studentId}</div>
                                             </div>
-                                            
+
                                         </div>
                                     </td>
                                     <td class="px-6 py-4">
@@ -709,6 +718,9 @@ function showToast(message, type = 'success', duration = 3000) {
                                             ${emailStatus}
                                         </span>
                                     </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">${reminderDate}</div>
+                                    </td>
                                 </tr>
                             `;
                         }).join('');
@@ -719,7 +731,7 @@ function showToast(message, type = 'success', duration = 3000) {
                         console.error('Error loading overdue books:', error);
                         container.innerHTML = `
                             <tr>
-                                <td colspan="4" class="px-6 py-8 text-center">
+                                <td colspan="5" class="px-6 py-8 text-center">
                                     <div class="flex flex-col items-center justify-center space-y-3">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
