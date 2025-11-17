@@ -165,15 +165,15 @@
                 .then(data => {
                     if (data.success) {
                         // Remove the row from the table
-                        const id = form.action.split('/').pop();
+                        const id = form.action.split('/').slice(-2)[0];
                         document.getElementById(`row-${id}`).remove();
-                        
+
                         // Show success message
                         showToast('Teacher/Visitor permanently deleted successfully', 'success');
-                        
+
                         // Close the modal
                         closeDeleteModal();
-                        
+
                         // If no more rows, show empty state
                         if (document.querySelectorAll('tbody tr').length === 0) {
                             const tbody = document.querySelector('tbody');

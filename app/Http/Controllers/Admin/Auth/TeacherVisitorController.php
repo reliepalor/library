@@ -254,7 +254,7 @@ class TeacherVisitorController extends \App\Http\Controllers\Controller
     public function index()
     {
         $teachersVisitors = TeacherVisitor::active()->orderBy('created_at', 'desc')->get();
-        $archivedTeachersVisitors = TeacherVisitor::archived()->orderBy('created_at', 'desc')->get();
+        $archivedTeachersVisitors = TeacherVisitor::withTrashed()->archived()->orderBy('created_at', 'desc')->get();
         return view('admin.teachers_visitors.index', [
             "teachersVisitors" => $teachersVisitors,
             "archivedTeachersVisitors" => $archivedTeachersVisitors
@@ -593,7 +593,7 @@ class TeacherVisitorController extends \App\Http\Controllers\Controller
      */
     public function archived()
     {
-        $archivedTeachersVisitors = TeacherVisitor::archived()->get();
+        $archivedTeachersVisitors = TeacherVisitor::withTrashed()->archived()->get();
         return view('admin.teachers_visitors.archived', ["teachersVisitors" => $archivedTeachersVisitors]);
     }
 

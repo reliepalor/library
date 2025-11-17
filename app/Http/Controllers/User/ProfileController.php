@@ -20,6 +20,25 @@ class ProfileController extends Controller
     {
         $user = $request->user()->load(['student.attendanceHistories', 'teacherVisitor']);
         $reservations = $user->reservations()->with('book')->get();
+
+        // Add status information for each reservation
+        foreach ($reservations as $reservation) {
+            $borrowedBook = \App\Models\BorrowedBook::where('book_id', $reservation->book_id)
+                ->where(function ($query) use ($reservation) {
+                    if ($reservation->student_id) {
+                        $query->where('student_id', $reservation->student_id)
+                              ->where('user_type', 'student');
+                    } elseif ($reservation->teacher_visitor_email) {
+                        $query->where('student_id', $reservation->teacher_visitor_email)
+                              ->where('user_type', 'teacher');
+                    }
+                })
+                ->whereIn('status', ['approved', 'returned', 'rejected'])
+                ->first();
+
+            $reservation->borrow_status = $borrowedBook ? $borrowedBook->status : 'reserved';
+        }
+
         return view('user.profile.edit', compact('user', 'reservations'));
     }
 

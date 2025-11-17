@@ -51,15 +51,21 @@
                         <input type="date" id="selectedDate" class="shadcn-input" value="{{ date('Y-m-d') }}">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">College</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">College/Department</label>
                         <select id="collegeFilter" class="shadcn-input">
-                            <option value="">All Colleges</option>
+                            <option value="">All Colleges/Departments</option>
                             <option value="CICS">CICS</option>
                             <option value="CTED">CTED</option>
                             <option value="CCJE">CCJE</option>
                             <option value="CHM">CHM</option>
                             <option value="CBEA">CBEA</option>
                             <option value="CA">CA</option>
+                            <option value="Computer Science">Computer Science</option>
+                            <option value="Information Technology">Information Technology</option>
+                            <option value="Engineering">Engineering</option>
+                            <option value="Education">Education</option>
+                            <option value="Business">Business</option>
+                            <option value="Arts">Arts</option>
                         </select>
                     </div>
                     <div>
@@ -91,9 +97,9 @@
                     <table id="attendanceTable" class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID/ROLE</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">College</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">College/Department</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Activity</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time In</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time Out</th>

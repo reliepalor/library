@@ -63,11 +63,13 @@ class User extends Authenticatable
         $query = Reservation::query();
 
         if ($this->student) {
-            $query->where('student_id', $this->student->student_id);
+            $query->where('student_id', $this->student->student_id)
+                  ->where('user_type', 'student');
         }
 
         if ($this->teacherVisitor) {
-            $query->where('teacher_visitor_email', $this->teacherVisitor->email);
+            $query->where('teacher_visitor_email', $this->teacherVisitor->email)
+                  ->where('user_type', 'teacher');
         }
 
         return $query->where('status', 'active');

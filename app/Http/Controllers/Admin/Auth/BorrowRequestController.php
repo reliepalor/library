@@ -140,7 +140,7 @@ class BorrowRequestController extends Controller
         return redirect()->route('admin.attendance.index')->with('success', 'Borrow request submitted and waiting for admin approval.');
     }
 
-    public function index()
+    public function index(Request $request)
     {
         // Get all pending requests with their associated data
         $requests = \App\Models\BorrowedBook::where('status', 'pending')->with(['student', 'book'])->get();
@@ -149,30 +149,76 @@ class BorrowRequestController extends Controller
         $requestsWithReservations = collect();
         $requestsWithoutReservations = collect();
 
-        foreach ($requests as $request) {
+        foreach ($requests as $borrowRequest) {
             $hasReservation = false;
-            if ($request->user_type === 'student') {
-                $hasReservation = \App\Models\Reservation::where('book_id', $request->book_id)
+            if ($borrowRequest->user_type === 'student') {
+                $hasReservation = \App\Models\Reservation::where('book_id', $borrowRequest->book_id)
                     ->where('status', 'active')
-                    ->where('student_id', $request->student_id)
+                    ->where('student_id', $borrowRequest->student_id)
                     ->whereNull('teacher_visitor_email')
                     ->exists();
-            } elseif (in_array($request->user_type, ['teacher', 'teacher_visitor'])) {
-                $hasReservation = \App\Models\Reservation::where('book_id', $request->book_id)
+            } elseif (in_array($borrowRequest->user_type, ['teacher', 'teacher_visitor'])) {
+                $hasReservation = \App\Models\Reservation::where('book_id', $borrowRequest->book_id)
                     ->where('status', 'active')
-                    ->where('teacher_visitor_email', $request->student_id)
+                    ->where('teacher_visitor_email', $borrowRequest->student_id)
                     ->exists();
             }
 
             if ($hasReservation) {
-                $requestsWithReservations->push($request);
+                $requestsWithReservations->push($borrowRequest);
             } else {
-                $requestsWithoutReservations->push($request);
+                $requestsWithoutReservations->push($borrowRequest);
             }
         }
 
-        // Sort each group by latest first, then combine with reserved requests first
-        $requests = $requestsWithReservations->sortByDesc('created_at')->merge($requestsWithoutReservations->sortByDesc('created_at'));
+        // Apply reservation priority filter if requested
+        if ($request->has('filter') && $request->filter === 'reservation_priority') {
+            // Group requests by book_id and sort by reservation time (earliest first)
+            $groupedRequests = collect();
+
+            foreach ($requestsWithReservations as $borrowRequest) {
+                $bookId = $borrowRequest->book_id;
+                if (!isset($groupedRequests[$bookId])) {
+                    $groupedRequests[$bookId] = collect();
+                }
+                $groupedRequests[$bookId]->push($borrowRequest);
+            }
+
+            // Sort each group by reservation time (earliest reservation gets priority)
+            $sortedRequests = collect();
+            foreach ($groupedRequests as $bookId => $bookRequests) {
+                $bookRequests = $bookRequests->sortBy(function ($borrowRequest) {
+                    // Find the reservation time for this request
+                    if ($borrowRequest->user_type === 'student') {
+                        $reservation = \App\Models\Reservation::where('book_id', $borrowRequest->book_id)
+                            ->where('status', 'active')
+                            ->where('student_id', $borrowRequest->student_id)
+                            ->whereNull('teacher_visitor_email')
+                            ->first();
+                    } elseif (in_array($borrowRequest->user_type, ['teacher', 'teacher_visitor'])) {
+                        $reservation = \App\Models\Reservation::where('book_id', $borrowRequest->book_id)
+                            ->where('status', 'active')
+                            ->where('teacher_visitor_email', $borrowRequest->student_id)
+                            ->first();
+                    }
+                    return $reservation ? $reservation->reserved_at->timestamp : $borrowRequest->created_at->timestamp;
+                });
+
+                // Add rank to each request
+                $rank = 1;
+                foreach ($bookRequests as $borrowRequest) {
+                    $borrowRequest->reservation_rank = $rank;
+                    $rank++;
+                }
+
+                $sortedRequests = $sortedRequests->merge($bookRequests);
+            }
+
+            $requests = $sortedRequests->merge($requestsWithoutReservations->sortByDesc('created_at'));
+        } else {
+            // Default sorting: Sort each group by latest first, then combine with reserved requests first
+            $requests = $requestsWithReservations->sortByDesc('created_at')->merge($requestsWithoutReservations->sortByDesc('created_at'));
+        }
 
         $borrowedBooks = \App\Models\BorrowedBook::whereIn('status', ['approved', 'rejected'])->with(['student', 'book'])->latest()->get();
 

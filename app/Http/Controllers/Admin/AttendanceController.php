@@ -378,13 +378,33 @@ class AttendanceController extends Controller
     public function getChartData(Request $request)
     {
         try {
-            $period = $request->query('period', '30days');
+            $period = $request->query('period', 'last30days');
             $type = $request->query('type', 'student'); // 'student' or 'teacher'
 
             // Parse period to get days
-            $days = 30;
-            if (preg_match('/(\d+)days?/', $period, $matches)) {
-                $days = (int) $matches[1];
+            $days = 30; // default
+            switch ($period) {
+                case 'today':
+                    $days = 1;
+                    break;
+                case 'last7days':
+                    $days = 7;
+                    break;
+                case 'last30days':
+                    $days = 30;
+                    break;
+                case 'last90days':
+                    $days = 90;
+                    break;
+                case 'lastyear':
+                    $days = 365;
+                    break;
+                default:
+                    // Fallback: try to parse number from period string
+                    if (preg_match('/(\d+)/', $period, $matches)) {
+                        $days = (int) $matches[1];
+                    }
+                    break;
             }
             $days = max(1, min(365, $days)); // Limit between 1 and 365 days
 
@@ -447,15 +467,12 @@ class AttendanceController extends Controller
                 return array_search($a['activity'], $requiredCategories) <=> array_search($b['activity'], $requiredCategories);
             })->values();
 
-            // Get colleges data (only for students)
-            $colleges = [];
-            if ($type === 'student') {
-                $colleges = (clone $baseQuery)
-                    ->select(DB::raw('COALESCE(college, "Unknown") as college'), DB::raw('COUNT(*) as cnt'))
-                    ->groupBy('college')
-                    ->orderByDesc('cnt')
-                    ->get();
-            }
+            // Get colleges/departments data (for both students and teachers)
+            $colleges = (clone $baseQuery)
+                ->select(DB::raw('COALESCE(college, department, "Unknown") as college'), DB::raw('COUNT(*) as cnt'))
+                ->groupBy(DB::raw('COALESCE(college, department, "Unknown")'))
+                ->orderByDesc('cnt')
+                ->get();
 
             return response()->json([
                 'activities' => $activities,
@@ -538,43 +555,79 @@ class AttendanceController extends Controller
         $college = $request->input('college');
         $status = $request->input('status');
 
-        $query = AttendanceHistory::query()
+        // Get student history records
+        $studentQuery = AttendanceHistory::query()
+            ->where('user_type', 'student')
             ->join('students', 'attendance_histories.student_id', '=', 'students.student_id')
             ->select('attendance_histories.*', 'students.fname', 'students.lname');
 
         if ($date) {
-            $query->whereDate('date', $date);
+            $studentQuery->whereDate('attendance_histories.date', $date);
         }
 
         if ($college) {
-            $query->where('attendance_histories.college', $college);
+            $studentQuery->where('attendance_histories.college', $college);
         }
 
         if ($status) {
             if ($status === 'present') {
-                $query->whereNull('time_out');
+                $studentQuery->whereNull('attendance_histories.time_out');
             } else if ($status === 'logged_out') {
-                $query->whereNotNull('time_out');
+                $studentQuery->whereNotNull('attendance_histories.time_out');
             }
         }
 
-        // Get history records
-        $history = $query->orderBy('date', 'desc')
-            ->orderBy('time_in', 'desc')
-            ->get()
-            ->map(function ($record) {
-                return [
-                    'student_id' => $record->student_id,
-                    'student_name' => $record->lname . ', ' . $record->fname,
-                    'college' => $record->college,
-                    'activity' => $record->activity,
-                    'time_in' => Carbon::parse($record->time_in)->setTimezone('Asia/Manila')->format('h:i A'),
-                    'time_out' => $record->time_out ? Carbon::parse($record->time_out)->setTimezone('Asia/Manila')->format('h:i A') : null
-                ];
-            });
+        $studentHistory = $studentQuery->get()->map(function ($record) {
+            return [
+                'student_id' => $record->student_id,
+                'student_name' => $record->lname . ', ' . $record->fname,
+                'college' => $record->college,
+                'activity' => $record->activity,
+                'time_in' => Carbon::parse($record->time_in)->setTimezone('Asia/Manila')->format('h:i A'),
+                'time_out' => $record->time_out ? Carbon::parse($record->time_out)->setTimezone('Asia/Manila')->format('h:i A') : null
+            ];
+        });
+
+        // Get teacher/visitor history records
+        $teacherQuery = AttendanceHistory::query()
+            ->where('user_type', 'teacher')
+            ->join('teachers_visitors', 'attendance_histories.teacher_visitor_id', '=', 'teachers_visitors.id')
+            ->select('attendance_histories.*', 'teachers_visitors.fname', 'teachers_visitors.lname', 'teachers_visitors.department', 'teachers_visitors.role');
+
+        if ($date) {
+            $teacherQuery->whereDate('attendance_histories.date', $date);
+        }
+
+        if ($college) {
+            $teacherQuery->where('attendance_histories.department', $college);
+        }
+
+        if ($status) {
+            if ($status === 'present') {
+                $teacherQuery->whereNull('attendance_histories.time_out');
+            } else if ($status === 'logged_out') {
+                $teacherQuery->whereNotNull('attendance_histories.time_out');
+            }
+        }
+
+        $teacherHistory = $teacherQuery->get()->map(function ($record) {
+            return [
+                'student_id' => ucfirst($record->role ?? 'Staff'),
+                'student_name' => $record->lname . ', ' . $record->fname,
+                'college' => $record->department,
+                'activity' => $record->activity,
+                'time_in' => Carbon::parse($record->time_in)->setTimezone('Asia/Manila')->format('h:i A'),
+                'time_out' => $record->time_out ? Carbon::parse($record->time_out)->setTimezone('Asia/Manila')->format('h:i A') : null
+            ];
+        });
+
+        // Combine and sort both student and teacher records
+        $combinedHistory = $studentHistory->concat($teacherHistory)->sortByDesc(function ($record) {
+            return [$record['time_in'], $record['student_id']];
+        })->values();
 
         return response()->json([
-            'history' => $history
+            'history' => $combinedHistory
         ]);
     }
 

@@ -35,7 +35,7 @@
                 <!-- Header -->
                 <div class="bg-white shadow-sm rounded-lg mb-6">
                     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                        <div class="flex justify-between items-center">
+                            <div class="flex justify-between items-center">
                             <h1 class="text-2xl font-semibold text-gray-900">Book Borrowing Management</h1>
                             <div class="flex space-x-4">
                                 <button id="requestsBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
@@ -44,6 +44,7 @@
                                 <button id="borrowedBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200">
                                     Borrowed Books
                                 </button>
+                                
                             </div>
 
                             <!-- Toast Notification -->
@@ -72,9 +73,46 @@
                 <div class="w-full mx-auto">
                     <!-- Borrow Requests Section -->
                     <div id="requestsSection" class="bg-white rounded-xl shadow-sm overflow-hidden">
-                        <div class="p-6 border-b border-gray-200">
+                        <div class="p-6 border-b border-gray-200 flex justify-between items-center">
                             <h2 class="text-xl font-semibold text-gray-800">Pending Borrow Requests</h2>
-                        </div>
+                       
+                            <form method="GET" action="{{ route('admin.borrow.requests') }}" class="flex items-center space-x-3">
+
+                                <label for="filter" class="text-sm font-medium text-gray-600">
+                                    Filter:
+                                </label>
+
+                                <div class="relative">
+                                    <select 
+                                        name="filter" 
+                                        id="filter" 
+                                        onchange="this.form.submit()" 
+                                        class="appearance-none w-[18vw] px-4 py-2.5 bg-white border border-gray-300 rounded-lg 
+                                            text-sm text-gray-700 cursor-pointer
+                                            focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800
+                                            hover:bg-gray-50 transition">
+
+                                     
+                                        <option value="">
+                                            Default (Latest First)
+                                        </option>
+
+                                        <option value="reservation_priority" 
+                                            {{ request('filter') === 'reservation_priority' ? 'selected' : '' }}>
+                                            Reservation Priority (Earliest First)
+                                        </option>
+                                    </select>
+
+                                    <!-- Chevron Icon -->
+                                    <svg class="w-4 h-4 text-gray-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" 
+                                        fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" />
+                                    </svg>
+                                </div>
+
+                            </form>
+
+                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full">
                                 <thead class="bg-gray-50">
@@ -142,42 +180,7 @@
                                                         </span>
                                                     @endif
                                                 </div>
-                                                @php
-                                                    $reservation = null;
-                                                    if ($request->user_type === 'student') {
-                                                        $reservation = \App\Models\Reservation::where('book_id', $request->book_id)
-                                                            ->where('student_id', $request->student_id)
-                                                            ->whereNull('teacher_visitor_email')
-                                                            ->where('status', 'active')
-                                                            ->latest('reserved_at')
-                                                            ->first();
-                                                    } elseif (in_array($request->user_type, ['teacher', 'teacher_visitor'])) {
-                                                        // For teacher/visitor, check both email and ID formats
-                                                        $reservation = \App\Models\Reservation::where('book_id', $request->book_id)
-                                                            ->where(function($q) use ($request) {
-                                                                $q->where('teacher_visitor_email', $request->student_id);
-                                                                if (is_numeric($request->student_id)) {
-                                                                    $tv = \App\Models\TeacherVisitor::find($request->student_id);
-                                                                    if ($tv) {
-                                                                        $q->orWhere('teacher_visitor_email', $tv->email);
-                                                                    }
-                                                                }
-                                                            })
-                                                            ->where('status', 'active')
-                                                            ->latest('reserved_at')
-                                                            ->first();
-                                                    }
-                                                @endphp
-                                                @if($reservation)
-                                                    <div class="mt-1">
-                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                                                            <svg class="mr-1.5 h-2 w-2 text-yellow-400" fill="currentColor" viewBox="0 0 8 8">
-                                                                <circle cx="4" cy="4" r="3" />
-                                                            </svg>
-                                                            Reserved at {{ $reservation->reserved_at->setTimezone('Asia/Manila')->format('M j, Y h:i A') }}
-                                                        </span>
-                                                    </div>
-                                                @endif
+
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <div class="text-sm font-medium text-gray-900">{{ $request->book->name }}</div>
@@ -214,6 +217,9 @@
                                                             <circle cx="4" cy="4" r="3" />
                                                         </svg>
                                                         Reserved at {{ $reservation2->reserved_at->setTimezone('Asia/Manila')->format('M j, Y h:i A') }}
+                                                        @if(isset($request->reservation_rank))
+                                                            <span class="ml-1 font-semibold">(No. {{ $request->reservation_rank }})</span>
+                                                        @endif
                                                     </span>
                                                 @endif
                                             </td>

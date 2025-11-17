@@ -26,7 +26,37 @@ class UserBooksController extends Controller
     public function show($id)
     {
         $book = Books::findOrFail($id);
-        return view('user.books.show', compact('book'));
+
+        $user = Auth::user();
+        $hasReservation = false;
+
+        // Determine user type and identifiers
+        if ($user->usertype === 'user') {
+            $student = $user->student;
+            $teacherVisitor = $user->teacherVisitor;
+
+            if ($student) {
+                $studentId = $student->student_id;
+                $teacherVisitorEmail = null;
+            } elseif ($teacherVisitor) {
+                $studentId = null;
+                $teacherVisitorEmail = $teacherVisitor->email;
+            }
+
+            // Check if user has an active reservation for this book
+            $hasReservation = Reservation::where(function ($query) use ($studentId, $teacherVisitorEmail) {
+                if ($studentId) {
+                    $query->where('student_id', $studentId);
+                } else {
+                    $query->where('teacher_visitor_email', $teacherVisitorEmail);
+                }
+            })
+                ->where('book_id', $book->book_code)
+                ->where('status', 'active')
+                ->exists();
+        }
+
+        return view('user.books.show', compact('book', 'hasReservation'));
     }
 
     /**
