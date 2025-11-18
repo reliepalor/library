@@ -1222,9 +1222,15 @@ async function showActivityModal(userType, identifier) {
         if (response.ok && data.user) {
             const user = data.user;
             const name = data.name;
-            const profilePic = data.profile_picture
-                ? (window.assetBaseUrl + 'storage/' + data.profile_picture)
-                : `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=random&size=100`;
+            // If profile_picture is already a full URL, use it directly; otherwise construct it
+            let profilePic = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=random&size=100`;
+            if (data.profile_picture) {
+                if (data.profile_picture.startsWith('http://') || data.profile_picture.startsWith('https://') || data.profile_picture.startsWith('/')) {
+                    profilePic = data.profile_picture;
+                } else {
+                    profilePic = window.assetBaseUrl + 'storage/' + data.profile_picture;
+                }
+            }
 
             // Update modal with user info
             userProfilePic.src = profilePic;
@@ -1481,9 +1487,15 @@ function updateStudentTable(attendance) {
                 console.groupEnd();
                 
                 // Build the row HTML with proper fallbacks - prioritize storage profile picture
-                const profilePic = record.profile_picture
-                    ? (window.assetBaseUrl + 'storage/' + record.profile_picture)
-                    : AvatarService.getPlaceholderAvatar(studentName, 100);
+                // If profile_picture is already a full URL, use it directly; otherwise construct it
+                let profilePic = AvatarService.getPlaceholderAvatar(studentName, 100);
+                if (record.profile_picture) {
+                    if (record.profile_picture.startsWith('http://') || record.profile_picture.startsWith('https://') || record.profile_picture.startsWith('/')) {
+                        profilePic = record.profile_picture;
+                    } else {
+                        profilePic = window.assetBaseUrl + 'storage/' + record.profile_picture;
+                    }
+                }
 
                 // Get gender information
                 const studentGender = studentInfo.gender || record.gender || 'N/A';
@@ -1705,9 +1717,16 @@ function updateTeacherTable(attendance) {
                 const statusText = status === 'out' ? 'Signed Out' : 'Signed In';
                 
                 // Build the row HTML with proper fallbacks
-                const profilePic = record.profile_picture ||
-                                 teacherInfo.profile_picture ||
-                                 AvatarService.getPlaceholderAvatar(teacherName, 100);
+                // If profile_picture is already a full URL, use it directly; otherwise construct it
+                let profilePic = AvatarService.getPlaceholderAvatar(teacherName, 100);
+                const picSource = record.profile_picture || teacherInfo.profile_picture;
+                if (picSource) {
+                    if (picSource.startsWith('http://') || picSource.startsWith('https://') || picSource.startsWith('/')) {
+                        profilePic = picSource;
+                    } else {
+                        profilePic = window.assetBaseUrl + 'storage/' + picSource;
+                    }
+                }
 
                 // Get gender information for teachers (if available)
                 const teacherGender = teacherInfo.gender || record.gender || 'N/A';
@@ -1948,9 +1967,15 @@ function updateSingleTeacherRecord(record) {
     const statusText = status === 'out' ? 'Signed Out' : 'Signed In';
 
                 // Build profile pic with fallback - prioritize storage profile picture
-                const profilePic = record.profile_picture
-                    ? (window.assetBaseUrl + 'storage/' + record.profile_picture)
-                    : AvatarService.getPlaceholderAvatar(teacherName, 100);
+                // If profile_picture is already a full URL, use it directly; otherwise construct it
+                let profilePic = AvatarService.getPlaceholderAvatar(teacherName, 100);
+                if (record.profile_picture) {
+                    if (record.profile_picture.startsWith('http://') || record.profile_picture.startsWith('https://') || record.profile_picture.startsWith('/')) {
+                        profilePic = record.profile_picture;
+                    } else {
+                        profilePic = window.assetBaseUrl + 'storage/' + record.profile_picture;
+                    }
+                }
 
     // Create new row if it doesn't exist
     let row = document.getElementById(rowId);
@@ -2521,9 +2546,16 @@ function loadInitialStudentRecords() {
                 const statusText = status === 'out' ? 'Logged Out' : 'Present';
 
                 // Build the row HTML with proper fallbacks
-                const profilePic = record.profile_picture ||
-                                 studentInfo.profile_picture ||
-                                 `https://ui-avatars.com/api/?name=${encodeURIComponent(studentName)}&background=random&size=100`;
+                // If profile_picture is already a full URL, use it directly; otherwise construct it
+                let profilePic = `https://ui-avatars.com/api/?name=${encodeURIComponent(studentName)}&background=random&size=100`;
+                const picSource = record.profile_picture || studentInfo.profile_picture;
+                if (picSource) {
+                    if (picSource.startsWith('http://') || picSource.startsWith('https://') || picSource.startsWith('/')) {
+                        profilePic = picSource;
+                    } else {
+                        profilePic = window.assetBaseUrl + 'storage/' + picSource;
+                    }
+                }
 
                 // Get gender information
                 const studentGender = studentInfo.gender || record.gender || 'N/A';
@@ -2650,9 +2682,15 @@ function loadMoreStudentRecords() {
             const statusText = status === 'out' ? 'Logged Out' : 'Present';
 
             // Prioritize storage profile picture over avatar service
-            const profilePic = record.profile_picture
-                ? (window.assetBaseUrl + 'storage/' + record.profile_picture)
-                : AvatarService.getPlaceholderAvatar(studentName, 100);
+            // If profile_picture is already a full URL, use it directly; otherwise construct it
+            let profilePic = AvatarService.getPlaceholderAvatar(studentName, 100);
+            if (record.profile_picture) {
+                if (record.profile_picture.startsWith('http://') || record.profile_picture.startsWith('https://') || record.profile_picture.startsWith('/')) {
+                    profilePic = record.profile_picture;
+                } else {
+                    profilePic = window.assetBaseUrl + 'storage/' + record.profile_picture;
+                }
+            }
 
             // Get gender information
             const studentGender = studentInfo.gender || record.gender || 'N/A';

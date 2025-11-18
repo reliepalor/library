@@ -50,6 +50,24 @@
                 color: #111827;
                 border-left: 3px solid #3b82f6;
             }
+            .break-inside-avoid {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            .page-break {
+                display: none;
+            }
+            #batch-print-modal .modal-content {
+                max-height: 90vh;
+                display: flex;
+                flex-direction: column;
+            }
+            #batch-print-modal .modal-grid-wrapper {
+                flex: 1;
+                overflow-y: auto;
+                padding-right: 0.5rem;
+                margin-right: -0.5rem;
+            }
             
             /* Ensure smooth transition for content area */
             .content-area {
@@ -59,11 +77,17 @@
             @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
             .animate-fadeIn { animation: fadeIn 0.3s; }
             @media print {
-                body * { visibility: hidden !important; }
-                #batch-print-modal, #batch-print-modal * { visibility: visible !important; }
-                #batch-print-modal { position: static !important; background: #fff !important; box-shadow: none !important; }
+                body { margin: 0 !important; background: #fff !important; }
+                body * { visibility: hidden !important; display: none !important; }
+                #batch-print-modal,
+                #batch-print-modal * { visibility: visible !important; display: block !important; }
+                #batch-print-grid { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 1rem !important; justify-items: center !important; }
+                #batch-print-grid .qr-block { width: 100% !important; padding: 0.5rem !important; }
+                #batch-print-modal { position: static !important; background: #fff !important; box-shadow: none !important; padding: 0 !important; }
+                #batch-print-modal > div { margin: 0 !important; max-width: none !important; width: 100% !important; background: #fff !important; box-shadow: none !important; max-height: none !important; }
+                #batch-print-modal .modal-grid-wrapper { overflow: visible !important; padding-right: 0 !important; margin-right: 0 !important; }
                 #close-batch-print, #modal-print-btn { display: none !important; }
-                .print-container, .content-area, .sidebar, nav, header, footer { display: none !important; }
+                .page-break { display: block !important; break-after: page; width: 100%; height: 0; }
             }
         </style>
     </head>
@@ -357,12 +381,14 @@
         </div>
 
         <!-- Batch Print Modal -->
-        <div id="batch-print-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden transition-opacity duration-300">
-            <div class="bg-white rounded-xl shadow-lg p-8 max-w-4xl w-full relative animate-fadeIn">
+        <div id="batch-print-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden transition-opacity duration-300 overflow-auto py-8 px-4">
+            <div class="modal-content bg-white rounded-xl shadow-lg p-6 sm:p-8 max-w-4xl w-full relative animate-fadeIn mx-auto">
                 <button id="close-batch-print" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
                 <h2 class="text-xl font-semibold text-center mb-6">Batch Print QR Codes</h2>
-                <div id="batch-print-grid" class="grid grid-cols-3 grid-rows-2 gap-6 justify-items-center"></div>
-                <div class="flex justify-center mt-6">
+                <div class="modal-grid-wrapper">
+                    <div id="batch-print-grid" class="grid grid-cols-3 gap-6 justify-items-center"></div>
+                </div>
+                <div class="flex justify-center mt-6 pt-4 border-t border-gray-100 bg-white">
                     <button id="modal-print-btn" class="px-6 py-2 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition">Print</button>
                 </div>
             </div>
@@ -655,10 +681,7 @@
                         alert('Select at least one teacher/visitor.');
                         return;
                     }
-                    if (selected.length > 6) {
-                        alert('You can only print up to 6 teachers/visitors at a time.');
-                        return;
-                    }
+
                     // Prepare data for print
                     let teachersVisitors = selected.map(cb => ({
                         name: cb.getAttribute('data-name') || '',
@@ -679,12 +702,12 @@
 
                     // Fill grid safely
                     grid.innerHTML = '';
-                    teachersVisitors.forEach(tv => {
+                    teachersVisitors.forEach((tv, index) => {
                         const wrap = document.createElement('div');
-                        wrap.className = 'qr-block bg-white rounded-lg shadow p-4 flex flex-col items-center border';
+                        wrap.className = 'qr-block bg-white rounded-lg shadow p-4 flex flex-col items-center border break-inside-avoid';
 
                         const img = document.createElement('img');
-                        img.className = 'w-32 h-32 mb-2 bg-white border rounded';
+                        img.className = 'w-24 h-24 mb-2 bg-white border rounded mx-auto';
                         img.src = tv.qr;
                         img.alt = 'QR Code';
 
@@ -694,19 +717,21 @@
 
                         const roleEl = document.createElement('div');
                         roleEl.className = 'role text-gray-700 text-sm mb-1 text-center';
-                        roleEl.textContent = tv.department;
+                        roleEl.textContent = tv.department || tv.role;
 
                         wrap.appendChild(img);
                         wrap.appendChild(nameEl);
                         wrap.appendChild(roleEl);
                         grid.appendChild(wrap);
+
+                        const isLast = index === teachersVisitors.length - 1;
+                        if ((index + 1) % 9 === 0 && !isLast) {
+                            const pageBreak = document.createElement('div');
+                            pageBreak.className = 'page-break';
+                            grid.appendChild(pageBreak);
+                        }
                     });
-                    // Fill empty blocks if less than 6
-                    for (let i = teachersVisitors.length; i < 6; i++) {
-                        const placeholder = document.createElement('div');
-                        placeholder.className = 'qr-block';
-                        grid.appendChild(placeholder);
-                    }
+
                     modal.classList.remove('hidden');
                     modal.classList.add('flex');
                     modal.style.opacity = 1;

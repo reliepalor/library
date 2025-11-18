@@ -351,103 +351,71 @@
                         </div>
 
 
-<!-- Study Area Settings Section -->
-<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden animate-slide-up">
+<!-- Study Area Settings – Pure Heroicons -->
+<div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
     <div class="p-8">
-        <!-- Header -->
         <div class="mb-8">
             <h2 class="text-2xl font-semibold text-gray-900 mb-2">Study Area Settings</h2>
             <p class="text-sm text-gray-500">Configure the maximum capacity for study area slots</p>
         </div>
 
-        <!-- Stats Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <!-- Maximum Capacity Card -->
-            <div class="group relative overflow-hidden bg-white rounded-2xl p-7 border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-500">
-                <div class="flex items-start justify-between">
-                    <div class="space-y-2">
-                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Maximum Capacity</p>
-                        <p class="text-4xl font-bold text-gray-900" id="maxCapacity">{{ $studyArea->max_capacity }}</p>
-                    </div>
-                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
-                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
+            <!-- Maximum Capacity -->
+            <div class="group">
+                <div class="bg-white rounded-2xl p-7 border border-gray-200 hover:border-gray-400 transition-all duration-300">
+                    <div class="flex items-start justify-between">
+                        <div class="space-y-4">
+                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Maximum Capacity</p>
+                            <p class="text-4xl font-bold text-gray-900" id="maxCapacity">{{ $studyArea->max_capacity }}</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center group-hover:bg-gray-200 transition-colors">
+                            <!-- Building Office (best for capacity/seats) -->
+                            <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 21v-7.5a1.5 1.5 0 00-1.5-1.5h-12a1.5 1.5 0 00-1.5 1.5V21m19.5 0h-18m18 0V10.5a1.5 1.5 0 00-.757-1.303l-7.5-4.286a1.5 1.5 0 00-1.486 0l-7.5 4.286A1.5 1.5 0 003.757 10.5V21m4.5-9h.008v.008H7.5V12zm0 3h.008v.008H7.5V15zm0 3h.008v.008H7.5V18zm3-6h.008v.008H10.5V12zm0 3h.008v.008H10.5V15zm0 3h.008v.008H10.5V18zm3-6h.008v.008H13.5V12zm0 3h.008v.008H13.5V15zm0 3h.008v.008H13.5V18zm3-6h.008v.008H16.5V12zm0 3h.008v.008H16.5V15z"/>
+                            </svg>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Available Slots Card -->
-            <div class="group relative overflow-hidden bg-white rounded-2xl p-7 border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-500">
-                <div class="flex items-start justify-between">
-                    <div class="space-y-2">
-                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Available Slots</p>
-                        <p class="text-4xl font-bold text-gray-900" id="availableSlots">{{ $studyArea->available_slots }}</p>
-                    </div>
-                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
-                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+            <!-- Available Slots -->
+            <div class="group">
+                <div class="bg-white rounded-2xl p-7 border border-gray-200 hover:border-gray-400 transition-all duration-300">
+                    <div class="flex items-start justify-between">
+                        <div class="space-y-4">
+                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Available Slots</p>
+                            <p class="text-4xl font-bold text-gray-900" id="availableSlots">{{ $studyArea->available_slots }}</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center group-hover:bg-gray-200 transition-colors">
+                            <!-- Check Circle -->
+                            <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Update Form -->
-        <form id="studyAreaForm" class="bg-gray-50 rounded-2xl p-6 border border-gray-100">
+        <!-- Form -->
+        <form id="studyAreaForm" class="bg-gray-50 rounded-2xl p-6 border border-gray-200">
             @csrf
-            <div class="flex flex-col sm:flex-row gap-4">
+            <div class="flex flex-col sm:flex-row gap-6 items-end">
                 <div class="flex-1">
-                    <label for="max_capacity" class="block text-sm font-medium text-gray-700 mb-3">
-                        Set Maximum Capacity
-                    </label>
-                    <input type="number" 
-                           id="max_capacity" 
-                           name="max_capacity"
-                           value="{{ $studyArea->max_capacity }}"
-                           min="1" 
-                           max="1000"
-                           class="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:bg-white focus:border-gray-900 focus:ring-4 focus:ring-gray-100 transition-all duration-300 outline-none"
-                           placeholder="Enter maximum capacity">
+                    <label for="max_capacity" class="block text-sm font-medium text-gray-700 mb-3">Set Maximum Capacity</label>
+                    <input type="number" id="max_capacity" name="max_capacity" value="{{ $studyArea->max_capacity }}"
+                           min="1" max="1000"
+                           class="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-100 transition">
                 </div>
-                <div class="flex items-end">
-                    <button type="submit"
-                            class="inline-flex items-center gap-2 bg-gray-200 px-6 py-3.5 rounded-xl font-medium text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 whitespace-nowrap text-gray-800">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        <span>Update Capacity</span>
-                    </button>
-                </div>
+                <button type="submit"
+                        class="inline-flex items-center gap-2.5 bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-800 px-7 py-3.5 rounded-xl font-medium text-sm transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.5 12.75l6 6 9-13.5"/>
+                    </svg>
+                    Update Capacity
+                </button>
             </div>
         </form>
-
-        <!-- Status Indicator (Optional) 
-        <div class="mt-6 flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-100" id="statusCard">
-            <div class="flex-shrink-0">
-                @if($studyArea->available_slots <= 5)
-                    <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1-1.964-1-2.732 0L4.082 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                    </div>
-                @elseif($studyArea->available_slots <= 10)
-                    <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1-1.964-1-2.732 0L4.082 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                    </div>
-                @else
-                    <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                @endif
-            </div>
-
-        </div>
-        -->
     </div>
 </div>
                     </div>

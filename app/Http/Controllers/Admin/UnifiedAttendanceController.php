@@ -4,13 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
-use App\Models\AttendanceHistory;
 use App\Models\Student;
 use App\Models\TeacherVisitor;
 use App\Models\BorrowedBook;
 use App\Models\Books;
 use App\Mail\AttendanceNotification;
 use App\Services\AvatarService;
+use App\Services\AttendanceSaveResetService;
+use App\Traits\FormatsBorrowActivity;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -21,10 +22,17 @@ use App\Events\AttendanceUpdated;
 use App\Mail\LogoutCodeMail;
 use Illuminate\Support\Facades\Cache;
 use App\Helpers\StudyAreaHelper;
-use App\Models\StudyArea;
 
 class UnifiedAttendanceController extends Controller
 {
+    use FormatsBorrowActivity;
+
+    protected AttendanceSaveResetService $attendanceSaveResetService;
+
+    public function __construct(AttendanceSaveResetService $attendanceSaveResetService)
+    {
+        $this->attendanceSaveResetService = $attendanceSaveResetService;
+    }
     /**
      * Display today's attendance for both students and teachers
      */
@@ -658,109 +666,14 @@ class UnifiedAttendanceController extends Controller
      */
     public function saveAndReset()
     {
-        $startOfDay = Carbon::today()->startOfDay();
-        $endOfDay = Carbon::today()->endOfDay();
+        $result = $this->attendanceSaveResetService->saveAndReset();
 
-        $studentAttendance = $this->getStudentAttendance($startOfDay, $endOfDay);
-        $teacherAttendance = $this->getTeacherAttendance($startOfDay, $endOfDay);
-        $borrowRequests = $this->getTodayBorrowRequests();
-
-        // Save to history
-        $this->saveAttendanceHistory($studentAttendance, $teacherAttendance, $borrowRequests);
-
-        // Delete today's records
-        $studentAttendance->each->delete();
-        $teacherAttendance->each->delete();
-
-        // Reset study area availability (all active sessions end, so reset to max capacity)
-        $this->resetStudyAreaAvailability();
+        $message = $result['saved']
+            ? 'Attendance records saved and reset successfully.'
+            : 'No attendance records to archive today. System reset completed.';
 
         return redirect()->route('admin.attendance.index')
-            ->with('success', 'Attendance records saved and reset successfully.');
-    }
-
-    /**
-     * Reset study area availability to maximum capacity
-     */
-    private function resetStudyAreaAvailability()
-    {
-        try {
-            $studyArea = StudyArea::firstOrCreate(
-                ['name' => 'Main Study Area'],
-                ['max_capacity' => 30, 'available_slots' => 30]
-            );
-
-            // Reset to maximum capacity since all sessions end
-            $studyArea->available_slots = $studyArea->max_capacity;
-            $studyArea->save();
-
-            // Clear the cache to ensure fresh data
-            Cache::forget('study_area_availability');
-
-            Log::info('Study area availability reset during attendance save and reset', [
-                'max_capacity' => $studyArea->max_capacity,
-                'reset_slots' => $studyArea->available_slots
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Study area reset failed during attendance save and reset', [
-                'error' => $e->getMessage()
-            ]);
-            // Don't throw exception here as it's not critical to the main attendance reset
-        }
-    }
-
-    /**
-     * Save attendance to history
-     */
-    private function saveAttendanceHistory($studentAttendance, $teacherAttendance, $borrowRequests)
-    {
-        $today = Carbon::today()->toDateString();
-
-        // Save student records
-        foreach ($studentAttendance as $record) {
-            $activity = $this->getActivityWithBorrowStatus($record, $borrowRequests, $record->student_id);
-
-            // Calculate duration in minutes if both time_in and time_out exist
-            $duration = null;
-            if ($record->login && $record->logout) {
-                $duration = Carbon::parse($record->login)->diffInMinutes(Carbon::parse($record->logout));
-            }
-
-            AttendanceHistory::create([
-                'user_type' => 'student',
-                'student_id' => $record->student_id,
-                'college' => $record->student->college,
-                'gender' => $record->student->gender,
-                'activity' => $activity,
-                'time_in' => $record->login,
-                'time_out' => $record->logout,
-                'duration' => $duration,
-                'date' => $today
-            ]);
-        }
-
-        // Save teacher records
-        foreach ($teacherAttendance as $record) {
-            // Calculate duration in minutes if both time_in and time_out exist
-            $duration = null;
-            if ($record->login && $record->logout) {
-                $duration = Carbon::parse($record->login)->diffInMinutes(Carbon::parse($record->logout));
-            }
-
-            AttendanceHistory::create([
-                'user_type' => 'teacher',
-                'teacher_visitor_id' => $record->teacher_visitor_id,
-                'department' => $record->teacherVisitor->department,
-                'role' => $record->teacherVisitor->role,
-                'gender' => $record->teacherVisitor->gender,
-                'activity' => $record->activity,
-                'time_in' => $record->login,
-                'time_out' => $record->logout,
-                'duration' => $duration,
-                'date' => $today
-            ]);
-        }
+            ->with('success', $message);
     }
 
     /**

@@ -597,6 +597,39 @@ class StudentController extends \App\Http\Controllers\Controller
     }
 
     /**
+     * Bulk delete selected archived students.
+     */
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'student_ids' => 'required|array',
+            'student_ids.*' => 'integer|exists:students,id',
+        ]);
+
+        $studentIds = $request->input('student_ids');
+        $deletedCount = 0;
+
+        foreach ($studentIds as $id) {
+            $student = Student::find($id);
+            if ($student && $student->archived) {
+                // Delete the QR code file if it exists
+                if ($student->qr_code_path && Storage::disk('public')->exists($student->qr_code_path)) {
+                    Storage::disk('public')->delete($student->qr_code_path);
+                }
+                // Permanently delete the student
+                $student->delete();
+                $deletedCount++;
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully deleted {$deletedCount} archived student(s).",
+            'deleted_count' => $deletedCount,
+        ]);
+    }
+
+    /**
      * Generate composite QR code image with text overlay.
      */
     private function generateCompositeQr(Student $student)

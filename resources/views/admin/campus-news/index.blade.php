@@ -87,80 +87,80 @@
                     </div>
                 </div>
 
-                <!-- Stats Grid -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                    <!-- Total News -->
-                    <div class="animate-slide-up delay-100 group">
-                        <div class="relative overflow-hidden bg-white rounded-3xl p-7 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-500">
-                            <div class="flex items-start justify-between">
-                                <div class="space-y-3">
-                                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total News</p>
-                                    <p class="text-4xl font-bold text-gray-900">{{ $news->total() }}</p>
-                                </div>
-                                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
-                                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-600"></div>
-                        </div>
-                    </div>
-
-                    <!-- Published -->
-                    <div class="animate-slide-up delay-150 group">
-                        <div class="relative overflow-hidden bg-white rounded-3xl p-7 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-500">
-                            <div class="flex items-start justify-between">
-                                <div class="space-y-3">
-                                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Published</p>
-                                    <p class="text-4xl font-bold text-gray-900">{{ $news->where('status', 'published')->count() }}</p>
-                                </div>
-                                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
-                                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-green-400 to-emerald-600"></div>
-                        </div>
-                    </div>
-
-                    <!-- Archived -->
-                    <div class="animate-slide-up delay-200 group">
-                        <div class="relative overflow-hidden bg-white rounded-3xl p-7 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-500">
-                            <div class="flex items-start justify-between">
-                                <div class="space-y-3">
-                                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Archived</p>
-                                    <p class="text-4xl font-bold text-gray-900">{{ $news->where('status', 'archived')->count() }}</p>
-                                </div>
-                                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-400 to-pink-600 flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
-                                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-400 to-pink-600"></div>
-                        </div>
-                    </div>
-
-                    <!-- Featured -->
-                    <div class="animate-slide-up delay-250 group">
-                        <div class="relative overflow-hidden bg-white rounded-3xl p-7 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-500">
-                            <div class="flex items-start justify-between">
-                                <div class="space-y-3">
-                                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Featured</p>
-                                    <p class="text-4xl font-bold text-gray-900">{{ $news->where('is_featured', true)->count() }}</p>
-                                </div>
-                                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-400 to-pink-600 flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
-                                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-400 to-pink-600"></div>
-                        </div>
-                    </div>
+<!-- Stats Grid - Modern Minimalist Monochrome -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+    <!-- Total News -->
+    <div class="group">
+        <div class="bg-white border border-gray-200 rounded-2xl p-7 hover:border-gray-400 transition-all duration-300">
+            <div class="flex items-start justify-between">
+                <div class="space-y-4">
+                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Total News</p>
+                    <p class="text-4xl font-bold text-gray-900">{{ $news->total() }}</p>
                 </div>
+                <div class="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center group-hover:bg-gray-200 transition-colors duration-300">
+                    <!-- Minimalist Newspaper Icon -->
+                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-1.036 0-1.875.84-1.875 1.875v15.75c0 1.036.84 1.875 1.875 1.875h12.75c1.036 0 1.875-.84 1.875-1.875V5.625c0-1.036-.84-1.875-1.875-1.875H10.5v8.25l-3-1.875-3 1.875V2.25z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Published -->
+    <div class="group">
+        <div class="bg-white border border-gray-200 rounded-2xl p-7 hover:border-gray-400 transition-all duration-300">
+            <div class="flex items-start justify-between">
+                <div class="space-y-4">
+                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Published</p>
+                    <p class="text-4xl font-bold text-gray-900">{{ $news->where('status', 'published')->count() }}</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center group-hover:bg-gray-200 transition-colors duration-300">
+                    <!-- Minimalist Check Circle Icon -->
+                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Archived -->
+    <div class="group">
+        <div class="bg-white border border-gray-200 rounded-2xl p-7 hover:border-gray-400 transition-all duration-300">
+            <div class="flex items-start justify-between">
+                <div class="space-y-4">
+                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Archived</p>
+                    <p class="text-4xl font-bold text-gray-900">{{ $news->where('status', 'archived')->count() }}</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center group-hover:bg-gray-200 transition-colors duration-300">
+                    <!-- Minimalist Archive Box Icon -->
+                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Featured -->
+    <div class="group">
+        <div class="bg-white border border-gray-200 rounded-2xl p-7 hover:border-gray-400 transition-all duration-300">
+            <div class="flex items-start justify-between">
+                <div class="space-y-4">
+                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Featured</p>
+                    <p class="text-4xl font-bold text-gray-900">{{ $news->where('is_featured', true)->count() }}</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center group-hover:bg-gray-200 transition-colors duration-300">
+                    <!-- Minimalist Star Icon -->
+                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM21 12l-2.773-.813a4.5 4.5 0 00-3.09-3.09L12 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L21 12z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
                 <!-- Filters Section -->
                 <div class="bg-white rounded-2xl border border-gray-100 p-6 mb-8 shadow-sm animate-slide-up delay-300">

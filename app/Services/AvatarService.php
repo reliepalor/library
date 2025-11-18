@@ -80,8 +80,17 @@ class AvatarService
      */
     public static function getProfilePictureUrl(?string $profilePicture, ?string $name = null, int $size = 300): string
     {
-        if ($profilePicture && Storage::disk('public')->exists($profilePicture)) {
-            return asset('storage/' . $profilePicture);
+        if ($profilePicture) {
+            // Check if file exists in public/storage (where uploaded files are stored)
+            $publicPath = public_path('storage/' . $profilePicture);
+            if (file_exists($publicPath)) {
+                return asset('storage/' . $profilePicture);
+            }
+            
+            // Also check storage/app/public (Laravel's default storage location)
+            if (Storage::disk('public')->exists($profilePicture)) {
+                return asset('storage/' . $profilePicture);
+            }
         }
 
         // If profile picture is not found, try to generate placeholder avatar

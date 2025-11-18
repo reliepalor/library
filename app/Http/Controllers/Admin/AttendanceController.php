@@ -126,13 +126,20 @@ class AttendanceController extends Controller
             $studentId = $attendance->student_id;
             $activity = $this->getActivityWithBorrowStatus($attendance, $borrowRequests, $studentId);
 
+            $student = $attendance->student;
+            $name = ($student && $student->lname && $student->fname) 
+                ? $student->lname . ', ' . $student->fname 
+                : ($student ? ($student->fname ?? $student->lname ?? 'N/A') : 'N/A');
+            
+            // Get profile picture from user relationship
+            $profile = $student && $student->user ? $student->user->profile_picture : null;
+            $profilePicture = AvatarService::getProfilePictureUrl($profile, $name, 100);
+
             return [
                 'id' => $attendance->id,
                 'student_id' => $attendance->student->student_id ?? 'N/A',
-                'student_name' => ($attendance->student->lname ?? 'N/A') . ', ' . ($attendance->student->fname ?? 'N/A'),
-                'profile_picture' => $attendance->student && $attendance->student->user && $attendance->student->user->profile_picture
-                    ? asset('storage/profile_pictures/' . $attendance->student->user->profile_picture)
-                    : null,
+                'student_name' => $name,
+                'profile_picture' => $profilePicture,
                 'college' => $attendance->student->college ?? 'N/A',
                 'gender' => $attendance->student->gender ?? 'N/A',
                 'activity' => $activity,
@@ -385,6 +392,7 @@ class AttendanceController extends Controller
             $days = 30; // default
             switch ($period) {
                 case 'today':
+                case 'daily':
                     $days = 1;
                     break;
                 case 'last7days':
@@ -955,10 +963,8 @@ class AttendanceController extends Controller
         $userName = $user->fname . ' ' . $user->lname;
 
         // Get profile picture, fallback to generated avatar if not available
-        $profilePicture = $this->getUserProfilePicture($userType, $user);
-        if (!$profilePicture) {
-            $profilePicture = AvatarService::getPlaceholderAvatar($userName, 100);
-        }
+        $profile = optional($user->user)->profile_picture;
+        $profilePicture = AvatarService::getProfilePictureUrl($profile, $userName, 100);
 
         return response()->json([
             'user' => $user,
@@ -1113,20 +1119,17 @@ class AttendanceController extends Controller
      */
     private function getUserProfilePicture($userType, $user)
     {
-        if ($user->user && $user->user->profile_picture) {
-            return asset('storage/profile_pictures/' . $user->user->profile_picture);
-        }
-        return null;
+        $profile = optional($user->user)->profile_picture;
+        return AvatarService::getProfilePictureUrl($profile, $user->fname . ' ' . $user->lname);
     }
+
 
     /**
      * Get today's student attendance records
      */
     private function getTodayStudentAttendance($startOfDay, $endOfDay)
     {
-        return Attendance::with(['student' => function($query) {
-                $query->select('student_id', 'lname', 'fname', 'college', 'email', 'gender')->with('user');
-            }])
+        return Attendance::with(['student.user'])
             ->where('user_type', 'student')
             ->whereBetween('login', [$startOfDay, $endOfDay])
             ->orderBy('created_at', 'desc')
@@ -1217,13 +1220,9 @@ class AttendanceController extends Controller
             $lname = $student ? ($student->lname ?? null) : null;
             $name = ($fname && $lname) ? $lname . ', ' . $fname : ($fname ?: $lname ?: $studentId);
 
-            $profilePicture = $student && $student->user && $student->user->profile_picture
-                ? asset('storage/profile_pictures/' . $student->user->profile_picture)
-                : null;
-
-            if (!$profilePicture) {
-                $profilePicture = AvatarService::getPlaceholderAvatar($name, 100);
-            }
+            // Get profile picture from user relationship
+            $profile = $student && $student->user ? $student->user->profile_picture : null;
+            $profilePicture = AvatarService::getProfilePictureUrl($profile, $name, 100);
 
             return [
                 'id' => $attendance->id,
@@ -1256,9 +1255,9 @@ class AttendanceController extends Controller
             $teacherId = $attendance->teacher_visitor_id;
             $name = ($fname && $lname) ? $lname . ', ' . $fname : ($fname ?: $lname ?: $teacherId);
 
-            $profilePicture = $teacher && $teacher->user && $teacher->user->profile_picture
-                ? asset('storage/profile_pictures/' . $teacher->user->profile_picture)
-                : AvatarService::getPlaceholderAvatar($name, 100);
+            // Get profile picture from user relationship
+            $profile = $teacher && $teacher->user ? $teacher->user->profile_picture : null;
+            $profilePicture = AvatarService::getProfilePictureUrl($profile, $name, 100);
 
             return [
                 'id' => $attendance->id,

@@ -621,4 +621,37 @@ class TeacherVisitorController extends \App\Http\Controllers\Controller
             'archived_count' => $count,
         ]);
     }
+
+    /**
+     * Bulk delete selected archived teachers/visitors.
+     */
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'teacher_visitor_ids' => 'required|array',
+            'teacher_visitor_ids.*' => 'integer|exists:teachers_visitors,id',
+        ]);
+
+        $teacherVisitorIds = $request->input('teacher_visitor_ids');
+        $deletedCount = 0;
+
+        foreach ($teacherVisitorIds as $id) {
+            $teacherVisitor = TeacherVisitor::withTrashed()->find($id);
+            if ($teacherVisitor && $teacherVisitor->archived) {
+                // Delete the QR code file if it exists
+                if ($teacherVisitor->qr_code_path && Storage::disk('public')->exists($teacherVisitor->qr_code_path)) {
+                    Storage::disk('public')->delete($teacherVisitor->qr_code_path);
+                }
+                // Permanently delete the teacher/visitor
+                $teacherVisitor->forceDelete();
+                $deletedCount++;
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully deleted {$deletedCount} archived teacher(s)/visitor(s).",
+            'deleted_count' => $deletedCount,
+        ]);
+    }
 }

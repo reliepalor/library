@@ -174,6 +174,14 @@
                                                     </svg>
                                                     Archive Selected
                                                 </button>
+                                                <!-- Delete Selected Button (for archived students only) -->
+                                                <button id="delete-selected-btn"
+                                                    class="inline-flex items-center gap-2 bg-red-50 border border-red-300 text-red-800 rounded-lg px-4 py-2 text-sm font-medium hover:bg-red-100 focus:ring-2 focus:ring-red-200 transition hidden">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                                    </svg>
+                                                    Delete Selected
+                                                </button>
                                             </div>
                                         </div>
 
@@ -336,12 +344,18 @@
                                     @endif
                                 </div>
 
-                                <!-- Archived Students Section -->
+                                                <!-- Archived Students Section -->
                                 <div id="archived-students-section" style="display: none;">
                                     <div class="overflow-x-auto p-4 py-6">
                                         <table class="w-full table-auto text-sm text-left text-gray-700">
                                             <thead class="bg-gray-50 text-gray-500 uppercase text-xs font-semibold border-b">
                                                 <tr>
+                                                    <th class="px-2 py-3 w-12">
+                                                        <label for="select-all-archived" class="inline-flex items-center gap-2">
+                                                            <input type="checkbox" id="select-all-archived" class="h-4 w-4">
+                                                            <span>Select All</span>
+                                                        </label>
+                                                    </th>
                                                     <th class="px-6 py-3">Student ID</th>
                                                     <th class="px-6 py-3">Last Name</th>
                                                     <th class="px-6 py-3">First Name</th>
@@ -357,6 +371,7 @@
                                             <tbody class="divide-y divide-gray-100">
                                                 @forelse($archivedStudents as $student)
                                                 <tr class="hover:bg-gray-50">
+                                                    <td class="px-2 py-4"><input type="checkbox" class="select-archived-student" value="{{ $student->id }}" data-name="{{ $student->lname }}, {{ $student->fname }}{{ $student->MI ? ' ' . $student->MI . '.' : '' }}"></td>
                                                     <td class="px-6 py-4">{{ $student->student_id }}</td>
                                                     <td class="px-6 py-4">{{ $student->lname }}</td>
                                                     <td class="px-6 py-4">{{ $student->fname }}</td>
@@ -417,7 +432,7 @@
                                                 </tr>
                                                 @empty
                                                 <tr>
-                                                    <td colspan="10" class="px-6 py-12 text-center text-gray-500">
+                                                    <td colspan="11" class="px-6 py-12 text-center text-gray-500">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
                                                         </svg>
@@ -618,6 +633,18 @@
                 <div class="flex justify-end space-x-3">
                     <button id="cancel-bulk-archive" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition">Cancel</button>
                     <button id="confirm-bulk-archive" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">Archive Selected</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bulk Delete Confirmation Modal -->
+        <div id="bulk-delete-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden transition-opacity duration-300">
+            <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Confirm Bulk Delete</h3>
+                <p class="text-gray-600 mb-6" id="bulk-delete-modal-message">Are you sure you want to permanently delete the selected student(s)? This action cannot be undone.</p>
+                <div class="flex justify-end space-x-3">
+                    <button id="cancel-bulk-delete" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition">Cancel</button>
+                    <button id="confirm-bulk-delete" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">Delete Permanently</button>
                 </div>
             </div>
         </div>

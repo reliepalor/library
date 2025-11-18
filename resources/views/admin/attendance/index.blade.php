@@ -273,7 +273,7 @@
                                                 </span>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex items-center space-x-3">
-                                                <img src="{{ \App\Services\AvatarService::getProfilePictureUrl($attendance['profile_picture'], $attendance['name'], 100) }}"
+                                                <img src="{{ $attendance['profile_picture'] ?? \App\Services\AvatarService::getPlaceholderAvatar($attendance['name'], 100) }}"
                                                      class="w-10 h-10 rounded-full object-cover shadow-sm ring-1 ring-blue-100"
                                                      alt="{{ $attendance['name'] }}"
                                                      onerror="this.onerror=null; this.src='{{ asset('images/default-profile.png') }}'">

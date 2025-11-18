@@ -323,11 +323,26 @@
       });
     }
 
+    // Select all archived logic
+    const selectAllArchived = document.getElementById('select-all-archived');
+    if (selectAllArchived) {
+      selectAllArchived.addEventListener('change', function () {
+        document.querySelectorAll('.select-archived-student').forEach(cb => {
+          cb.checked = selectAllArchived.checked;
+        });
+        updateDeleteSelectedButton();
+      });
+    }
+
     // Update select all when individual checkboxes change
     document.addEventListener('change', function (e) {
       if (e.target.classList.contains('select-student')) {
         updateSelectAllState();
         updateArchiveSelectedButton();
+      }
+      if (e.target.classList.contains('select-archived-student')) {
+        updateSelectAllArchivedState();
+        updateDeleteSelectedButton();
       }
     });
 
@@ -346,6 +361,17 @@
       selectAll.indeterminate = checkedVisible > 0 && checkedVisible < visibleCheckboxes.length;
     }
 
+    // Update select all archived checkbox state
+    function updateSelectAllArchivedState() {
+      const selectAllArchived = document.getElementById('select-all-archived');
+      if (!selectAllArchived) return;
+
+      const archivedCheckboxes = document.querySelectorAll('.select-archived-student');
+      const checkedArchived = document.querySelectorAll('.select-archived-student:checked').length;
+      selectAllArchived.checked = archivedCheckboxes.length > 0 && checkedArchived === archivedCheckboxes.length;
+      selectAllArchived.indeterminate = checkedArchived > 0 && checkedArchived < archivedCheckboxes.length;
+    }
+
     // Update archive selected button visibility
     function updateArchiveSelectedButton() {
       const archiveSelectedBtn = document.getElementById('archive-selected-btn');
@@ -356,6 +382,19 @@
         archiveSelectedBtn.classList.remove('hidden');
       } else {
         archiveSelectedBtn.classList.add('hidden');
+      }
+    }
+
+    // Update delete selected button visibility (for archived students only)
+    function updateDeleteSelectedButton() {
+      const deleteSelectedBtn = document.getElementById('delete-selected-btn');
+      if (!deleteSelectedBtn) return;
+
+      const checkedBoxes = document.querySelectorAll('.select-archived-student:checked');
+      if (checkedBoxes.length > 0) {
+        deleteSelectedBtn.classList.remove('hidden');
+      } else {
+        deleteSelectedBtn.classList.add('hidden');
       }
     }
 
@@ -849,6 +888,76 @@ if (toggleArchivedViewBtn) {
           .catch(error => {
             console.error('Error:', error);
             showToast('An error occurred while archiving students.', 'error');
+          });
+        };
+
+        cancelBtn.addEventListener('click', cancelHandler);
+        confirmBtn.addEventListener('click', confirmHandler);
+      });
+    }
+
+    // Delete selected students logic (for archived students only)
+    const deleteSelectedBtn = document.getElementById('delete-selected-btn');
+    if (deleteSelectedBtn) {
+      deleteSelectedBtn.addEventListener('click', function () {
+        const selectedCheckboxes = document.querySelectorAll('.select-archived-student:checked');
+        if (selectedCheckboxes.length === 0) {
+          showToast('No archived students selected.', 'error');
+          return;
+        }
+
+        const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+        const selectedNames = Array.from(selectedCheckboxes).map(cb => cb.getAttribute('data-name'));
+
+        // Show bulk delete confirmation modal
+        const modal = document.getElementById('bulk-delete-modal');
+        const message = document.getElementById('bulk-delete-modal-message');
+        message.textContent = `Are you sure you want to permanently delete ${selectedIds.length} selected archived student(s)? This action cannot be undone.`;
+        modal.classList.remove('hidden');
+
+        // Handle modal buttons
+        const cancelBtn = document.getElementById('cancel-bulk-delete');
+        const confirmBtn = document.getElementById('confirm-bulk-delete');
+
+        const closeModal = () => {
+          modal.classList.add('hidden');
+          cancelBtn.removeEventListener('click', cancelHandler);
+          confirmBtn.removeEventListener('click', confirmHandler);
+        };
+
+        const cancelHandler = () => closeModal();
+
+        const confirmHandler = () => {
+          closeModal();
+
+          // Create form data for bulk delete
+          const formData = new FormData();
+          formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+          selectedIds.forEach(id => formData.append('student_ids[]', id));
+
+          // Send AJAX request
+          fetch('/admin/students/bulk-delete', {
+            method: 'POST',
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+          })
+          .then(response => response.json())
+          .then(result => {
+            if (result.success) {
+              showToast(`Successfully deleted ${result.deleted_count} archived student(s).`, 'success');
+              // Reload page to reflect changes
+              setTimeout(() => {
+                window.location.reload();
+              }, 1500);
+            } else {
+              showToast(result.message || 'Failed to delete selected archived students.', 'error');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            showToast('An error occurred while deleting archived students.', 'error');
           });
         };
 
