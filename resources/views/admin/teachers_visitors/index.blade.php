@@ -384,7 +384,7 @@
         <div id="batch-print-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden transition-opacity duration-300 overflow-auto py-8 px-4">
             <div class="modal-content bg-white rounded-xl shadow-lg p-6 sm:p-8 max-w-4xl w-full relative animate-fadeIn mx-auto">
                 <button id="close-batch-print" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
-                <h2 class="text-xl font-semibold text-center mb-6">Batch Print QR Codes</h2>
+                <h2 class="text-xl font-semibold text-center mb-6">Teachers/Visitors QR Codes Printed</h2>
                 <div class="modal-grid-wrapper">
                     <div id="batch-print-grid" class="grid grid-cols-3 gap-6 justify-items-center"></div>
                 </div>
